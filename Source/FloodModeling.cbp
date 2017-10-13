@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="FloodModeling" />
+		<Option pch_mode="2" />
+		<Option compiler="gfortran" />
+		<Build>
+			<Target title="Debug">
+				<Option output="bin/Debug/FloodModeling" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="./test" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gfortran" />
+				<Compiler>
+					<Add option="-g" />
+					<Add option="-fbounds-check -ffixed-line-length-120" />
+				</Compiler>
+			</Target>
+			<Target title="Release">
+				<Option output="bin/Release/FloodModeling" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="gfortran" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-ffixed-line-length-120" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+		</Compiler>
+		<Unit filename="BASING.f">
+			<Option weight="0" />
+		</Unit>
+		<Unit filename="FLOOD_ROUTING.f" />
+		<Unit filename="MODULE_OBS.f">
+			<Option weight="0" />
+		</Unit>
+		<Unit filename="MODULE_UHG.f">
+			<Option weight="0" />
+		</Unit>
+		<Unit filename="MODULLE_ROUTING.f">
+			<Option weight="0" />
+		</Unit>
+		<Unit filename="NAM.f">
+			<Option weight="1" />
+		</Unit>
+		<Unit filename="READ.f">
+			<Option weight="1" />
+		</Unit>
+		<Unit filename="SCS_UHG.f">
+			<Option weight="1" />
+		</Unit>
+		<Unit filename="TOOL.f">
+			<Option weight="0" />
+		</Unit>
+		<Unit filename="WRITE.f">
+			<Option weight="1" />
+		</Unit>
+		<Unit filename="main.f">
+			<Option weight="1" />
+		</Unit>
+		<Extensions>
+			<code_completion />
+			<envvars />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>
