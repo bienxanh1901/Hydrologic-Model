@@ -229,10 +229,10 @@ C CHECK AND OPEN INPUT FILE
       NSTOTAL = NRV + NRS
       ALLOCATE(FRTYPE(1:NSTOTAL))
       IF(NRV.GT.0) ALLOCATE(RIVER(1:NRV))
-      IF(NRS.GT.0) ALLOCATE(RESEVOIR(1:NRS))
+      IF(NRS.GT.0) ALLOCATE(RESERVOIR(1:NRS))
 
       !Read comments
-      DO I = 1,10
+      DO I = 1,12
         READ(FUNIT,*) CTMP
       ENDDO
 
@@ -250,7 +250,7 @@ C CHECK AND OPEN INPUT FILE
 
         ELSE IF(FRTYPE(I).EQ.2) THEN
             K = K + 1
-            CALL READ_DATA_FOR_RESEVOIR(FUNIT, K)
+            CALL READ_DATA_FOR_RESERVOIR(FUNIT, K)
 
         ENDIF
 
@@ -323,7 +323,7 @@ C=================================================================
       INTEGER :: J, K, FUNIT, FINF, I
 
       READ(FUNIT,*) RIVER(I)%NSRC, RIVER(I)%NBASE,
-     &              RESEVOIR(I)%NINF, RIVER(I)%TX
+     &              RESERVOIR(I)%NINF, RIVER(I)%TX
 
       IF(RIVER(I)%NSRC.GT.0) THEN
 
@@ -360,62 +360,63 @@ C=================================================================
 C=================================================================
 C SUBROUTINE READ DATA INPUT FOR RIVER FLOOD ROUTING
 C=================================================================
-      SUBROUTINE READ_DATA_FOR_RESEVOIR(FUNIT, I)
+      SUBROUTINE READ_DATA_FOR_RESERVOIR(FUNIT, I)
       USE ROUTING
       USE OBSERVATION
       IMPLICIT NONE
       INTEGER :: J, K, FUNIT, FINF, I
 
       !Read basic param
-      READ(FUNIT,*) RESEVOIR(I)%NSRC, RESEVOIR(I)%NBASE,
-     &              RESEVOIR(I)%NINF, RESEVOIR(I)%NVZ,
-     &              RESEVOIR(I)%NDC, RESEVOIR(I)%DOOR_W,
-     &              RESEVOIR(I)%DOOR_H, RESEVOIR(I)%DC_COEFF,
-     &              RESEVOIR(I)%QTB, RESEVOIR(I)%Z0
+      READ(FUNIT,*) RESERVOIR(I)%NSRC, RESERVOIR(I)%NBASE,
+     &              RESERVOIR(I)%NINF, RESERVOIR(I)%NVZ,
+     &              RESERVOIR(I)%NDC, RESERVOIR(I)%DOOR_W,
+     &              RESERVOIR(I)%DOOR_H, RESERVOIR(I)%DC_COEFF,
+     &              RESERVOIR(I)%QTB, RESERVOIR(I)%Z0, RESERVOIR(I)%ZMAX
 
       !Read source from other routing sources
-      IF(RESEVOIR(I)%NSRC.GT.0) THEN
+      IF(RESERVOIR(I)%NSRC.GT.0) THEN
 
-        ALLOCATE(RESEVOIR(I)%SRC(1:RESEVOIR(I)%NSRC))
-        READ(FUNIT,*)(RESEVOIR(I)%SRC(J), J = 1, RESEVOIR(I)%NSRC)
+        ALLOCATE(RESERVOIR(I)%SRC(1:RESERVOIR(I)%NSRC))
+        READ(FUNIT,*)(RESERVOIR(I)%SRC(J), J = 1, RESERVOIR(I)%NSRC)
 
       ENDIF
 
       !Read source from UHG or NAM calculation
-      IF(RESEVOIR(I)%NBASE.GT.0) THEN
-        ALLOCATE(RESEVOIR(I)%BASE(1:RESEVOIR(I)%NBASE))
-        READ(FUNIT,*) (RESEVOIR(I)%BASE(J), J = 1, RESEVOIR(I)%NBASE)
+      IF(RESERVOIR(I)%NBASE.GT.0) THEN
+        ALLOCATE(RESERVOIR(I)%BASE(1:RESERVOIR(I)%NBASE))
+        READ(FUNIT,*) (RESERVOIR(I)%BASE(J), J = 1, RESERVOIR(I)%NBASE)
       ENDIF
 
       !Read source from user input file
-      IF(RESEVOIR(I)%NINF.GT.0) THEN
+      IF(RESERVOIR(I)%NINF.GT.0) THEN
 
-        ALLOCATE(RESEVOIR(I)%QINF(1:RESEVOIR(I)%NINF,1:NTIME))
-        READ(FUNIT,*) RESEVOIR(I)%INFLOWF
-        FINF = 11
-        OPEN(FINF, FILE=TRIM(RESEVOIR(I)%INFLOWF),STATUS='OLD')
-        DO K = 1,NTIME
-            READ(FINF,*) (RESEVOIR(I)%QINF(J,K), J = 1, RESEVOIR(I)%NINF)
-        ENDDO
-        CLOSE(FINF)
+        ALLOCATE(RESERVOIR(I)%QINF(1:RESERVOIR(I)%NINF,1:NTIME))
+        READ(FUNIT,*) RESERVOIR(I)%INFLOWF
+*        FINF = 11
+*        OPEN(FINF, FILE=TRIM(RESERVOIR(I)%INFLOWF),STATUS='OLD')
+*        DO K = 1,NTIME
+*            READ(FINF,*) (RESERVOIR(I)%QINF(J,K), J = 1, RESERVOIR(I)%NINF)
+*        ENDDO
+*        CLOSE(FINF)
 
+         RESERVOIR(I)%QINF = 300.0D0
       ENDIF
 
-      !Read Z~V relation of RESEVOIR
-      ALLOCATE(RESEVOIR(I)%VZ(1:2,1:RESEVOIR(I)%NVZ))
-      READ(FUNIT,*) (RESEVOIR(I)%VZ(1,J), J=1,RESEVOIR(I)%NVZ)
-      READ(FUNIT,*) (RESEVOIR(I)%VZ(2,J), J=1,RESEVOIR(I)%NVZ)
-      RESEVOIR(I)%VZ(1,:) = RESEVOIR(I)%VZ(1,:)*1000000.0D0
+      !Read Z~V relation of RESERVOIR
+      ALLOCATE(RESERVOIR(I)%VZ(1:2,1:RESERVOIR(I)%NVZ))
+      READ(FUNIT,*) (RESERVOIR(I)%VZ(1,J), J=1,RESERVOIR(I)%NVZ)
+      READ(FUNIT,*) (RESERVOIR(I)%VZ(2,J), J=1,RESERVOIR(I)%NVZ)
+      RESERVOIR(I)%VZ(1,:) = RESERVOIR(I)%VZ(1,:)*1000000.0D0
 
       !Read discharge control Z - Ndoor - door height
-      ALLOCATE(RESEVOIR(I)%DC_CTR(1:RESEVOIR(I)%NDC, 1:3))
-      READ(FUNIT,*) (RESEVOIR(I)%DC_CTR(J,1),J = 1,RESEVOIR(I)%NDC)
-      READ(FUNIT,*) (RESEVOIR(I)%DC_CTR(J,2),J = 1,RESEVOIR(I)%NDC)
-      READ(FUNIT,*) (RESEVOIR(I)%DC_CTR(J,3),J = 1,RESEVOIR(I)%NDC)
+      ALLOCATE(RESERVOIR(I)%DC_CTR(1:RESERVOIR(I)%NDC, 1:3))
+      READ(FUNIT,*) (RESERVOIR(I)%DC_CTR(J,1),J = 1,RESERVOIR(I)%NDC)
+      READ(FUNIT,*) (RESERVOIR(I)%DC_CTR(J,2),J = 1,RESERVOIR(I)%NDC)
+      READ(FUNIT,*) (RESERVOIR(I)%DC_CTR(J,3),J = 1,RESERVOIR(I)%NDC)
 
 
       RETURN
-      END SUBROUTINE READ_DATA_FOR_RESEVOIR
+      END SUBROUTINE READ_DATA_FOR_RESERVOIR
 C=================================================================
 C
 C=================================================================

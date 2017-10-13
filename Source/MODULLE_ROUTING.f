@@ -19,20 +19,20 @@ C STRUCT FOR RIVER FLOOD ROUTING
       END TYPE RIVER_ROUTING
 
 C STRUCT FOR RESOURCE FLOOD ROUTING
-      TYPE RESEVOIR_ROUTING
+      TYPE RESERVOIR_ROUTING
         !Connectivity
         INTEGER :: NSRC, NBASE, NINF
         !Index of source
         INTEGER, ALLOCATABLE, DIMENSION(:) :: SRC, BASE
         !Characteristics
         INTEGER :: NVZ, NDC
-        REAL(8) :: DOOR_W, DOOR_H, DC_COEFF, QTB, Z0
+        REAL(8) :: DOOR_W, DOOR_H, DC_COEFF, QTB, Z0, ZMAX
         !V~Z relation, discharge control, inflow
         REAL(8), ALLOCATABLE, DIMENSION(:,:) :: VZ, DC_CTR, QINF
         !Name of inflow file
         CHARACTER(100) :: INFLOWF
 
-      END TYPE RESEVOIR_ROUTING
+      END TYPE RESERVOIR_ROUTING
 
       !Control variable
       LOGICAL :: ISROUTING
@@ -45,7 +45,7 @@ C STRUCT FOR RESOURCE FLOOD ROUTING
       !River routing characteristics
       TYPE(RIVER_ROUTING), ALLOCATABLE, DIMENSION(:) :: RIVER
       !Resource routing characteristics
-      TYPE(RESEVOIR_ROUTING), ALLOCATABLE, DIMENSION(:) :: RESEVOIR
+      TYPE(RESERVOIR_ROUTING), ALLOCATABLE, DIMENSION(:) :: RESERVOIR
 
       END MODULE ROUTING
 C=================================================================

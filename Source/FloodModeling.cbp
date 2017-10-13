@@ -8,7 +8,7 @@
 		<Build>
 			<Target title="Debug">
 				<Option output="bin/Debug/FloodModeling" prefix_auto="1" extension_auto="1" />
-				<Option working_dir="./test" />
+				<Option working_dir="../Validate/NONGSON" />
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gfortran" />
@@ -37,7 +37,9 @@
 		<Unit filename="BASING.f">
 			<Option weight="0" />
 		</Unit>
-		<Unit filename="FLOOD_ROUTING.f" />
+		<Unit filename="FLOOD_ROUTING.f">
+			<Option weight="1" />
+		</Unit>
 		<Unit filename="MODULE_OBS.f">
 			<Option weight="0" />
 		</Unit>

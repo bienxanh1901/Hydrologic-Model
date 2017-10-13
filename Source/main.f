@@ -6,9 +6,11 @@
       IMPLICIT NONE
 
 C Read input parameters
+      WRITE(*,*) 'READ INPUT DATA!!!'
       CALL READ_INPUT
 
 C Flood calculation
+      WRITE(*,*) 'CALCULATING FLOW!!!'
       ALLOCATE(QF(1:NBASING, 1:NTIME))
       IF(MODEL.EQ.'UHG') THEN
 
@@ -22,7 +24,7 @@ C Flood calculation
 
 C Flood routing
       IF(ISROUTING) THEN
-
+        WRITE(*,*) 'FLOOD ROUTING!!!'
         ALLOCATE(QDC(1:NSTOTAL, 0:NTIME))
         ALLOCATE(QIN(1:NSTOTAL, 0:NTIME))
         IF(NRS.GT.0) THEN
@@ -37,6 +39,7 @@ C Flood routing
 
       ENDIF
 C Write output
+      WRITE(*,*) 'WRITE OUTPUT DATA!!!'
       CALL WRITE_OUTPUT
 
       END PROGRAM FLOOD_MODELING

@@ -102,84 +102,80 @@ C=================================================================
       USE CALC
       IMPLICIT NONE
       INTEGER :: INX, I, J,IDX
-      REAL(8) :: QDCTMP, AREA, DH, DV
+      REAL(8) :: QDCTMP, AREA, DH, DV, HEIGHT
 
       QIN(INX,0) = QDC(INX,0)
 
-      ZH(IDX,0) = RESEVOIR(IDX)%Z0
+      ZH(IDX,0) = RESERVOIR(IDX)%Z0
       !Interpolate initial volume from height
-      CALL INTERP(RESEVOIR(IDX)%VZ(1,1:RESEVOIR(IDX)%NVZ),
-     &            RESEVOIR(IDX)%VZ(2,1:RESEVOIR(IDX)%NVZ),
-     &            ZH(IDX,0), V(IDX,0), RESEVOIR(IDX)%NVZ)
+      CALL INTERP(RESERVOIR(IDX)%VZ(1,1:RESERVOIR(IDX)%NVZ),
+     &            RESERVOIR(IDX)%VZ(2,1:RESERVOIR(IDX)%NVZ),
+     &            ZH(IDX,0), V(IDX,0), RESERVOIR(IDX)%NVZ)
 
       DO I = 1, NTIME
 
         !Calculate in flow (source)
         QIN(INX,I) = 0.0D0
 
-        IF(RESEVOIR(IDX)%NSRC.GT.0) THEN
+        IF(RESERVOIR(IDX)%NSRC.GT.0) THEN
 
-            DO J = 1, RESEVOIR(IDX)%NSRC
+            DO J = 1, RESERVOIR(IDX)%NSRC
 
-                QIN(INX,I) = QIN(INX,I) + QDC(RESEVOIR(IDX)%SRC(J),I)
-
-            ENDDO
-
-        ENDIF
-
-        IF(RESEVOIR(IDX)%NBASE.GT.0) THEN
-
-            DO J = 1, RESEVOIR(IDX)%NBASE
-
-                QIN(INX,I) = QIN(INX,I) + QF(RESEVOIR(IDX)%BASE(J),I)
+                QIN(INX,I) = QIN(INX,I) + QDC(RESERVOIR(IDX)%SRC(J),I)
 
             ENDDO
 
         ENDIF
 
-        IF(RESEVOIR(IDX)%NINF.GT.0) THEN
+        IF(RESERVOIR(IDX)%NBASE.GT.0) THEN
 
-            DO J = 1, RESEVOIR(IDX)%NINF
+            DO J = 1, RESERVOIR(IDX)%NBASE
 
-                QIN(INX,I) = QIN(INX,I) + RESEVOIR(IDX)%QINF(J,I)
+                QIN(INX,I) = QIN(INX,I) + QF(RESERVOIR(IDX)%BASE(J),I)
+
+            ENDDO
+
+        ENDIF
+
+        IF(RESERVOIR(IDX)%NINF.GT.0) THEN
+
+            DO J = 1, RESERVOIR(IDX)%NINF
+
+                QIN(INX,I) = QIN(INX,I) + RESERVOIR(IDX)%QINF(J,I)
 
             ENDDO
 
         ENDIF
 
 
-        QDC(INX, I) = RESEVOIR(IDX)%QTB
-        CALL GET_DOOR_AREA(ZH(IDX,I - 1), IDX, AREA)
+        QDC(INX, I) = RESERVOIR(IDX)%QTB
+        CALL GET_DOOR_AREA(ZH(IDX,I - 1), IDX, AREA, HEIGHT)
 
-*        IF(ZH(IDX,I - 1).GE.RESEVOIR(IDX)%ZMAX)THEN
-*
-*            DH = ZH(IDX,I - 1) - RESEVOIR(IDX)%ZMAX
-*            IF(DH.GE.RESEVOIR(IDX)%DOOR_H) THEN
-*
-*                DOOR_AREA = RESEVOIR(IDX)%DC_COEFF*RESEVOIR(IDX)%NDOOR*
-*     &                      RESEVOIR(IDX)%DOOR_H*RESEVOIR(IDX)%DOOR_W
-*                QDCTMP = DOOR_AREA*DSQRT(9.81*2.0*DH - 0.5*RESEVOIR(IDX)%DOOR_H)
-*
-*            ELSE
-*
-*                DOOR_AREA = 0.44*RESEVOIR(IDX)%NDOOR*
-*     &                      DH*RESEVOIR(IDX)%DOOR_W
-*                QDCTMP = DOOR_AREA*DSQRT(9.81*2.0*DH)
-*
-*            ENDIF
-*
-*            QDC(INX, I) = QDC(INX, I) + QDCTMP
-*
-*        ENDIF
+        IF(AREA.GT.0.0D0)THEN
 
-        DV = (0.5*((QIN(INX,I) + QIN(INX,I - 1)) - (QDC(INX, I) - QDC(INX, I - 1))))*DT
+            DH = ZH(IDX,I - 1) - RESERVOIR(IDX)%ZMAX
+            IF(DH.GE.HEIGHT) THEN
+
+                QDCTMP = RESERVOIR(IDX)%DC_COEFF*AREA*DSQRT(9.81D0*2.0D0*(DH - 0.5*HEIGHT))
+
+            ELSE
+
+                QDCTMP = 0.44D0*AREA*DSQRT(9.81*2.0*DH)
+
+            ENDIF
+
+            QDC(INX, I) = QDC(INX, I) + QDCTMP
+
+        ENDIF
+
+        DV = (0.5D0*((QIN(INX,I) + QIN(INX,I - 1)) - (QDC(INX, I) - QDC(INX, I - 1))))*DT
 
         V(IDX,I) = V(IDX,I - 1) + DV
 
 
-        CALL INTERP(RESEVOIR(IDX)%VZ(2,1:RESEVOIR(IDX)%NVZ),
-     &            RESEVOIR(IDX)%VZ(1,1:RESEVOIR(IDX)%NVZ),
-     &            V(IDX,I), ZH(IDX,I), RESEVOIR(IDX)%NVZ)
+        CALL INTERP(RESERVOIR(IDX)%VZ(2,1:RESERVOIR(IDX)%NVZ),
+     &            RESERVOIR(IDX)%VZ(1,1:RESERVOIR(IDX)%NVZ),
+     &            V(IDX,I), ZH(IDX,I), RESERVOIR(IDX)%NVZ)
 
       ENDDO
 
@@ -241,34 +237,34 @@ C=================================================================
 
             L = L + 1
 
-            QDC(I,0) = RESEVOIR(L)%QTB
+            QDC(I,0) = RESERVOIR(L)%QTB
 
-*            IF(RESEVOIR(L)%NSRC.GT.0) THEN
+*            IF(RESERVOIR(L)%NSRC.GT.0) THEN
 *
-*                DO J = 1, RESEVOIR(L)%NSRC
+*                DO J = 1, RESERVOIR(L)%NSRC
 *
-*                    QDC(I,0) = QDC(I,0) + QDC(RESEVOIR(L)%SRC(J), 0)
-*
-*                ENDDO
-*
-*            ENDIF
-*
-*            IF(RESEVOIR(L)%NBASE.GT.0) THEN
-*
-*                DO J = 1, RESEVOIR(L)%NBASE
-*
-*                    QDC(I,0) = QDC(I,0) + BASE(RESEVOIR(L)%BASE(J))%Q0
+*                    QDC(I,0) = QDC(I,0) + QDC(RESERVOIR(L)%SRC(J), 0)
 *
 *                ENDDO
 *
 *            ENDIF
 *
+*            IF(RESERVOIR(L)%NBASE.GT.0) THEN
 *
-*            IF(RESEVOIR(L)%NINF.GT.0) THEN
+*                DO J = 1, RESERVOIR(L)%NBASE
 *
-*                DO J = 1, RESEVOIR(L)%NINF
+*                    QDC(I,0) = QDC(I,0) + BASE(RESERVOIR(L)%BASE(J))%Q0
 *
-*                    QDC(I,0) = QDC(I,0) + RESEVOIR(L)%QINF(J)
+*                ENDDO
+*
+*            ENDIF
+*
+*
+*            IF(RESERVOIR(L)%NINF.GT.0) THEN
+*
+*                DO J = 1, RESERVOIR(L)%NINF
+*
+*                    QDC(I,0) = QDC(I,0) + RESERVOIR(L)%QINF(J)
 *
 *                ENDDO
 *
@@ -286,31 +282,33 @@ C=================================================================
 C=================================================================
 C SUBROUTINE INITIAL THE DISCHARGE
 C=================================================================
-      SUBROUTINE GET_DOOR_AREA(ZI, I, AREA)
+      SUBROUTINE GET_DOOR_AREA(ZI, I, AREA, HEIGHT)
       USE ROUTING
       USE CALC
       IMPLICIT NONE
-      INTEGER :: I, J, K, L
-      REAL(8) :: ZI, AREA
+      INTEGER :: I, J
+      REAL(8) :: ZI, AREA, HEIGHT
 
-      IF(ZI.LT.RESEVOIR(I)%DC_CTR(1,1)) THEN
+      IF(ZI.LT.RESERVOIR(I)%DC_CTR(1,1)) THEN
 
         AREA = 0.0D0
         RETURN
 
-      ELSE IF(ZI.GE.RESEVOIR(I)%DC_CTR(RESEVOIR(I)%NDC,1)) THEN
+      ELSE IF(ZI.GE.RESERVOIR(I)%DC_CTR(RESERVOIR(I)%NDC,1)) THEN
 
-        J = RESEVOIR(I)%NDC
-        AREA = RESEVOIR(I)%DC_CTR(J,2)*RESEVOIR(I)%DC_CTR(J,3)*RESEVOIR(I)%DOOR_W
+        J = RESERVOIR(I)%NDC
+        AREA = RESERVOIR(I)%DC_CTR(J,2)*RESERVOIR(I)%DC_CTR(J,3)*RESERVOIR(I)%DOOR_W
+        HEIGHT = RESERVOIR(I)%DC_CTR(J,3)
         RETURN
 
       ELSE
 
-        DO J = 2,RESEVOIR(I)%NDC
-            IF(ZI.GE.RESEVOIR(I)%DC_CTR(J - 1,1).AND.
-     &         ZI.LT.RESEVOIR(I)%DC_CTR(J,1)) THEN
+        DO J = 2,RESERVOIR(I)%NDC
+            IF(ZI.GE.RESERVOIR(I)%DC_CTR(J - 1,1).AND.
+     &         ZI.LT.RESERVOIR(I)%DC_CTR(J,1)) THEN
 
-                AREA = RESEVOIR(I)%DC_CTR(J,2)*RESEVOIR(I)%DC_CTR(J,3)*RESEVOIR(I)%DOOR_W
+                AREA = RESERVOIR(I)%DC_CTR(J,2)*RESERVOIR(I)%DC_CTR(J,3)*RESERVOIR(I)%DOOR_W
+                HEIGHT = RESERVOIR(I)%DC_CTR(J,3)
                 RETURN
 
             ENDIF
