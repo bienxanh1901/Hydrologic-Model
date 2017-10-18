@@ -6,31 +6,31 @@ C=================================================================
 C STRUCT FOR RIVER FLOOD ROUTING
       TYPE RIVER_ROUTING
         !Connectivity
-        INTEGER :: NSRC, NBASE, NINF
+        INTEGER :: NSRC, NBASE, INP_FLAG
         !Index of source
         INTEGER, ALLOCATABLE, DIMENSION(:) :: SRC, BASE
         !Coefficient
-        REAL(8) :: TX
+        REAL(8) :: K, X
         !Inflow
-        REAL(8), ALLOCATABLE, DIMENSION(:,:) ::  QINF
-        !Name of inflow file
-        CHARACTER(100) :: INFLOWF
+        REAL(8), ALLOCATABLE, DIMENSION(:) ::  QINP
 
       END TYPE RIVER_ROUTING
 
 C STRUCT FOR RESOURCE FLOOD ROUTING
       TYPE RESERVOIR_ROUTING
         !Connectivity
-        INTEGER :: NSRC, NBASE, NINF
+        INTEGER :: NSRC, NBASE, INP_FLAG, QTB_FLAG
         !Index of source
         INTEGER, ALLOCATABLE, DIMENSION(:) :: SRC, BASE
         !Characteristics
         INTEGER :: NVZ, NDC
-        REAL(8) :: DOOR_W, DOOR_H, DC_COEFF, QTB, Z0, ZMAX
+        REAL(8) :: DOOR_W, DC_COEFF, Z0, ZBT
         !V~Z relation, discharge control, inflow
-        REAL(8), ALLOCATABLE, DIMENSION(:,:) :: VZ, DC_CTR, QINF
-        !Name of inflow file
-        CHARACTER(100) :: INFLOWF
+        REAL(8), ALLOCATABLE, DIMENSION(:,:) :: VZ
+        REAL(8), ALLOCATABLE, DIMENSION(:) :: QINP, QTB
+        !Flood control
+        INTEGER :: CTRL_TYPE
+        REAL(8), ALLOCATABLE, DIMENSION(:,:) :: DC_CTR
 
       END TYPE RESERVOIR_ROUTING
 

@@ -20,7 +20,7 @@ C=================================================================
         ELSE IF(FRTYPE(I).EQ.2) THEN
 
             K = K + 1
-            CALL RESOURCE_FLOOD_ROUTING_CALC(I,K)
+            CALL RESERVOIR_FLOOD_ROUTING_CALC(I,K)
 
         ENDIF
 
@@ -41,20 +41,21 @@ C=================================================================
       USE CALC
       IMPLICIT NONE
       INTEGER :: INX, I, J, IDX
-      REAL(8) :: C0, C1, C2, C3
+      REAL(8) :: C0, C1, C2, C3, QI1, QI2
 
       QIN(INX,0) = QDC(INX,0)
+      QI1 = QIN(INX,0) + RIVER(IDX)%QINP(1)
 
       DO I = 1, NTIME
 
         !Calculate in flow (source)
-        QIN(INX,I) = 0.0D0
+        QI2 = 0.0D0
 
         IF(RIVER(IDX)%NSRC.GT.0) THEN
 
             DO J = 1, RIVER(IDX)%NSRC
 
-                QIN(INX,I) = QIN(INX,I) + QDC(RIVER(IDX)%SRC(J),I)
+                QI2 = QI2 + QDC(RIVER(IDX)%SRC(J),I)
 
             ENDDO
 
@@ -64,27 +65,28 @@ C=================================================================
 
             DO J = 1, RIVER(IDX)%NBASE
 
-                QIN(INX,I) = QIN(INX,I) + QF(RIVER(IDX)%BASE(J),I)
+                QI2 = QI2 + QF(RIVER(IDX)%BASE(J),I)
 
             ENDDO
 
         ENDIF
 
-        IF(RIVER(IDX)%NINF.GT.0) THEN
+        QIN(INX,I) = QI2
 
-            DO J = 1, RIVER(IDX)%NINF
+        IF(RIVER(IDX)%INP_FLAG.GT.0) THEN
 
-                QIN(INX,I) = QIN(INX,I) + RIVER(IDX)%QINF(J,I)
-
-            ENDDO
+            QI2 = QI2 + RIVER(IDX)%QINP(I)
 
         ENDIF
 
-        C0 = RIVER(IDX)%TX - 0.25D0*RIVER(IDX)%TX + 0.5D0*DT
-        C1 = (- 0.25D0*RIVER(IDX)%TX + 0.5D0*DT)/C0
-        C2 = (0.25D0*RIVER(IDX)%TX + 0.5D0*DT)/C0
-        C3 = (RIVER(IDX)%TX - 0.25D0*RIVER(IDX)%TX - 0.5D0*DT)/C0
-        QDC(INX,I) = C1*QIN(INX,I) + C2*QIN(INX,I-1) + C3*QDC(INX,I - 1)
+
+
+        C0 = 2.0D0*RIVER(IDX)%K*(1.0D0 - RIVER(IDX)%X) + DT
+        C1 = (DT - 2.0D0*RIVER(IDX)%K*RIVER(IDX)%X)/C0
+        C2 = (DT + 2.0D0*RIVER(IDX)%K*RIVER(IDX)%X)/C0
+        C3 = (2.0D0*RIVER(IDX)%K*(1.0D0 - RIVER(IDX)%X) - DT)/C0
+        QDC(INX,I) = C1*QI2 + C2*QI1 + C3*QDC(INX,I - 1)
+        QI1 = QI2
 
       ENDDO
 
@@ -94,18 +96,21 @@ C=================================================================
 C
 C=================================================================
 C=================================================================
-C SUBROUTINE RESOURCE FLOOD ROUTING
+C SUBROUTINE RESERVOIR FLOOD ROUTING
 C=================================================================
-      SUBROUTINE RESOURCE_FLOOD_ROUTING_CALC(INX,IDX)
+      SUBROUTINE RESERVOIR_FLOOD_ROUTING_CALC(INX,IDX)
       USE ROUTING
       USE OBSERVATION
       USE CALC
       IMPLICIT NONE
       INTEGER :: INX, I, J,IDX
-      REAL(8) :: QDCTMP, AREA, DH, DV, HEIGHT
+      REAL(8) :: AREA, DH, DV, HEIGHT
+      REAL(8) :: QI1, QI2, QO1, QO2
 
-      QIN(INX,0) = QDC(INX,0)
-
+      QIN(INX,0) = QDC(INX,0) + RESERVOIR(IDX)%QTB(1)
+      QI1 = QIN(INX,0)
+      QO1 = QDC(INX,0) + RESERVOIR(IDX)%QTB(1)
+      IF(RESERVOIR(IDX)%INP_FLAG.GT.0) QI1 = QIN(INX,0) + RESERVOIR(IDX)%QINP(1)
       ZH(IDX,0) = RESERVOIR(IDX)%Z0
       !Interpolate initial volume from height
       CALL INTERP(RESERVOIR(IDX)%VZ(1,1:RESERVOIR(IDX)%NVZ),
@@ -115,13 +120,13 @@ C=================================================================
       DO I = 1, NTIME
 
         !Calculate in flow (source)
-        QIN(INX,I) = 0.0D0
+        QI2 = 0.0D0
 
         IF(RESERVOIR(IDX)%NSRC.GT.0) THEN
 
             DO J = 1, RESERVOIR(IDX)%NSRC
 
-                QIN(INX,I) = QIN(INX,I) + QDC(RESERVOIR(IDX)%SRC(J),I)
+                QI2 = QI2 + QDC(RESERVOIR(IDX)%SRC(J),I)
 
             ENDDO
 
@@ -131,44 +136,48 @@ C=================================================================
 
             DO J = 1, RESERVOIR(IDX)%NBASE
 
-                QIN(INX,I) = QIN(INX,I) + QF(RESERVOIR(IDX)%BASE(J),I)
+                QI2 = QI2 + QF(RESERVOIR(IDX)%BASE(J),I)
 
             ENDDO
 
         ENDIF
 
-        IF(RESERVOIR(IDX)%NINF.GT.0) THEN
+        QIN(INX,I) = QI2
 
-            DO J = 1, RESERVOIR(IDX)%NINF
+        IF(RESERVOIR(IDX)%INP_FLAG.GT.0) THEN
 
-                QIN(INX,I) = QIN(INX,I) + RESERVOIR(IDX)%QINF(J,I)
-
-            ENDDO
+            QI2 = QI2 + RESERVOIR(IDX)%QINP(I)
 
         ENDIF
 
+        IF(RESERVOIR(IDX)%CTRL_TYPE.EQ.1) THEN
 
-        QDC(INX, I) = RESERVOIR(IDX)%QTB
-        CALL GET_DOOR_AREA(ZH(IDX,I - 1), IDX, AREA, HEIGHT)
+            CALL GET_DISCHARGE(ZH(IDX,I - 1), IDX, QDC(INX, I))
 
-        IF(AREA.GT.0.0D0)THEN
+        ELSE
 
-            DH = ZH(IDX,I - 1) - RESERVOIR(IDX)%ZMAX
-            IF(DH.GE.HEIGHT) THEN
+            CALL GET_DOOR_AREA(ZH(IDX,I - 1), IDX, AREA, HEIGHT)
 
-                QDCTMP = RESERVOIR(IDX)%DC_COEFF*AREA*DSQRT(9.81D0*2.0D0*(DH - 0.5*HEIGHT))
+            IF(AREA.GT.0.0D0)THEN
 
-            ELSE
+                DH = ZH(IDX,I - 1) - RESERVOIR(IDX)%ZBT
+                IF(DH.GE.HEIGHT) THEN
 
-                QDCTMP = 0.44D0*AREA*DSQRT(9.81*2.0*DH)
+                    QDC(INX, I) = RESERVOIR(IDX)%DC_COEFF*AREA*DSQRT(9.81D0*2.0D0*(DH - 0.5*HEIGHT))
+
+                ELSE
+
+                    QDC(INX, I) = 0.44D0*AREA*DSQRT(9.81*2.0*DH)
+
+                ENDIF
 
             ENDIF
 
-            QDC(INX, I) = QDC(INX, I) + QDCTMP
-
         ENDIF
-
-        DV = (0.5D0*((QIN(INX,I) + QIN(INX,I - 1)) - (QDC(INX, I) - QDC(INX, I - 1))))*DT
+        QO2 = QDC(INX, I) + RESERVOIR(IDX)%QTB(I)
+        DV = (0.5D0*((QI2 + QI1) - (QO2 + QO1)))*DT
+        QI1 = QI2
+        QO1 = QO2
 
         V(IDX,I) = V(IDX,I - 1) + DV
 
@@ -180,7 +189,7 @@ C=================================================================
       ENDDO
 
       RETURN
-      END SUBROUTINE RESOURCE_FLOOD_ROUTING_CALC
+      END SUBROUTINE RESERVOIR_FLOOD_ROUTING_CALC
 C=================================================================
 C
 C=================================================================
@@ -223,21 +232,17 @@ C=================================================================
 
             ENDIF
 
-            IF(RIVER(K)%NINF.GT.0) THEN
-
-                DO J = 1, RIVER(K)%NINF
-
-                    QDC(I,0) = QDC(I,0) + RIVER(K)%QINF(J,0)
-
-                ENDDO
-
-            ENDIF
+*            IF(RIVER(K)%INP_FLAG.GT.0) THEN
+*
+*                QDC(I,0) = QDC(I,0) + RIVER(K)%QINP(1)
+*
+*            ENDIF
 
         ELSE IF(FRTYPE(I).EQ.2) THEN
 
             L = L + 1
-
-            QDC(I,0) = RESERVOIR(L)%QTB
+            QDC(I,0) = 0.0D0
+*            QDC(I,0) = RESERVOIR(L)%QTB(1)
 
 *            IF(RESERVOIR(L)%NSRC.GT.0) THEN
 *
@@ -264,7 +269,7 @@ C=================================================================
 *
 *                DO J = 1, RESERVOIR(L)%NINF
 *
-*                    QDC(I,0) = QDC(I,0) + RESERVOIR(L)%QINF(J)
+*                    QDC(I,0) = QDC(I,0) + RESERVOIR(L)%QINP(J)
 *
 *                ENDDO
 *
@@ -320,6 +325,48 @@ C=================================================================
 
       RETURN
       END SUBROUTINE GET_DOOR_AREA
+C=================================================================
+C
+C=================================================================
+C=================================================================
+C SUBROUTINE INITIAL THE DISCHARGE
+C=================================================================
+      SUBROUTINE GET_DISCHARGE(ZI, I, Q)
+      USE ROUTING
+      USE CALC
+      IMPLICIT NONE
+      INTEGER :: I, J
+      REAL(8) :: ZI, Q
+
+      IF(ZI.LT.RESERVOIR(I)%DC_CTR(1,1)) THEN
+
+        Q = 0.0D0
+        RETURN
+
+      ELSE IF(ZI.GE.RESERVOIR(I)%DC_CTR(RESERVOIR(I)%NDC,1)) THEN
+
+        J = RESERVOIR(I)%NDC
+        Q = RESERVOIR(I)%DC_CTR(J,2)
+        RETURN
+
+      ELSE
+
+        DO J = 2,RESERVOIR(I)%NDC
+            IF(ZI.GE.RESERVOIR(I)%DC_CTR(J - 1,1).AND.
+     &         ZI.LT.RESERVOIR(I)%DC_CTR(J,1)) THEN
+
+                Q = RESERVOIR(I)%DC_CTR(J,2)
+                RETURN
+
+            ENDIF
+        ENDDO
+
+      ENDIF
+
+
+
+      RETURN
+      END SUBROUTINE GET_DISCHARGE
 C=================================================================
 C
 C=================================================================
