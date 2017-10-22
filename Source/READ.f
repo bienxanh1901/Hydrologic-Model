@@ -296,8 +296,8 @@ C=================================================================
 
         READ(FUNIT,*) CTMP
         READ(FUNIT,*) BASE(I)%AREA, NAMPRM(I)%U40, NAMPRM(I)%L20,
-     &                NAMPRM(I)%EP, NAMPRM(I)%OF0, NAMPRM(I)%BF0,
-     &                BASE(I)%NSTATS
+     &                NAMPRM(I)%EP, NAMPRM(I)%OF0, NAMPRM(I)%FQ0,
+     &                NAMPRM(I)%BF0, BASE(I)%NSTATS
 
         READ(FUNIT,*) NAMPRM(I)%UMAX, NAMPRM(I)%SLMAX, NAMPRM(I)%CQOF,
      &                NAMPRM(I)%CKIF, NAMPRM(I)%CK1, NAMPRM(I)%TOF,
