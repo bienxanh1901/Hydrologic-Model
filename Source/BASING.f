@@ -14,7 +14,7 @@ C STRUCT FOR NAM PARAMMETERS
 C STRUCT FOR BASING CHARACTERISTICS
       TYPE BASING_CHAR
         !Characteristics
-        REAL(8) :: AREA, LENGTH, SLOPE, CN, Q0
+        REAL(8) :: AREA, LENGTH, SLOPE, CN, Q0, IMPERVIOUS
         !number of hydrological stations
         INTEGER :: NSTATS
 

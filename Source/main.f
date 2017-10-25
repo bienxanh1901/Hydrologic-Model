@@ -8,7 +8,13 @@
 C Read input parameters
       WRITE(*,*) 'READ INPUT DATA!!!'
       CALL READ_INPUT
-
+C Loss model
+      WRITE(*,*) 'CALCULATING LOSS'
+      ALLOCATE(LOSS(1:NBASING, 1:NTIME))
+      ALLOCATE(EXCESS(1:NBASING, 1:NTIME))
+      LOSS = 0.0D0
+      EXCESS = 0.0D0
+      CALL SCS_CURVE_NUMBER
 C Flood calculation
       WRITE(*,*) 'CALCULATING FLOW!!!'
       ALLOCATE(QF(1:NBASING, 1:NTIME))

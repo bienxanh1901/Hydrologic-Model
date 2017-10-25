@@ -26,7 +26,7 @@ C=================================================================
       ! type of watershed calculation method
       CHARACTER(10) :: MODEL
       !in-out flow
-      REAL(8), ALLOCATABLE, DIMENSION(:,:) :: QF, QDC, QIN
+      REAL(8), ALLOCATABLE, DIMENSION(:,:) :: QF, QDC, QIN, LOSS, EXCESS
       !resource/power plan state
       REAL(8), ALLOCATABLE, DIMENSION(:,:) :: V, ZH
 

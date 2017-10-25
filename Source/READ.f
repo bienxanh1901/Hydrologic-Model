@@ -183,7 +183,7 @@ C CALCULATION AVERAGE PRECIPITATION
         CNT = 0
         STLOOP:DO J=1,NSTATS_TOTAL
             CNT = CNT + 1
-            XF(K,I) = XF(K,I) + HX(J)*XTMP(J,I)/1000.0D0
+            XF(K,I) = XF(K,I) + HX(J)*XTMP(J,I)
             IF(CNT.EQ.BASE(K)%NSTATS)THEN
                 K = K + 1
                 CNT = 0
@@ -272,7 +272,9 @@ C=================================================================
 
         READ(FUNIT,*) CTMP
         READ(FUNIT,*) BASE(I)%AREA, BASE(I)%LENGTH, BASE(I)%SLOPE,
-     &                BASE(I)%Q0, BASE(I)%CN,  BASE(I)%NSTATS
+     &                BASE(I)%Q0, BASE(I)%CN,  BASE%IMPERVIOUS, BASE(I)%NSTATS
+
+        BASE(I)%IMPERVIOUS = BASE(I)%IMPERVIOUS/100.0D0
 
       ENDDO
 

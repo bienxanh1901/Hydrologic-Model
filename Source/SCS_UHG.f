@@ -25,12 +25,12 @@ C=================================================================
       USE BASING
       USE CALC
       IMPLICIT NONE
-      INTEGER :: I, J, K, NUF, L
-      REAL(8) :: TP, TC, DELTAD, TL, UP
+      INTEGER :: I, J, K, NUF, L, M, N
+      REAL(8) :: TP, TC, DELTAD, TL, UP, DR
       REAL(8) :: TU1(1:NUHG), U1(1:NUHG)
       REAL(8), ALLOCATABLE, DIMENSION(:) :: TU, U
 
-
+      open(20,file='uhg.dat')
       DO I = 1, NBASING
 
 
@@ -38,14 +38,15 @@ C=================================================================
      &       (14104.0D0*BASE(I)%CN**0.70D0*BASE(I)%SLOPE**0.50D0)
 
         TL = 3.0D0*TC/5.0D0
-        DELTAD = 0.133D0*TC
-        TP = 0.50D0*DELTAD + TL
+        TL = 8.0D0
+        TP = 0.50D0*DT/3600.0D0 + TL
         UP = 2.080D0*BASE(I)%AREA/TP
 
         DO J = 1,NUHG
 
             TU1(J) = TP*UHG_DATA(1,J)
             U1(J) = UP*UHG_DATA(2,J)
+*            write(20,*),TU1(J), U1(J)
 
         ENDDO
 
@@ -60,16 +61,21 @@ C=================================================================
             IF(J.GT.1) TU(J) = TU(J - 1) + 1.0D0
 
             CALL INTERP(U1, TU1, TU(J), U(J), NUHG)
+*            write(20,*),TU(J), U(J)
 
         ENDDO
+        close(20)
+        DO N = 1,NTIME
 
-        DO J = 1,NTIME
-
-            QF(I,J) = BASE(I)%Q0
-            DO K = 1,J
-                L = J - K + 1
+            QF(I,N) = BASE(I)%Q0
+            DR = 0.0D0
+            DO M = 1,N
+                L = N - M + 1
                 IF(L.LE.NUF)THEN
-                    QF(I,J) = QF(I,J) + XF(I,K)*U(L)
+
+                    DR = DR + EXCESS(I,M)*U(L)
+                    QF(I,N) = QF(I,N) + EXCESS(I,M)*U(L)
+
                 ENDIF
             ENDDO
 

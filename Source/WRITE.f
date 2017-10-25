@@ -14,7 +14,7 @@ C=================================================================
       OPEN(UNIT = 10, FILE=TRIM(FILE_NAME), STATUS='REPLACE')
 
       DO J = 1,NTIME
-        WRITE(10,*) REAL(J - 1,8)*DT/3600.0D0,(XF(I,J)*1000.0D0,QF(I,J), I=1,NBASING)
+        WRITE(10,*) REAL(J - 1,8)*DT/3600.0D0,(XF(I,J), LOSS(I,J), EXCESS(I,J), QF(I,J), I=1,NBASING)
       ENDDO
 
       CLOSE(10)
@@ -37,12 +37,10 @@ C=================================================================
 
             K = K + 1
             WRITE(10,'(A,I1,A)') "POSITION_",J, " : RESERVOIR"
-            WRITE(10,*) (RESERVOIR(K)%QINP(I),I=1,NTIME)
-            WRITE(10,*) (QIN(J,I),I=1,NTIME)
-            WRITE(10,*) (RESERVOIR(K)%QTB(I),I=1,NTIME)
-            WRITE(10,*) (QDC(J,I),I=1,NTIME)
-            WRITE(10,*) (V(K,I)/1000000.0D0,I=1,NTIME)
-            WRITE(10,*) (ZH(K,I),I=1,NTIME)
+            DO I = 1, NTIME
+
+                WRITE(10,*) QIN(J,I),QDC(J,I),V(K,I)/1000000.0D0, ZH(K,I)
+            ENDDO
 
         ENDIF
 
