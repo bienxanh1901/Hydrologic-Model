@@ -25,7 +25,7 @@ C=================================================================
       USE BASING
       USE CALC
       IMPLICIT NONE
-      INTEGER :: I, J, K, NUF, L, M, N
+      INTEGER :: I, J, NUF, L, M, N
       REAL(8) :: TP, TC, DELTAD, TL, UP, DR
       REAL(8) :: TU1(1:NUHG), U1(1:NUHG)
       REAL(8), ALLOCATABLE, DIMENSION(:) :: TU, U
@@ -46,7 +46,6 @@ C=================================================================
 
             TU1(J) = TP*UHG_DATA(1,J)
             U1(J) = UP*UHG_DATA(2,J)
-*            write(20,*),TU1(J), U1(J)
 
         ENDDO
 
@@ -61,23 +60,22 @@ C=================================================================
             IF(J.GT.1) TU(J) = TU(J - 1) + 1.0D0
 
             CALL INTERP(U1, TU1, TU(J), U(J), NUHG)
-*            write(20,*),TU(J), U(J)
+*            write(20,*) TU(J), U(J)
 
         ENDDO
-        close(20)
+        CLOSE(20)
         DO N = 1,NTIME
 
-            QF(I,N) = BASE(I)%Q0
             DR = 0.0D0
             DO M = 1,N
                 L = N - M + 1
                 IF(L.LE.NUF)THEN
 
-                    DR = DR + EXCESS(I,M)*U(L)
-                    QF(I,N) = QF(I,N) + EXCESS(I,M)*U(L)
+                    DR = DR + EXCESS(I,M)*U(L)/10.0D0
 
                 ENDIF
             ENDDO
+             QF(I,N) = BASE(I)%Q0 + DR
 
         ENDDO
 

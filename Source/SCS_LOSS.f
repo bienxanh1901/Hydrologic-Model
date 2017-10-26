@@ -8,7 +8,7 @@ C=================================================================
       USE CALC
       IMPLICIT NONE
       INTEGER :: I, N
-      REAL(8) :: S, P, PE1, PE2, IA, IMP, F
+      REAL(8) :: S, P, PE1, PE2, IA, IMP
 
 
       DO I = 1, NBASING

@@ -372,7 +372,7 @@ C=================================================================
       READ(FUNIT,*) RESERVOIR(I)%NSRC, RESERVOIR(I)%NBASE,
      &              RESERVOIR(I)%INP_FLAG, RESERVOIR(I)%QTB_FLAG,
      &              RESERVOIR(I)%NVZ, RESERVOIR(I)%DOOR_W,
-     &              RESERVOIR(I)%DC_COEFF, RESERVOIR(I)%QTB,
+     &              RESERVOIR(I)%DC_COEFF,
      &              RESERVOIR(I)%Z0, RESERVOIR(I)%ZBT
 
       !Read source from other routing sources
