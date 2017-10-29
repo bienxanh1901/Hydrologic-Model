@@ -13,6 +13,8 @@
 				<Option type="1" />
 				<Option compiler="gfortran" />
 				<Compiler>
+					<Add option="-fcheck=bounds" />
+					<Add option="-fcheck=all" />
 					<Add option="-g" />
 					<Add option="-fbounds-check -ffixed-line-length-120" />
 				</Compiler>

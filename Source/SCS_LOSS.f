@@ -17,7 +17,8 @@ C=================================================================
         IA = 0.2D0*S
         P = 0.0D0
         PE1 = 0.0D0
-        DO N = 1,NTIME
+
+        DO N = 1,NTIME - 1
 
             IMP = XF(I,N)*BASE(I)%IMPERVIOUS
             P = P + XF(I,N) - IMP

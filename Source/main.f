@@ -10,14 +10,14 @@ C Read input parameters
       CALL READ_INPUT
 C Loss model
       WRITE(*,*) 'CALCULATING LOSS'
-      ALLOCATE(LOSS(1:NBASING, 1:NTIME))
-      ALLOCATE(EXCESS(1:NBASING, 1:NTIME))
+      ALLOCATE(LOSS(1:NBASING, 0:NTIME - 1))
+      ALLOCATE(EXCESS(1:NBASING, 0:NTIME - 1))
       LOSS = 0.0D0
       EXCESS = 0.0D0
       CALL SCS_CURVE_NUMBER
 C Flood calculation
       WRITE(*,*) 'CALCULATING FLOW!!!'
-      ALLOCATE(QF(1:NBASING, 1:NTIME))
+      ALLOCATE(QF(1:NBASING, 0:NTIME - 1))
       IF(MODEL.EQ.'UHG') THEN
 
         CALL UHG_CALC
@@ -31,17 +31,17 @@ C Flood calculation
 C Flood routing
       IF(ISROUTING) THEN
         WRITE(*,*) 'FLOOD ROUTING!!!'
-        ALLOCATE(QDC(1:NSTOTAL, 0:NTIME))
-        ALLOCATE(QIN(1:NSTOTAL, 0:NTIME))
+        ALLOCATE(QDC(1:NSTOTAL, 0:NTIME - 1))
+        ALLOCATE(QIN(1:NSTOTAL, 0:NTIME - 1))
         IF(NRS.GT.0) THEN
-            ALLOCATE(ZH(1:NRS, 0:NTIME))
-            ALLOCATE(V(1:NRS, 0:NTIME))
+            ALLOCATE(ZH(1:NRS, 0:NTIME - 1))
+            ALLOCATE(V(1:NRS, 0:NTIME - 1))
             ZH = 0.0D0
             V = 0.0D0
         ENDIF
         QDC = 0.0D0
         QIN = 0.0D0
-        CALL FLOOD_ROUTING_CALC
+        CALL ROUTING_CALC
 
       ENDIF
 C Write output

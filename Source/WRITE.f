@@ -9,44 +9,65 @@ C=================================================================
       IMPLICIT NONE
       CHARACTER(30) :: FILE_NAME
       INTEGER :: I,J, K, L
+      CHARACTER(2) :: IWR
 
-      FILE_NAME = 'OUTPUT_FLOOD_CALCULATION.DAT'
-      OPEN(UNIT = 10, FILE=TRIM(FILE_NAME), STATUS='REPLACE')
 
-      DO J = 1,NTIME
-        WRITE(10,*) REAL(J - 1,8)*DT/3600.0D0,(XF(I,J), LOSS(I,J), EXCESS(I,J), QF(I,J), I=1,NBASING)
+      DO I = 1,NBASING
+
+        WRITE(IWR,'(I2.2)') I
+        FILE_NAME = 'OUTPUT_BASING_'//IWR//'.DAT'
+        OPEN(UNIT = 10, FILE=TRIM(FILE_NAME), STATUS='REPLACE')
+
+        DO J = 0,NTIME - 1
+
+            WRITE(10,*) REAL(J,8)*DT/3600.0D0, XF(I,J), LOSS(I,J), EXCESS(I,J),
+     &                  BASE(I)%Q0, QF(I,J) - BASE(I)%Q0, QF(I,J)
+
+        ENDDO
+
+        CLOSE(10)
+
       ENDDO
 
-      CLOSE(10)
 
-      FILE_NAME = 'OUTPUT_FLOOD_ROUTING.DAT'
-      OPEN(UNIT = 10, FILE=TRIM(FILE_NAME), STATUS='REPLACE')
+
       K = 0
       L = 0
-      DO J = 1,NSTOTAL
+      DO I = 1,NSTOTAL
 
-        IF(FRTYPE(J).EQ.1) THEN
+        IF(FRTYPE(I).EQ.1) THEN
 
             L = L + 1
-            WRITE(10,'(A,I1,A)') "POSITION_",J, " : RIVER"
-            WRITE(10,*) (RIVER(L)%QINP(I),I=1,NTIME)
-            WRITE(10,*) (QIN(J,I),I=1,NTIME)
-            WRITE(10,*) (QDC(J,I),I=1,NTIME)
+            WRITE(IWR,'(I2.2)') L
+            FILE_NAME = 'OUTPUT_REACH_'//IWR//'.DAT'
+            OPEN(UNIT = 10, FILE=TRIM(FILE_NAME), STATUS='REPLACE')
+
+            DO J = 0,NTIME - 1
+
+                WRITE(10,*) REAL(J,8)*DT/3600.0D0, QIN(I,J),QDC(I,J)
+
+            ENDDO
+
+            CLOSE(10)
 
         ELSE
 
             K = K + 1
-            WRITE(10,'(A,I1,A)') "POSITION_",J, " : RESERVOIR"
-            DO I = 1, NTIME
+            WRITE(IWR,'(I2.2)') K
+            FILE_NAME = 'OUTPUT_RESERVOIR_'//IWR//'.DAT'
+            OPEN(UNIT = 10, FILE=TRIM(FILE_NAME), STATUS='REPLACE')
 
-                WRITE(10,*) QIN(J,I),QDC(J,I),V(K,I)/1000000.0D0, ZH(K,I)
+            DO J = 0, NTIME - 1
+
+                WRITE(10,*) QIN(I,J),QDC(I,J),V(K,J)/1000000.0D0, ZH(K,J)
             ENDDO
 
+            CLOSE(10)
         ENDIF
 
       ENDDO
 
-      CLOSE(10)
+
 
 
 

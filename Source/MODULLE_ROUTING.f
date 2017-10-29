@@ -4,7 +4,7 @@ C=================================================================
       MODULE ROUTING
       IMPLICIT NONE
 C STRUCT FOR RIVER FLOOD ROUTING
-      TYPE RIVER_ROUTING
+      TYPE RIVER_TYPE
         !Connectivity
         INTEGER :: NSRC, NBASE, INP_FLAG
         !Index of source
@@ -14,10 +14,10 @@ C STRUCT FOR RIVER FLOOD ROUTING
         !Inflow
         REAL(8), ALLOCATABLE, DIMENSION(:) ::  QINP
 
-      END TYPE RIVER_ROUTING
+      END TYPE RIVER_TYPE
 
 C STRUCT FOR RESOURCE FLOOD ROUTING
-      TYPE RESERVOIR_ROUTING
+      TYPE RESERVOIR_TYPE
         !Connectivity
         INTEGER :: NSRC, NBASE, INP_FLAG, QTB_FLAG
         !Index of source
@@ -32,7 +32,7 @@ C STRUCT FOR RESOURCE FLOOD ROUTING
         INTEGER :: CTRL_TYPE
         REAL(8), ALLOCATABLE, DIMENSION(:,:) :: DC_CTR
 
-      END TYPE RESERVOIR_ROUTING
+      END TYPE RESERVOIR_TYPE
 
       !Control variable
       LOGICAL :: ISROUTING
@@ -43,9 +43,9 @@ C STRUCT FOR RESOURCE FLOOD ROUTING
       !Type: 1-river, 2-resource
       INTEGER, ALLOCATABLE, DIMENSION(:) :: FRTYPE
       !River routing characteristics
-      TYPE(RIVER_ROUTING), ALLOCATABLE, DIMENSION(:) :: RIVER
+      TYPE(RIVER_TYPE), ALLOCATABLE, DIMENSION(:) :: RIVER
       !Resource routing characteristics
-      TYPE(RESERVOIR_ROUTING), ALLOCATABLE, DIMENSION(:) :: RESERVOIR
+      TYPE(RESERVOIR_TYPE), ALLOCATABLE, DIMENSION(:) :: RESERVOIR
 
       END MODULE ROUTING
 C=================================================================

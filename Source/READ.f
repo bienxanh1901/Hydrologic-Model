@@ -148,7 +148,7 @@ C CHECK AND OPEN INPUT FILE
       FUNIT = 10
       OPEN(UNIT=FUNIT, FILE=TRIM(FILE_NAME),STATUS='OLD')
 
-      ALLOCATE(XF(1:NBASING,1:NTIME))
+      ALLOCATE(XF(1:NBASING,0:NTIME - 1))
       NSTATS_TOTAL = 0
 
       DO I=1,NBASING
@@ -158,7 +158,7 @@ C CHECK AND OPEN INPUT FILE
       ENDDO
 
       ALLOCATE(HX(1:NSTATS_TOTAL))
-      ALLOCATE(XTMP(1:NSTATS_TOTAL, 1:NTIME))
+      ALLOCATE(XTMP(1:NSTATS_TOTAL, 0:NTIME - 1))
 
 C READ PRECIPITATION COEFFICIENT OF EACH STATION
       READ(FUNIT,*) CTMP
@@ -166,7 +166,7 @@ C READ PRECIPITATION COEFFICIENT OF EACH STATION
 
 C READ PRECIPITATION OF EACH STATION INTIME
       READ(FUNIT,*) CTMP
-      DO I = 1, NTIME
+      DO I = 0, NTIME - 1
 
         READ(FUNIT,*) (XTMP(J,I), J = 1, NSTATS_TOTAL)
 
@@ -178,7 +178,7 @@ C CALCULATION AVERAGE PRECIPITATION
 
       XF = 0.0D0
 
-      DO I=1,NTIME
+      DO I=1,NTIME - 1
         K = 1
         CNT = 0
         STLOOP:DO J=1,NSTATS_TOTAL
@@ -339,7 +339,7 @@ C=================================================================
 
       ENDIF
 
-      ALLOCATE(RIVER(I)%QINP(1:NTIME))
+      ALLOCATE(RIVER(I)%QINP(0:NTIME - 1))
       RIVER(I)%QINP = 0.0D0
 
       IF(RIVER(I)%INP_FLAG.EQ.1) THEN
@@ -349,7 +349,7 @@ C=================================================================
 
       ELSEIF(RIVER(I)%INP_FLAG.EQ.2) THEN
 
-        READ(FUNIT,*) (RIVER(I)%QINP(J), J = 1, NTIME)
+        READ(FUNIT,*) (RIVER(I)%QINP(J), J = 0, NTIME - 1)
 
       ENDIF
 
@@ -390,7 +390,7 @@ C=================================================================
       ENDIF
 
       !Read source from user input file
-      ALLOCATE(RESERVOIR(I)%QINP(1:NTIME))
+      ALLOCATE(RESERVOIR(I)%QINP(0:NTIME - 1))
       RESERVOIR(I)%QINP = 0.0D0
 
       IF(RESERVOIR(I)%INP_FLAG.EQ.1) THEN
@@ -401,12 +401,12 @@ C=================================================================
 
       ELSEIF(RESERVOIR(I)%INP_FLAG.EQ.2) THEN
 
-        READ(FUNIT,*) (RESERVOIR(I)%QINP(J), J = 1, NTIME)
+        READ(FUNIT,*) (RESERVOIR(I)%QINP(J), J = 0, NTIME - 1)
 
       ENDIF
 
       !Read turbin flux
-      ALLOCATE(RESERVOIR(I)%QTB(1:NTIME))
+      ALLOCATE(RESERVOIR(I)%QTB(0:NTIME - 1))
       IF(RESERVOIR(I)%QTB_FLAG.EQ.1) THEN
 
         QTMP = 0.0D0
@@ -415,7 +415,7 @@ C=================================================================
 
       ELSE IF(RESERVOIR(I)%QTB_FLAG.EQ.2) THEN
 
-        READ(FUNIT,*) (RESERVOIR(I)%QTB(J), J = 1,NTIME)
+        READ(FUNIT,*) (RESERVOIR(I)%QTB(J), J = 0,NTIME - 1)
 
       ENDIF
 

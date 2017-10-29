@@ -1,7 +1,7 @@
 C=================================================================
 C SUBROUTINE FLOOD ROUTING
 C=================================================================
-      SUBROUTINE FLOOD_ROUTING_CALC
+      SUBROUTINE ROUTING_CALC
       USE ROUTING
       IMPLICIT NONE
       INTEGER :: I,J,K
@@ -15,12 +15,12 @@ C=================================================================
 
             J = J + 1
 
-            CALL RIVER_FLOOD_ROUTING_CALC(I,J)
+            CALL RIVER_ROUTING(I,J)
 
         ELSE IF(FRTYPE(I).EQ.2) THEN
 
             K = K + 1
-            CALL RESERVOIR_FLOOD_ROUTING_CALC(I,K)
+            CALL RESERVOIR_ROUTING(I,K)
 
         ENDIF
 
@@ -28,14 +28,14 @@ C=================================================================
 
 
       RETURN
-      END SUBROUTINE FLOOD_ROUTING_CALC
+      END SUBROUTINE ROUTING_CALC
 C=================================================================
 C
 C=================================================================
 C=================================================================
 C SUBROUTINE RIVER FLOOD ROUTING
 C=================================================================
-      SUBROUTINE RIVER_FLOOD_ROUTING_CALC(INX,IDX)
+      SUBROUTINE RIVER_ROUTING(INX,IDX)
       USE ROUTING
       USE OBSERVATION
       USE CALC
@@ -46,7 +46,7 @@ C=================================================================
       QIN(INX,0) = QDC(INX,0)
       QI1 = QIN(INX,0) + RIVER(IDX)%QINP(1)
 
-      DO I = 1, NTIME
+      DO I = 1, NTIME - 1
 
         !Calculate in flow (source)
         QI2 = 0.0D0
@@ -91,33 +91,32 @@ C=================================================================
       ENDDO
 
       RETURN
-      END SUBROUTINE RIVER_FLOOD_ROUTING_CALC
+      END SUBROUTINE RIVER_ROUTING
 C=================================================================
 C
 C=================================================================
 C=================================================================
 C SUBROUTINE RESERVOIR FLOOD ROUTING
 C=================================================================
-      SUBROUTINE RESERVOIR_FLOOD_ROUTING_CALC(INX,IDX)
+      SUBROUTINE RESERVOIR_ROUTING(INX,IDX)
       USE ROUTING
       USE OBSERVATION
       USE CALC
       IMPLICIT NONE
-      INTEGER :: INX, I, J,IDX
+      INTEGER :: INX, I, J,IDX, K
       REAL(8) :: AREA, DH, DV, HEIGHT
-      REAL(8) :: QI1, QI2, QO1, QO2
+      REAL(8) :: QI1, QI2, QO1, QO2, ZI, VI
 
-      QIN(INX,0) = QDC(INX,0) + RESERVOIR(IDX)%QTB(1)
       QI1 = QIN(INX,0)
-      QO1 = QDC(INX,0) + RESERVOIR(IDX)%QTB(1)
-      IF(RESERVOIR(IDX)%INP_FLAG.GT.0) QI1 = QIN(INX,0) + RESERVOIR(IDX)%QINP(1)
+      QO1 = QDC(INX,0) + RESERVOIR(IDX)%QTB(0)
+      IF(RESERVOIR(IDX)%INP_FLAG.GT.0) QI1 = QI1 + RESERVOIR(IDX)%QINP(0)
       ZH(IDX,0) = RESERVOIR(IDX)%Z0
       !Interpolate initial volume from height
       CALL INTERP(RESERVOIR(IDX)%VZ(1,1:RESERVOIR(IDX)%NVZ),
      &            RESERVOIR(IDX)%VZ(2,1:RESERVOIR(IDX)%NVZ),
      &            ZH(IDX,0), V(IDX,0), RESERVOIR(IDX)%NVZ)
 
-      DO I = 1, NTIME
+      DO I = 1, NTIME - 1
 
         !Calculate in flow (source)
         QI2 = 0.0D0
@@ -150,46 +149,54 @@ C=================================================================
 
         ENDIF
 
-        IF(RESERVOIR(IDX)%CTRL_TYPE.EQ.1) THEN
+        ZI = ZH(IDX,I - 1)
+        VI = V(IDX,I - 1)
+        DO K =1, 3600
 
-            CALL GET_DISCHARGE(ZH(IDX,I - 1), IDX, QDC(INX, I))
+            IF(RESERVOIR(IDX)%CTRL_TYPE.EQ.1) THEN
 
-        ELSE
+                CALL GET_DISCHARGE(ZI, IDX, QDC(INX, I))
 
-            CALL GET_DOOR_AREA(ZH(IDX,I - 1), IDX, AREA, HEIGHT)
+            ELSE
 
-            IF(AREA.GT.0.0D0)THEN
+                CALL GET_DOOR_AREA(ZI, IDX, AREA, HEIGHT)
 
-                DH = ZH(IDX,I - 1) - RESERVOIR(IDX)%ZBT
-                IF(DH.GE.HEIGHT) THEN
+                IF(AREA.GT.0.0D0)THEN
 
-                    QDC(INX, I) = RESERVOIR(IDX)%DC_COEFF*AREA*DSQRT(9.81D0*2.0D0*(DH - 0.5*HEIGHT))
+                    DH = ZI - RESERVOIR(IDX)%ZBT
+                    IF(DH.GE.HEIGHT) THEN
 
-                ELSE
+                        QDC(INX, I) = RESERVOIR(IDX)%DC_COEFF*AREA*DSQRT(9.81D0*2.0D0*(DH - 0.5*HEIGHT))
 
-                    QDC(INX, I) = 0.44D0*AREA*DSQRT(9.81*2.0*DH)
+                    ELSE
+
+                        QDC(INX, I) = 0.44D0*AREA*DSQRT(9.81*2.0*DH)
+
+                    ENDIF
 
                 ENDIF
 
             ENDIF
+            QO2 = QDC(INX, I) + RESERVOIR(IDX)%QTB(I)
+            DV = (0.5D0*((QI2 + QI1) - (QO2 + QO1)))*DT/3600.0d0
 
-        ENDIF
-        QO2 = QDC(INX, I) + RESERVOIR(IDX)%QTB(I)
-        DV = (0.5D0*((QI2 + QI1) - (QO2 + QO1)))*DT
+            VI = VI + DV
+
+
+            CALL INTERP(RESERVOIR(IDX)%VZ(2,1:RESERVOIR(IDX)%NVZ),
+     &            RESERVOIR(IDX)%VZ(1,1:RESERVOIR(IDX)%NVZ),
+     &            VI, ZI, RESERVOIR(IDX)%NVZ)
+        ENDDO
+
+        V(IDX,I) = VI
+        ZH(IDX,I) = ZI
         QI1 = QI2
         QO1 = QO2
-
-        V(IDX,I) = V(IDX,I - 1) + DV
-
-
-        CALL INTERP(RESERVOIR(IDX)%VZ(2,1:RESERVOIR(IDX)%NVZ),
-     &            RESERVOIR(IDX)%VZ(1,1:RESERVOIR(IDX)%NVZ),
-     &            V(IDX,I), ZH(IDX,I), RESERVOIR(IDX)%NVZ)
 
       ENDDO
 
       RETURN
-      END SUBROUTINE RESERVOIR_FLOOD_ROUTING_CALC
+      END SUBROUTINE RESERVOIR_ROUTING
 C=================================================================
 C
 C=================================================================
@@ -242,6 +249,15 @@ C=================================================================
 
             L = L + 1
             QDC(I,0) = 0.0D0
+            IF(RESERVOIR(L)%NBASE.GT.0) THEN
+
+                DO J = 1, RESERVOIR(L)%NBASE
+
+                    QIN(I,0) = QIN(I,0) + QF(RESERVOIR(L)%BASE(J),0)
+
+                ENDDO
+
+            ENDIF
 *            QDC(I,0) = RESERVOIR(L)%QTB(1)
 
 *            IF(RESERVOIR(L)%NSRC.GT.0) THEN
@@ -351,16 +367,18 @@ C=================================================================
 
       ELSE
 
-        DO J = 2,RESERVOIR(I)%NDC
-            IF(ZI.GE.RESERVOIR(I)%DC_CTR(J - 1,1).AND.
-     &         ZI.LT.RESERVOIR(I)%DC_CTR(J,1)) THEN
-
-                Q = RESERVOIR(I)%DC_CTR(J,2)
-                RETURN
-
-            ENDIF
-        ENDDO
-
+*        DO J = 2,RESERVOIR(I)%NDC
+*            IF(ZI.GE.RESERVOIR(I)%DC_CTR(J - 1,1).AND.
+*     &         ZI.LT.RESERVOIR(I)%DC_CTR(J,1)) THEN
+*
+*                Q = RESERVOIR(I)%DC_CTR(J,2)
+*                RETURN
+*
+*            ENDIF
+*        ENDDO
+            CALL INTERP(RESERVOIR(I)%DC_CTR(1:RESERVOIR(I)%NDC,2),
+     &            RESERVOIR(I)%DC_CTR(1:RESERVOIR(I)%NDC,1),
+     &            ZI, Q, RESERVOIR(I)%NDC)
       ENDIF
 
 
