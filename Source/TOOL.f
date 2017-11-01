@@ -33,3 +33,32 @@ C=================================================================
 C=================================================================
 C
 C=================================================================
+C=================================================================
+C SUBROUTINE SET DATE AND TIME OF EACH TIME STEP
+C=================================================================
+      SUBROUTINE SET_DATE_TIME(UHG_TYPE)
+      USE CONSTANTS
+      IMPLICIT NONE
+      INTEGER :: N
+      REAL(8) :: T
+
+      ALLOCATE(CURRENT_DATE(0:NTIME - 1))
+      ALLOCATE(CURRENT_TIME(0:NTIME - 1))
+
+      CURRENT_DATE(0) = TRIM(START_DATE)
+      CURRENT_TIME(0) = TRIM(START_TIME)
+      CURRENT_DATE(NTIME - 1) = TRIM(END_DATE)
+      CURRENT_DATE(NTIME - 1) = TRIM(END_TIME)
+
+      T = 0
+
+      DO N = 1, NTIME - 2
+
+        T = T + DT
+
+      ENDDO
+      RETURN
+      END SUBROUTINE GET_UHG
+C=================================================================
+C
+C=================================================================

@@ -36,39 +36,13 @@
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
-		<Unit filename="BASING.f">
-			<Option weight="0" />
-		</Unit>
-		<Unit filename="FLOOD_ROUTING.f">
-			<Option weight="1" />
-		</Unit>
-		<Unit filename="MODULE_OBS.f">
-			<Option weight="0" />
-		</Unit>
+		<Unit filename="CONSTANTS.f" />
+		<Unit filename="MODULE_PARAM.f" />
 		<Unit filename="MODULE_UHG.f">
 			<Option weight="0" />
 		</Unit>
-		<Unit filename="MODULLE_ROUTING.f">
-			<Option weight="0" />
-		</Unit>
-		<Unit filename="NAM.f">
-			<Option weight="1" />
-		</Unit>
-		<Unit filename="READ.f">
-			<Option weight="1" />
-		</Unit>
-		<Unit filename="SCS_LOSS.f">
-			<Option weight="1" />
-		</Unit>
-		<Unit filename="SCS_UHG.f">
-			<Option weight="1" />
-		</Unit>
-		<Unit filename="TOOL.f">
-			<Option weight="0" />
-		</Unit>
-		<Unit filename="WRITE.f">
-			<Option weight="1" />
-		</Unit>
+		<Unit filename="READ.f" />
+		<Unit filename="TOOL.f" />
 		<Unit filename="main.f">
 			<Option weight="1" />
 		</Unit>

@@ -4,8 +4,10 @@ C=================================================================
       MODULE UNIT_HYDROGRAPH
       IMPLICIT NONE
 
-C     Variable definition
-      INTEGER :: UHG_TYPE
+
+C Parameter definition
+      INTEGER :: SCS_UHG_TYPE = 1
+C Variable definition
       INTEGER :: NUHG
       REAL(8), ALLOCATABLE, DIMENSION(:,:) :: UHG_DATA
 
@@ -14,12 +16,13 @@ C     Subroutine definition
 C=================================================================
 C Subroutine get unit hydrograph
 C=================================================================
-      SUBROUTINE GET_UHG
+      SUBROUTINE GET_UHG(UHG_TYPE)
       USE UNIT_HYDROGRAPH
       IMPLICIT NONE
+      INTEGER, INTENT(IN) :: UHG_TYPE
 
       SELECT CASE (UHG_TYPE)
-        CASE(1)
+        CASE(SCS_UHG_TYPE)
             CALL GET_SCS_UHG
         CASE DEFAULT
             WRITE(*,*) 'Error: Invalid type of unit hydrograph!!!'
