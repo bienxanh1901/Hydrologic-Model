@@ -5,8 +5,7 @@ C=================================================================
       IMPLICIT NONE
 
 
-C Parameter definition
-      INTEGER :: SCS_UHG_TYPE = 1
+
 C Variable definition
       INTEGER :: NUHG
       REAL(8), ALLOCATABLE, DIMENSION(:,:) :: UHG_DATA
@@ -17,6 +16,7 @@ C=================================================================
 C Subroutine get unit hydrograph
 C=================================================================
       SUBROUTINE GET_UHG(UHG_TYPE)
+      USE CONSTANTS
       USE UNIT_HYDROGRAPH
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: UHG_TYPE

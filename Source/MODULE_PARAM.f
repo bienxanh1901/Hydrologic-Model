@@ -37,7 +37,7 @@ C STRUCT FOR REACH
 
         CHARACTER(100) :: NAME
         !Routing method
-        INTEGER :: REACH_METHOD
+        INTEGER :: ROUTING_METHOD
         !Parameter for Muskingum method
         REAL(8) :: K, X
         !Output
@@ -52,7 +52,7 @@ C STRUCT FOR REACH
 
         CHARACTER(100) :: NAME
         !Routing method
-        INTEGER :: RESERVOIR_METHOD
+        INTEGER :: ROUTING_METHOD
         !Parameter for reservoir structure method
         REAL(8) :: Z0, DOORW, DC_COEFF, ZBT
         !Storage-elevation relation
@@ -60,8 +60,8 @@ C STRUCT FOR REACH
         REAL(8), ALLOCATABLE, DIMENSION(:,:) :: SE_CURVE
         !Discharge control
         INTEGER :: DC_CTRL, NDE
-        REAL(8), ALLOCATABLE, DIMENSION(:,:) :: DE_CURVE
-        REAL(8), ALLOCATABLE, DIMENSION(:,:) :: HE_CURVE
+        REAL(8), ALLOCATABLE, DIMENSION(:,:) :: DCE_CURVE
+        REAL(8), ALLOCATABLE, DIMENSION(:,:) :: ORE_CURVE
         INTEGER, ALLOCATABLE, DIMENSION(:) :: NDOOR_OPEN
         !Output
         REAL(8), ALLOCATABLE, DIMENSION(:) :: INFLOW, OUTFLOW, V, Z
@@ -73,10 +73,10 @@ C STRUCT FOR REACH
 C STRUCT FOR SOURCE
       TYPE SOURCE_TYPE
 
+        CHARACTER(100) :: NAME
         !Source type
         INTEGER :: SRC_TYPE
         !Data
-        REAL(8) :: SRC_CONST
         REAL(8), ALLOCATABLE, DIMENSION(:) :: SRC_DATA
         !Downstream
         CHARACTER(100) :: DOWNSTREAM
