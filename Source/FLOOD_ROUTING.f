@@ -40,11 +40,12 @@ C=================================================================
       USE OBSERVATION
       USE CALC
       IMPLICIT NONE
-      INTEGER :: INX, I, J, IDX
-      REAL(8) :: C0, C1, C2, C3, QI1, QI2
+      INTEGER :: INX, I, J, IDX, K
+      REAL(8) :: C0, C1, C2, C3, QI1, QI2, QO1, QO2
+      REAL(8) :: DT1
 
       QIN(INX,0) = QDC(INX,0)
-      QI1 = QIN(INX,0) + RIVER(IDX)%QINP(1)
+      QI1 = QIN(INX,0)
 
       DO I = 1, NTIME - 1
 
@@ -71,7 +72,6 @@ C=================================================================
 
         ENDIF
 
-        QIN(INX,I) = QI2
 
         IF(RIVER(IDX)%INP_FLAG.GT.0) THEN
 
@@ -79,14 +79,21 @@ C=================================================================
 
         ENDIF
 
+        QIN(INX,I) = QI2
 
+        DO K =1, 3600
+            DT1 = DT/3600.0D0
+            C0 = 2.0D0*RIVER(IDX)%K*(1.0D0 - RIVER(IDX)%X) + DT1
+            C1 = (DT1 - 2.0D0*RIVER(IDX)%K*RIVER(IDX)%X)/C0
+            C2 = (DT1 + 2.0D0*RIVER(IDX)%K*RIVER(IDX)%X)/C0
+            C3 = (2.0D0*RIVER(IDX)%K*(1.0D0 - RIVER(IDX)%X) - DT1)/C0
+            QDC(INX,I) = C1*QI2 + C2*QI1 + C3*QDC(INX,I - 1)
+            QO2 = QDC(INX,I)
 
-        C0 = 2.0D0*RIVER(IDX)%K*(1.0D0 - RIVER(IDX)%X) + DT
-        C1 = (DT - 2.0D0*RIVER(IDX)%K*RIVER(IDX)%X)/C0
-        C2 = (DT + 2.0D0*RIVER(IDX)%K*RIVER(IDX)%X)/C0
-        C3 = (2.0D0*RIVER(IDX)%K*(1.0D0 - RIVER(IDX)%X) - DT)/C0
-        QDC(INX,I) = C1*QI2 + C2*QI1 + C3*QDC(INX,I - 1)
+        ENDDO
+
         QI1 = QI2
+        QO1 = QO2
 
       ENDDO
 
@@ -109,7 +116,6 @@ C=================================================================
 
       QI1 = QIN(INX,0)
       QO1 = QDC(INX,0) + RESERVOIR(IDX)%QTB(0)
-      IF(RESERVOIR(IDX)%INP_FLAG.GT.0) QI1 = QI1 + RESERVOIR(IDX)%QINP(0)
       ZH(IDX,0) = RESERVOIR(IDX)%Z0
       !Interpolate initial volume from height
       CALL INTERP(RESERVOIR(IDX)%VZ(1,1:RESERVOIR(IDX)%NVZ),
@@ -141,13 +147,13 @@ C=================================================================
 
         ENDIF
 
-        QIN(INX,I) = QI2
-
         IF(RESERVOIR(IDX)%INP_FLAG.GT.0) THEN
 
             QI2 = QI2 + RESERVOIR(IDX)%QINP(I)
 
         ENDIF
+
+        QIN(INX,I) = QI2
 
         ZI = ZH(IDX,I - 1)
         VI = V(IDX,I - 1)
@@ -177,7 +183,8 @@ C=================================================================
                 ENDIF
 
             ENDIF
-            QO2 = QDC(INX, I) + RESERVOIR(IDX)%QTB(I)
+            QDC(INX, I) = QDC(INX, I) + RESERVOIR(IDX)%QTB(I)
+            QO2 = QDC(INX, I)
             DV = (0.5D0*((QI2 + QI1) - (QO2 + QO1)))*DT/3600.0d0
 
             VI = VI + DV
@@ -239,11 +246,11 @@ C=================================================================
 
             ENDIF
 
-*            IF(RIVER(K)%INP_FLAG.GT.0) THEN
-*
-*                QDC(I,0) = QDC(I,0) + RIVER(K)%QINP(1)
-*
-*            ENDIF
+            IF(RIVER(K)%INP_FLAG.GT.0) THEN
+
+                QDC(I,0) = QDC(I,0) + RIVER(K)%QINP(0)
+
+            ENDIF
 
         ELSE IF(FRTYPE(I).EQ.2) THEN
 
@@ -260,36 +267,21 @@ C=================================================================
             ENDIF
 *            QDC(I,0) = RESERVOIR(L)%QTB(1)
 
-*            IF(RESERVOIR(L)%NSRC.GT.0) THEN
-*
-*                DO J = 1, RESERVOIR(L)%NSRC
-*
-*                    QDC(I,0) = QDC(I,0) + QDC(RESERVOIR(L)%SRC(J), 0)
-*
-*                ENDDO
-*
-*            ENDIF
-*
-*            IF(RESERVOIR(L)%NBASE.GT.0) THEN
-*
-*                DO J = 1, RESERVOIR(L)%NBASE
-*
-*                    QDC(I,0) = QDC(I,0) + BASE(RESERVOIR(L)%BASE(J))%Q0
-*
-*                ENDDO
-*
-*            ENDIF
-*
-*
-*            IF(RESERVOIR(L)%NINF.GT.0) THEN
-*
-*                DO J = 1, RESERVOIR(L)%NINF
-*
-*                    QDC(I,0) = QDC(I,0) + RESERVOIR(L)%QINP(J)
-*
-*                ENDDO
-*
-*            ENDIF
+            IF(RESERVOIR(L)%NSRC.GT.0) THEN
+
+                DO J = 1, RESERVOIR(L)%NSRC
+
+                    QIN(I,0) = QIN(I,0) + QDC(RESERVOIR(L)%SRC(J), 0)
+
+                ENDDO
+
+            ENDIF
+
+            IF(RESERVOIR(L)%INP_FLAG.GT.0) THEN
+
+                QIN(I,0) = QIN(I,0) + RESERVOIR(L)%QINP(0)
+
+            ENDIF
 
         ENDIF
 
