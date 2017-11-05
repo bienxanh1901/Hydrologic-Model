@@ -1,52 +1,45 @@
       PROGRAM FLOOD_MODELING
-      USE OBSERVATION
-      USE CALC
-      USE BASING
-      USE ROUTING
+      USE PARAM
+      USE CONSTANTS
       IMPLICIT NONE
+      REAL(8) :: T
+      INTEGER :: I
 
 C Read input parameters
       WRITE(*,*) 'READ INPUT DATA!!!'
       CALL READ_INPUT
+      CALL BASING_CONNECTION
+
+C Initial variables at start time
+C Start Main loop
+      T = 0.0D0
+      I = 0
+      MAIN_LOOP:DO
+
+        T = T + DT/3600.0D0
+        I = I + 1
+
 C Loss model
-      WRITE(*,*) 'CALCULATING LOSS'
-      ALLOCATE(LOSS(1:NBASING, 0:NTIME - 1))
-      ALLOCATE(EXCESS(1:NBASING, 0:NTIME - 1))
-      LOSS = 0.0D0
-      EXCESS = 0.0D0
-      CALL SCS_CURVE_NUMBER
+
+        CALL LOSS_CALCULATION(I)
 C Flood calculation
-      WRITE(*,*) 'CALCULATING FLOW!!!'
-      ALLOCATE(QF(1:NBASING, 0:NTIME - 1))
-      IF(MODEL.EQ.'UHG') THEN
 
-        CALL UHG_CALC
-
-      ELSE IF (MODEL.EQ.'NAM') THEN
-
-        CALL NAM_MODEL_CALC
-
-      ENDIF
+        CALL TRANSFORM_ CALCULATION(I)
 
 C Flood routing
-      IF(ISROUTING) THEN
-        WRITE(*,*) 'FLOOD ROUTING!!!'
-        ALLOCATE(QDC(1:NSTOTAL, 0:NTIME - 1))
-        ALLOCATE(QIN(1:NSTOTAL, 0:NTIME - 1))
-        IF(NRS.GT.0) THEN
-            ALLOCATE(ZH(1:NRS, 0:NTIME - 1))
-            ALLOCATE(V(1:NRS, 0:NTIME - 1))
-            ZH = 0.0D0
-            V = 0.0D0
-        ENDIF
-        QDC = 0.0D0
-        QIN = 0.0D0
-        CALL ROUTING_CALC
 
-      ENDIF
+        CALL ROUTING_CALCULATION(I)
+
 C Write output
-      WRITE(*,*) 'WRITE OUTPUT DATA!!!'
-      CALL WRITE_OUTPUT
 
+        CALL WRITE_OUTPUT(T, I)
+
+        !Exit main loop
+        IF(I.EQ.NTIME - 1) EXIT MAIN_LOOP
+
+      ENDDO MAIN_LOOP
+
+
+      WRITE(*,*) 'END OF CALCULATION!!!'
       END PROGRAM FLOOD_MODELING
 

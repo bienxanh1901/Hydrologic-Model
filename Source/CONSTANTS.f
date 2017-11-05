@@ -25,8 +25,8 @@ C=================================================================
       !Time interval
       REAL(8) :: DT
       !Date and time table
-      CHARACTER(9), ALLOCATABLE, DIMENSION(:) :: CURRENT_DATE
-      CHARACTER(5), ALLOCATABLE, DIMENSION(:) :: CURRENT_TIME
+      CHARACTER(8), ALLOCATABLE, DIMENSION(:) :: CDATE
+      CHARACTER(5), ALLOCATABLE, DIMENSION(:) :: CTIME
 
       END MODULE CONSTANTS
 C=================================================================

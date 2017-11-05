@@ -36,6 +36,7 @@
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
+		<Unit filename="BASING_CONNECTION.f" />
 		<Unit filename="CONSTANTS.f" />
 		<Unit filename="MODULE_PARAM.f" />
 		<Unit filename="MODULE_UHG.f">

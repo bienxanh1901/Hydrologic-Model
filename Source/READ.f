@@ -8,21 +8,14 @@ C=================================================================
       IMPLICIT NONE
       INTEGER :: FUNIT
       CHARACTER(30) :: F1
-      LOGICAL :: EX
       NAMELIST /BASING/ NSUBBASING, NSOURCE, NREACH, NRESERVOIR,
      &                  NTIME, DT, START_DATE, START_TIME, END_DATE, END_TIME
 
 
 C Open input file
-      F1 = 'Input.dat'
-      INQUIRE(FILE=TRIM(F1), EXIST=EX)
-      IF(.NOT.EX) THEN
-        WRITE(*,*) "ERROR!!!"
-        WRITE(*,'(3A)')"File ", TRIM(F1), " does not exist in the current directory!!! "
-        STOP
-      ENDIF
-
       FUNIT = 10
+      F1 = 'Input.dat'
+      CALL CHK_FILE(TRIM(F1))
       OPEN(UNIT=FUNIT, FILE=TRIM(F1),STATUS='OLD')
 
 C Read name list BASING
@@ -38,6 +31,19 @@ C Read name list BASING
       END_TIME = ""
       READ(FUNIT,BASING,ERR=99)
 
+      IF(TRIM(START_DATE).EQ.'') THEN
+
+        WRITE(*,*) 'Please set start date with format 'DDMMYYYY' and restart '
+        STOP
+
+      ENDIF
+
+      IF(TRIM(START_TIME).EQ.'') THEN
+
+        WRITE(*,*) 'Please set start date with format 'HH:MM' and restart '
+        STOP
+
+      ENDIF
 C Read sub basing
       IF(NSUBBASING.GT.0) CALL READ_SUB_BASING(FUNIT)
 
@@ -75,14 +81,15 @@ C=================================================================
       CHARACTER(100) :: NAME, DOWNSTREAM, PRECIPF
       CHARACTER(3) :: ICH
 
-      NAMELIST /SBG1/ NAME, DOWNSTREAM, PRECIPF, BF_TYPE, LOSS_METHOD, TF_METHOD
-      NAMELIST /SBG2/ AREA, CN, IMPERVIOUS, TLAG, BF_CONST, BF_MONTHLY
+      NAMELIST /SBG1/ NAME, DOWNSTREAM, PRECIPF, LOSS_METHOD, TF_METHOD, AREA, CN, IMPERVIOUS, TLAG
+      NAMELIST /SBG2/ BF_TYPE, BF_CONST, BF_MONTHLY
 
       ALLOCATER(SUBBASING(1:NSUBBASING))
       FU = 10
 
       DO I = 1, NSUBBASING
 
+        !Initial values
         WRITE(ICH,'(I3.3)') I
         NAME = "SUB_BASING_"//ICH
         DOWNSTREAM = ""
@@ -97,9 +104,11 @@ C=================================================================
         BF_CONST = 0.0D0
         BF_MONTHLY = 0.0D0
 
+        !Read sub-basing  ith
         READ(FUNIT,SBG1)
         READ(FUNIT,SBG2)
 
+        !Stop if the file contains precipitation value is not set.
         IF(TRIM(PRECIPF).EQ."") THEN
 
             WRITE(*,*) "Please set the file name for precipitation data PRECIPF!!"
@@ -107,6 +116,7 @@ C=================================================================
 
         ENDIF
 
+        !Basing characteristic
         SUBBASING(I)%NAME = TRIM(NAME)
         SUBBASING(I)%DOWNSTREAM = TRIM(DOWNSTREAM)
         SUBBASING(I)%BF_TYPE = BF_TYPE
@@ -114,20 +124,40 @@ C=================================================================
         IF(BF_TYPE.EQ.CONSTANT_DATA) SUBBASING(I)%BF_CONST = BF_CONST
         ELSE IF(BF_TYPE.EQ.MONTHLY_DATA) SUBBASING(I)%BF_MONTHLY = BF_MONTHLY
 
+        !Loss method
         SUBBASING(I)%LOSS_METHOD = LOSS_METHOD
         IF(LOSS_METHOD.EQ.SCS_CURVE_LOSS) SUBBASING(I)%IMPERVIOUS = IMPERVIOUS
 
+        !Transform method
         SUBBASING(I)%TF_METHOD = TF_METHOD
         SUBBASING(I)%CN = CN
         SUBBASING(I)%TLAG = TLAG
+        IF(SUBBASING(I)%TLAG.GE.1) CALL GET_UHG(SUBBASING(I))
 
+        !Read precipitation
         ALLOCATE(SUBBASING(I)%PRECIP(0:NTIME - 1))
+
+        CALL CHK_FILE(TRIM(PRECIPF))
         OPEN(UNIT=FU, FILE=TRIM(PRECIPF), STATUS='OLD')
 
         DO J = 0, NTIME - 1
             READ(FU,*) SUBBASING(I)%PRECIP(J)
         ENDDO
+
         CLOSE(FU)
+
+        !Allocate variables
+        ALLOCATE(SUBBASING(I)%LOSS(0:NTIME - 1))
+        ALLOCATE(SUBBASING(I)%EXCESS(0:NTIME - 1))
+        ALLOCATE(SUBBASING(I)%BASE_FLOW(0:NTIME - 1))
+        ALLOCATE(SUBBASING(I)%DIRECT_FLOW(0:NTIME - 1))
+        ALLOCATE(SUBBASING(I)%TOTAL_FLOW(0:NTIME - 1))
+        SUBBASING(I)%LOSS = 0.0D0
+        SUBBASING(I)%EXCESS = 0.0D0
+        SUBBASING(I)%BASE_FLOW = 0.0D0
+        SUBBASING(I)%DIRECT_FLOW = 0.0D0
+        SUBBASING(I)%TOTAL_FLOW = 0.0D0
+
 
       ENDDO
 
@@ -157,6 +187,7 @@ C=================================================================
 
       DO I = 1, NSOURCE
 
+        !Initial values
         WRITE(ICH,'(I3.3)') I
         NAME = "SOURCE_"//ICH
         DOWNSTREAM = ""
@@ -164,6 +195,7 @@ C=================================================================
         SRC_TYPE = CONSTANT_DATA
         SRC_CONST = 0.0D0
 
+        !Read source ith
         READ(FUNIT,SRCI)
 
         IF(SRC_TYPE.EQ.TIME_SERIES_DATA.AND.TRIM(SRCF).EQ."") THEN
@@ -177,6 +209,8 @@ C=================================================================
         SOURCE(I)%DOWNSTREAM = TRIM(DOWNSTREAM)
         SOURCE(I)%SRC_TYPE = SRC_TYPE
 
+
+        !Source data
         ALLOCATE(SOURCE(I)%SRC_DATA(0:NTIME - 1))
         IF(SRC_TYPE.EQ.CONSTANT_DATA) THEN
 
@@ -184,6 +218,7 @@ C=================================================================
 
         ELSE IF(SRC_TYPE.EQ.TIME_SERIES_DATA) THEN
 
+            CALL CHK_FILE(TRIM(SRCF))
             OPEN(UNIT=FU, FILE=TRIM(SRCF), STATUS='OLD')
             DO J = 0, NTIME - 1
                 READ(FU,*) SOURCE(I)%SRC_DATA(J)
@@ -219,6 +254,7 @@ C=================================================================
 
       DO I = 1, NREACH
 
+        !Initial values
         WRITE(ICH,'(I3.3)') I
         NAME = "REACH_"//ICH
         DOWNSTREAM = ""
@@ -229,8 +265,18 @@ C=================================================================
         REACH(I)%NAME = TRIM(NAME)
         REACH(I)%DOWNSTREAM = TRIM(DOWNSTREAM)
         REACH(I)%ROUTING_METHOD = ROUTING_METHOD
-        REACH(I)%K = K
-        REACH(I)%X = X
+        IF(ROUTING_METHOD.EQ.MUSKINGUM_METHOD) THEN
+
+            REACH(I)%K = K
+            REACH(I)%X = X
+
+        ENDIF
+
+        !Allocate variable
+        ALLOCATE(REACH(I)%INFLOW(0:NTIME - 1))
+        ALLOCATE(REACH(I)%OUTFLOW(0:NTIME - 1))
+        REACH(I)%INFLOW = 0.0D0
+        REACH(I)%OUTFLOW = 0.0D0
 
       ENDDO
 
@@ -262,6 +308,7 @@ C=================================================================
 
       DO I = 1, NRESERVOIR
 
+        !Initial values
         WRITE(ICH,'(I3.3)') I
         NAME = "RESERVOIR_"//ICH
         DOWNSTREAM = ""
@@ -286,7 +333,7 @@ C=================================================================
 
         ENDIF
 
-        IF(SRC_TYPE.EQ.TIME_SERIES_DATA.AND.TRIM(SRCF).EQ."") THEN
+        IF(TRIM(DCFN).EQ."") THEN
 
             WRITE(*,*) "Please set the file name for discharge control data DCFN!!"
             STOP
@@ -302,6 +349,8 @@ C=================================================================
         RESERVOIR(I)%DC_COEFF = DC_COEFF
         RESERVOIR(I)%ZBT = ZBT
 
+        !Read storage - elevation curve
+        CALL CHK_FILE(TRIM(SEFN))
         OPEN(UNIT=FU, FILE=TRIM(SEFN), STATUS='OLD')
 
         READ(FU,*) RESERVOIR(I)%NSE
@@ -313,10 +362,13 @@ C=================================================================
             READ(FU,*) RESERVOIR(I)%SE_CURVE(J)
 
         ENDDO
+
         CLOSE(FU)
 
+        !Read discharge - elevation curve
         RESERVOIR(I)%DC_CTRL = DC_CTRL
 
+        CALL CHK_FILE(TRIM(DCFN))
         OPEN(UNIT=FU, FILE=TRIM(DCFN), STATUS='OLD')
 
         READ(FU,*) RESERVOIR(I)%NDE
@@ -345,6 +397,16 @@ C=================================================================
         ENDIF
 
         CLOSE(FU)
+
+        !Allocate variable
+        ALLOCATE(RESERVOIR(I)%INFLOW(0:NTIME - 1))
+        ALLOCATE(RESERVOIR(I)%OUTFLOW(0:NTIME - 1))
+        ALLOCATE(RESERVOIR(I)%STORAGE(0:NTIME - 1))
+        ALLOCATE(RESERVOIR(I)%STORAGE(0:NTIME - 1))
+        RESERVOIR(I)%INFLOW = 0.0D0
+        RESERVOIR(I)%OUTFLOW = 0.0D0
+        RESERVOIR(I)%STORAGE = 0.0D0
+        RESERVOIR(I)%ELEVATION = 0.0D0
 
       ENDDO
 

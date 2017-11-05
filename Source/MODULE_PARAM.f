@@ -20,9 +20,12 @@ C STRUCT FOR BASING CHARACTERISTICS
         !Base flow
         INTEGER :: BF_TYPE
         REAL(8) :: BF_CONST, BF_MONTHLY(1:12)
-        REAL(8), ALLOCATABLE, DIMENSION(:) :: BASEFLOW
+        REAL(8), ALLOCATABLE, DIMENSION(:) :: BASE_FLOW
         !Transform method
         INTEGER :: TF_METHOD
+        !Array for UHG
+        INTEGER :: NUHG
+        REAL(8), ALLOCATABLE, DIMENSION(:) :: U
         !Loss method
         INTEGER :: LOSS_METHOD
         !Output
@@ -64,7 +67,7 @@ C STRUCT FOR REACH
         REAL(8), ALLOCATABLE, DIMENSION(:,:) :: ORE_CURVE
         INTEGER, ALLOCATABLE, DIMENSION(:) :: NDOOR_OPEN
         !Output
-        REAL(8), ALLOCATABLE, DIMENSION(:) :: INFLOW, OUTFLOW, V, Z
+        REAL(8), ALLOCATABLE, DIMENSION(:) :: INFLOW, OUTFLOW, STORAGE, ELEVATION
         !Downstream
         CHARACTER(100) :: DOWNSTREAM
 
