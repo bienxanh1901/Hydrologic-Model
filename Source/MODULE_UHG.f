@@ -28,7 +28,7 @@ C=================================================================
       USE PARAM
       IMPLICIT NONE
       TYPE(SUBBASING_TYPE) :: SBS
-      INTEGER :: N = 33
+      INTEGER, PARAMETER :: N = 33
       REAL(8) :: UHG_DATA(1:2,1:N)
       REAL(8) :: TP, UP, T
       INTEGER :: I
@@ -62,13 +62,13 @@ C This dimensionless unit hydrograph was developed by Victor Mockus(1957)
       SBS%NUHG = INT(UHG_DATA(2,N)/(DT/3600.0D0))
 
       ALLOCATE(SBS%U(0:SBS%NUHG))
-      U = 0.0D0
+      SBS%U = 0.0D0
       T = 0.0D0
       DO I = 1, SBS%NUHG
 
         T = T + DT/3600.0D0
 
-        CALL INTERP(UHG_DATA(1,I), UHG_DATA(2,I), T, U(I), N)
+        CALL INTERP(UHG_DATA(1,I), UHG_DATA(2,I), T, SBS%U(I), N)
 
       ENDDO
 

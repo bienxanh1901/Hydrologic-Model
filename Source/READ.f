@@ -4,7 +4,6 @@ C=================================================================
       SUBROUTINE READ_INPUT
       USE PARAM
       USE CONSTANTS
-      USE UNIT_HYDROGRAPH
       IMPLICIT NONE
       INTEGER :: FUNIT
       CHARACTER(30) :: F1
@@ -33,14 +32,14 @@ C Read name list BASING
 
       IF(TRIM(START_DATE).EQ.'') THEN
 
-        WRITE(*,*) 'Please set start date with format 'DDMMYYYY' and restart '
+        WRITE(*,*) 'Please set start date with format ''DDMMYYYY'' and restart '
         STOP
 
       ENDIF
 
       IF(TRIM(START_TIME).EQ.'') THEN
 
-        WRITE(*,*) 'Please set start date with format 'HH:MM' and restart '
+        WRITE(*,*) 'Please set start date with format ''HH:MM'' and restart '
         STOP
 
       ENDIF
@@ -84,7 +83,7 @@ C=================================================================
       NAMELIST /SBG1/ NAME, DOWNSTREAM, PRECIPF, LOSS_METHOD, TF_METHOD, AREA, CN, IMPERVIOUS, TLAG
       NAMELIST /SBG2/ BF_TYPE, BF_CONST, BF_MONTHLY
 
-      ALLOCATER(SUBBASING(1:NSUBBASING))
+      ALLOCATE(SUBBASING(1:NSUBBASING))
       FU = 10
 
       DO I = 1, NSUBBASING
@@ -121,8 +120,14 @@ C=================================================================
         SUBBASING(I)%DOWNSTREAM = TRIM(DOWNSTREAM)
         SUBBASING(I)%BF_TYPE = BF_TYPE
         SUBBASING(I)%AREA = AREA
-        IF(BF_TYPE.EQ.CONSTANT_DATA) SUBBASING(I)%BF_CONST = BF_CONST
-        ELSE IF(BF_TYPE.EQ.MONTHLY_DATA) SUBBASING(I)%BF_MONTHLY = BF_MONTHLY
+        IF(BF_TYPE.EQ.CONSTANT_DATA) THEN
+
+            SUBBASING(I)%BF_CONST = BF_CONST
+
+        ELSEIF(BF_TYPE.EQ.MONTHLY_DATA) THEN
+
+            SUBBASING(I)%BF_MONTHLY = BF_MONTHLY
+        ENDIF
 
         !Loss method
         SUBBASING(I)%LOSS_METHOD = LOSS_METHOD

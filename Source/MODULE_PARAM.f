@@ -60,7 +60,7 @@ C STRUCT FOR REACH
         REAL(8) :: Z0, DOORW, DC_COEFF, ZBT
         !Storage-elevation relation
         INTEGER :: NSE
-        REAL(8), ALLOCATABLE, DIMENSION(:,:) :: SE_CURVE
+        REAL(8), ALLOCATABLE, DIMENSION(:) :: SE_CURVE
         !Discharge control
         INTEGER :: DC_CTRL, NDE
         REAL(8), ALLOCATABLE, DIMENSION(:,:) :: DCE_CURVE
@@ -86,14 +86,40 @@ C STRUCT FOR SOURCE
 
       END TYPE SOURCE_TYPE
 
+C STRUCT FOR PRECIPITATION GATE
+      TYPE PRECIP_GATE_TYPE
 
+        !Number of gate
+        CHARACTER(9) :: START_DATE, END_DATE
+        CHARACTER(5) :: START_TIME, END_TIME
+        REAL(8) :: TIME_INTERVAL
+        !Data
+        REAL(8), ALLOCATABLE, DIMENSION(:) :: PRECIP_DATA
+
+      END TYPE PRECIP_GATE_TYPE
+
+C STRUCT FOR DISCHARGE GATE
+      TYPE DISCHARGE_GATE_TYPE
+
+        !Number of gate
+        CHARACTER(9) :: START_DATE, END_DATE
+        CHARACTER(5) :: START_TIME, END_TIME
+        REAL(8) :: TIME_INTERVAL
+        !Data
+        REAL(8), ALLOCATABLE, DIMENSION(:) :: DC_DATA
+
+      END TYPE DISCHARGE_GATE_TYPE
+C---------------------------------------------------------------------------------------------------------
+C---------------------------------------------------------------------------------------------------------
       !Number of objects
-      INTEGER :: NSUBBASING, NREACH, NRESERVOIR, NSOURCE
+      INTEGER :: NSUBBASING, NREACH, NRESERVOIR, NSOURCE, NPRECIP, NDCGATE
       !Object data
       TYPE(SUBBASING_TYPE), ALLOCATABLE, DIMENSION(:) :: SUBBASING
       TYPE(REACH_TYPE), ALLOCATABLE, DIMENSION(:) :: REACH
       TYPE(RESERVOIR_TYPE), ALLOCATABLE, DIMENSION(:) :: RESERVOIR
       TYPE(SOURCE_TYPE), ALLOCATABLE, DIMENSION(:) :: SOURCE
+      TYPE(PRECIP_GATE_TYPE), ALLOCATABLE, DIMENSION(:) :: PRECIP_GATE
+      TYPE(DISCHARGE_GATE_TYPE), ALLOCATABLE, DIMENSION(:) :: DC_GATE
 
 
       END MODULE PARAM
