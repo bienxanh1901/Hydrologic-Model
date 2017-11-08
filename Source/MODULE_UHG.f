@@ -5,9 +5,9 @@ C=================================================================
       USE CONSTANTS
       USE PARAM
       IMPLICIT NONE
-      TYPE(SUBBASING_TYPE) :: SBS
+      TYPE(SUBBASIN_TYPE) :: SBS
 
-      SELECT CASE (SBS%TF_METHOD)
+      SELECT CASE (SBS%TRANSFORM)
         CASE(SCS_UHG_TYPE)
             CALL GET_SCS_UHG(SBS)
         CASE DEFAULT
@@ -26,8 +26,9 @@ C=================================================================
       SUBROUTINE GET_SCS_UHG(SBS)
       USE CONSTANTS
       USE PARAM
+      USE TIME
       IMPLICIT NONE
-      TYPE(SUBBASING_TYPE) :: SBS
+      TYPE(SUBBASIN_TYPE) :: SBS
       INTEGER, PARAMETER :: N = 33
       REAL(8) :: UHG_DATA(1:2,1:N)
       REAL(8) :: TP, UP, T

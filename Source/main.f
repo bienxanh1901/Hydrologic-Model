@@ -8,7 +8,7 @@
 *C Read input parameters
 *      WRITE(*,*) 'READ INPUT DATA!!!'
 *      CALL READ_INPUT
-*      CALL BASING_CONNECTION
+*      CALL BASIN_CONNECTION
 *
 *C Initial variables at start time
 *C Start Main loop

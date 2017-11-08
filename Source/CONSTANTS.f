@@ -17,17 +17,10 @@ C=================================================================
       INTEGER, PARAMETER :: SCS_CURVE_LOSS = 1
       !define transform method
       INTEGER, PARAMETER :: SCS_UHG_TYPE = 1
-      !Number of observation times
-      INTEGER :: NTIME
-      CHARACTER(9) :: START_DATE, END_DATE
-      CHARACTER(5) :: START_TIME, END_TIME
 
-      !Time interval
-      REAL(8) :: DT
-      !Date and time table
-      CHARACTER(8), ALLOCATABLE, DIMENSION(:) :: CDATE
-      CHARACTER(5), ALLOCATABLE, DIMENSION(:) :: CTIME
-
+      !define log file
+      INTEGER :: ULOG
+      CHARACTER(7) :: FLOG = "RUN.LOG"
       END MODULE CONSTANTS
 C=================================================================
 C

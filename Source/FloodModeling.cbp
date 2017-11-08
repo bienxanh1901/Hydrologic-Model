@@ -17,11 +17,10 @@
 					<Add option="-fcheck=all" />
 					<Add option="-g" />
 					<Add option="-fbounds-check -ffixed-line-length-120" />
-					<Add directory="D:/study/git/FloodModeling.git/branches/V1.1.0/Source/lib" />
+					<Add directory="lib" />
 				</Compiler>
 				<Linker>
-					<Add library="lib/libDateTime.a" />
-					<Add directory="D:/study/git/FloodModeling.git/branches/V1.1.0/Source/lib" />
+					<Add directory="lib" />
 				</Linker>
 			</Target>
 			<Target title="Release">
@@ -41,26 +40,47 @@
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
-		<Unit filename="BASING_CONNECTION.f">
-			<Option weight="0" />
+		<Unit filename="CHECK.f">
+			<Option weight="1" />
 		</Unit>
 		<Unit filename="CONSTANTS.f">
 			<Option weight="0" />
 		</Unit>
 		<Unit filename="MODULE_PARAM.f">
-			<Option weight="0" />
+			<Option weight="4" />
 		</Unit>
 		<Unit filename="MODULE_UHG.f">
-			<Option weight="1" />
+			<Option weight="5" />
+		</Unit>
+		<Unit filename="MOD_TIME.f">
+			<Option weight="4" />
 		</Unit>
 		<Unit filename="READ.f">
-			<Option weight="1" />
+			<Option weight="5" />
 		</Unit>
 		<Unit filename="TOOL.f">
+			<Option weight="0" />
+		</Unit>
+		<Unit filename="lib/datetime.f90">
+			<Option weight="3" />
+		</Unit>
+		<Unit filename="lib/mod_clock.f90">
+			<Option weight="2" />
+		</Unit>
+		<Unit filename="lib/mod_constants.f90">
+			<Option weight="0" />
+		</Unit>
+		<Unit filename="lib/mod_datetime.f90">
 			<Option weight="1" />
 		</Unit>
+		<Unit filename="lib/mod_strftime.f90">
+			<Option weight="0" />
+		</Unit>
+		<Unit filename="lib/mod_timedelta.f90">
+			<Option weight="0" />
+		</Unit>
 		<Unit filename="main.f">
-			<Option weight="1" />
+			<Option weight="5" />
 		</Unit>
 		<Extensions>
 			<code_completion />

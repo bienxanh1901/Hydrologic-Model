@@ -33,42 +33,4 @@ C=================================================================
 C=================================================================
 C
 C=================================================================
-C=================================================================
-C SUBROUTINE SET DATE AND TIME OF EACH TIME STEP
-C=================================================================
-      SUBROUTINE SET_DATE_TIME
-      USE CONSTANTS
-      IMPLICIT NONE
 
-      !Date: ddmmyyyy
-      !Time: hh:mm
-      ALLOCATE(CDATE(0:NTIME - 1))
-      ALLOCATE(CTIME(0:NTIME - 1))
-
-
-      RETURN
-      END SUBROUTINE SET_DATE_TIME
-C=================================================================
-C
-C=================================================================
-C=================================================================
-C FUNCTION CHECK FILE
-C=================================================================
-      SUBROUTINE CHK_FILE(FILE_NAME)
-      IMPLICIT NONE
-      CHARACTER(*) :: FILE_NAME
-      LOGICAL :: EX
-
-
-      INQUIRE(FILE=TRIM(FILE_NAME), EXIST=EX)
-      IF(.NOT.EX) THEN
-        WRITE(*,*) "ERROR!!!"
-        WRITE(*,'(3A)')"File ", TRIM(FILE_NAME), " does not exist in the current directory!!! "
-        STOP
-      ENDIF
-
-      RETURN
-      END SUBROUTINE CHK_FILE
-C=================================================================
-C
-C=================================================================

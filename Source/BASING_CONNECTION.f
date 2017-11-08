@@ -1,12 +1,12 @@
 C=================================================================
-C CHECK THE LEVEL OF OBJECTS TO FIND THE CONNECTION OF BASING
+C CHECK THE LEVEL OF OBJECTS TO FIND THE CONNECTION OF BASIN
 C=================================================================
-      SUBROUTINE BASING_CONNECTION
+      SUBROUTINE BASIN_CONNECTION
       IMPLICIT NONE
-* TODO (My#1#11/05/17): check basing connection
+* TODO (My#1#11/05/17): check BASIN connection
 
       RETURN
-      END SUBROUTINE BASING_CONNECTION
+      END SUBROUTINE BASIN_CONNECTION
 C=================================================================
 C
 C=================================================================
