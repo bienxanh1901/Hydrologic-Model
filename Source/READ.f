@@ -96,7 +96,7 @@ C Allocate array
 C Open input file
         WRITE(ICH,'(I2.2)') I
         FUNIT = 10
-        F1 = 'Basin_'//ICH
+        F1 = TRIM(INPUT_DIR)//'/Basin_'//ICH
         CALL CHK_FILE(TRIM(F1))
         OPEN(UNIT=FUNIT, FILE=TRIM(F1),STATUS='OLD')
 
@@ -149,12 +149,11 @@ C=================================================================
       INTEGER, INTENT(IN) :: FUNIT
       TYPE(BASIN_TYPE) :: BS
       INTEGER :: GATETYPE, I, J, FU, IERR
-      INTEGER :: INTERVAL, TOTAL_TIME
-      CHARACTER(100) :: NAME, DATAFILE
+      INTEGER :: INTERVAL
+      CHARACTER(100) :: NAME, DATAFILE, F1
       CHARACTER(3) :: ICH
       CHARACTER(16) :: TSTART, TEND
       TYPE(GATE_TYPE), POINTER :: GT
-      TYPE(datetime) :: TIMETMP
 
       NAMELIST /GATENL/ NAME, GATETYPE, TSTART, TEND, DATAFILE, INTERVAL
 
@@ -185,8 +184,9 @@ C=================================================================
         GT%GATETYPE = GATETYPE
         GT%INTERVAL = INTERVAL
 
-        CALL CHK_FILE(TRIM(DATAFILE))
-        OPEN(UNIT=FU, FILE=TRIM(DATAFILE), STATUS='OLD')
+        F1 = TRIM(INPUT_DIR)//'/'//TRIM(DATAFILE)
+        CALL CHK_FILE(TRIM(F1))
+        OPEN(UNIT=FU, FILE=TRIM(F1), STATUS='OLD')
 
         READ(FU,*) GT%NDATA
 
@@ -319,7 +319,7 @@ C=================================================================
       TYPE(BASIN_TYPE) :: BS
       INTEGER :: SRC_TYPE, I, J, IERR
       REAL(8) :: CONST_DATA
-      CHARACTER(100) :: DOWNSTREAM, SRCF, NAME, SRC_GATE
+      CHARACTER(100) :: DOWNSTREAM, NAME, SRC_GATE
       CHARACTER(3) :: ICH
       TYPE(SOURCE_TYPE), POINTER :: SRC
 
@@ -434,17 +434,19 @@ C=================================================================
       SUBROUTINE READ_RESERVOIR(FUNIT, BS)
       USE PARAM
       USE CONSTANTS
+      USE TIME
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: FUNIT
       TYPE(BASIN_TYPE) :: BS
-      INTEGER :: ROUTE, DC_CTRL, I, J, FU, IERR
-      REAL(8) :: Z0, DOORW, DC_COEFF, ZBT
-      CHARACTER(100) :: DOWNSTREAM, NAME, SEFN, DCFN
+      INTEGER :: ROUTE, DC_CTRL, I, J, FU, IERR, ROUTING_CURVE, TB_TYPE
+      REAL(8) :: Z0, DOORW, DC_COEFF, ZBT, TB_CONST_DATA
+      CHARACTER(100) :: DOWNSTREAM, NAME, RTCFN, DCFN, TURBIN_GATE, F1
       CHARACTER(3) :: ICH
       TYPE(RESERVOIR_TYPE), POINTER :: RES
-      NAMELIST /RES1/ NAME, DOWNSTREAM, ROUTE
-      NAMELIST /RES2/ Z0, DOORW, DC_COEFF, ZBT, SEFN
-      NAMELIST /RES3/ DC_CTRL, DCFN
+      NAMELIST /RES1/ NAME, DOWNSTREAM, ROUTE, Z0
+      NAMELIST /RES2/ ROUTING_CURVE, RTCFN
+      NAMELIST /RES3/ DC_CTRL, DOORW, DC_COEFF, ZBT, DCFN
+      NAMELIST /RES4/ TB_TYPE, TB_CONST_DATA, TURBIN_GATE
 
 
       ALLOCATE(BS%RESERVOIR(1:BS%NRESERVOIR), STAT=IERR)
@@ -459,54 +461,43 @@ C=================================================================
         WRITE(ICH,'(I3.3)') I
         NAME = "RESERVOIR_"//ICH
         DOWNSTREAM = ""
-        SEFN = ""
-        DCFN = ""
-        ROUTE = 0
-        DC_CTRL = 0
+        ROUTE = OUTFLOW_STRUCTURE
         Z0 = 0.0D0
+        ROUTING_CURVE = ELEVATION_STORAGE
+        RTCFN = ""
+        DC_CTRL = DC_ELEVATION_TYPE
         DOORW = 0.0D0
         DC_COEFF = 0.0D0
         ZBT = 0.0D0
+        DCFN = ""
+        TB_TYPE = CONSTANT_DATA
+        TB_CONST_DATA = 0.0D0
+        TURBIN_GATE = ""
 
 
         READ(FUNIT, RES1, ERR=99)
         READ(FUNIT, RES2, ERR=99)
         READ(FUNIT, RES3, ERR=99)
+        READ(FUNIT, RES4, ERR=99)
 
-        IF(TRIM(SEFN).EQ."") THEN
-
-            WRITE(*,*) "Please set the file name for STORAGE - ELEVATION CURVE SEFN!!"
-            STOP
-
-        ENDIF
-
-        IF(TRIM(DCFN).EQ."") THEN
-
-            WRITE(*,*) "Please set the file name for discharge control data DCFN!!"
-            STOP
-
-        ENDIF
 
         RES%NAME = TRIM(NAME)
         RES%DOWNSTREAM = TRIM(DOWNSTREAM)
         RES%ROUTE = ROUTE
-
         RES%Z0 = Z0
-        RES%DOORW = DOORW
-        RES%DC_COEFF = DC_COEFF
-        RES%ZBT = ZBT
 
         !Read storage - elevation curve
-        CALL CHK_FILE(TRIM(SEFN))
-        OPEN(UNIT=FU, FILE=TRIM(SEFN), STATUS='OLD')
+        F1 = TRIM(INPUT_DIR)//'/'//TRIM(RTCFN)
+        CALL CHK_FILE(TRIM(F1))
+        OPEN(UNIT=FU, FILE=TRIM(F1), STATUS='OLD')
 
         READ(FU,*) RES%NSE
-
-        ALLOCATE(RES%SE_CURVE(1:RES%NSE))
+        ALLOCATE(RES%SE_CURVE(1:2,1:RES%NSE), STAT=IERR)
+        CALL ChkMemErr('STORAGE-ELEVATION-CURVE', IERR)
 
         DO J = 1, RES%NSE
 
-            READ(FU,*) RES%SE_CURVE(J)
+            READ(FU,*) RES%SE_CURVE(1:2,J)
 
         ENDDO
 
@@ -515,15 +506,23 @@ C=================================================================
         !Read discharge - elevation curve
         RES%DC_CTRL = DC_CTRL
 
-        CALL CHK_FILE(TRIM(DCFN))
-        OPEN(UNIT=FU, FILE=TRIM(DCFN), STATUS='OLD')
+        F1 = TRIM(INPUT_DIR)//'/'//TRIM(DCFN)
+        CALL CHK_FILE(TRIM(F1))
+        OPEN(UNIT=FU, FILE=TRIM(F1), STATUS='OLD')
 
         READ(FU,*) RES%NDE
 
         IF(DC_CTRL.EQ.DC_DOOR_TYPE) THEN
 
-            ALLOCATE(RES%NDOOR_OPEN(1:RES%NDE))
-            ALLOCATE(RES%EH_CURVE(1:2,1:RES%NDE))
+            RES%DOORW = DOORW
+            RES%DC_COEFF = DC_COEFF
+            RES%ZBT = ZBT
+
+            ALLOCATE(RES%NDOOR_OPEN(1:RES%NDE), STAT=IERR)
+            CALL ChkMemErr('NDOOR_OPEN', IERR)
+            ALLOCATE(RES%EH_CURVE(1:2,1:RES%NDE), STAT=IERR)
+            CALL ChkMemErr('EH_CURVE', IERR)
+
 
             DO J = 1, RES%NDE
 
@@ -533,7 +532,8 @@ C=================================================================
 
         ELSE IF(DC_CTRL.EQ.DC_ELEVATION_TYPE) THEN
 
-            ALLOCATE(RES%ED_CURVE(1:2,1:RES%NDE))
+            ALLOCATE(RES%ED_CURVE(1:2,1:RES%NDE),STAT=IERR)
+            CALL ChkMemErr('ED_CURVE', IERR)
 
             DO J = 1, RES%NDE
 
@@ -544,6 +544,23 @@ C=================================================================
         ENDIF
 
         CLOSE(FU)
+
+        !Turbin data
+        RES%TB_TYPE = TB_TYPE
+        IF(TB_TYPE.EQ.CONSTANT_DATA) THEN
+
+            RES%TB_CONST_DATA = TB_CONST_DATA
+
+        ELSE
+
+            DO J = 1, BS%NGATE
+
+                IF(TRIM(BS%GATE(J)%NAME).EQ.TRIM(TURBIN_GATE)) RES%TURBIN_GATE => BS%GATE(J)
+
+            ENDDO
+
+        ENDIF
+
 
 
       ENDDO

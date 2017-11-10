@@ -40,6 +40,8 @@ C STRUCT FOR REACH
       TYPE REACH_TYPE
 
         CHARACTER(100) :: NAME
+        !Level
+        INTEGER :: LEVER = 0
         !Routing method
         INTEGER :: ROUTE
         !Parameter for Muskingum method
@@ -55,6 +57,8 @@ C STRUCT FOR REACH
       TYPE RESERVOIR_TYPE
 
         CHARACTER(100) :: NAME
+        !Level
+        INTEGER :: LEVER = 0
         !Routing method
         INTEGER :: ROUTE
         !Parameter for reservoir structure method
@@ -72,8 +76,8 @@ C STRUCT FOR REACH
         INTEGER, ALLOCATABLE, DIMENSION(:) :: NDOOR_OPEN
         !Turbin discharge
         INTEGER :: TB_TYPE
-        REAL(8) :: CONSTANT_DATA
-        TYPE(GATE_TYPE), POINTER :: TURBIN_DATA
+        REAL(8) :: TB_CONST_DATA
+        TYPE(GATE_TYPE), POINTER :: TURBIN_GATE
         !Output
         REAL(8), ALLOCATABLE, DIMENSION(:) :: INFLOW, OUTFLOW, STORAGE, ELEVATION
         !Downstream
@@ -113,6 +117,9 @@ C STRUCT FOR  GATE
 C---------------------------------------------------------------------------------------------------------
 C---------------------------------------------------------------------------------------------------------
       TYPE BASIN_TYPE
+
+        ! max level of basin objects
+        INTEGER :: MAX_LEVEL = 0
         !Number of objects
         INTEGER :: NSUBBASIN, NREACH, NRESERVOIR, NSOURCE, NPRECIP, NGATE
         !Object data
