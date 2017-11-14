@@ -41,7 +41,7 @@ C STRUCT FOR REACH
 
         CHARACTER(100) :: NAME
         !Level
-        INTEGER :: LEVER = 0
+        INTEGER :: LEVEL = 0
         !Routing method
         INTEGER :: ROUTE
         !Parameter for Muskingum method
@@ -58,7 +58,7 @@ C STRUCT FOR REACH
 
         CHARACTER(100) :: NAME
         !Level
-        INTEGER :: LEVER = 0
+        INTEGER :: LEVEL = 0
         !Routing method
         INTEGER :: ROUTE
         !Parameter for reservoir structure method
