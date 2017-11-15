@@ -85,6 +85,9 @@
 		<Unit filename="TOOL.f">
 			<Option weight="0" />
 		</Unit>
+		<Unit filename="TRANSFORM_METHOD.f">
+			<Option weight="5" />
+		</Unit>
 		<Unit filename="lib/datetime.f90">
 			<Option weight="3" />
 		</Unit>

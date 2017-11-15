@@ -12,6 +12,14 @@
         TYPE(SUBBASIN_TYPE), POINTER :: SBS
         INTEGER, INTENT(IN) :: ITER
         END SUBROUTINE SCS_CURVE_NUMBER
+
+        SUBROUTINE GET_BASE_FLOW(SBS, ITER)
+        USE PARAM
+        USE CONSTANTS
+        IMPLICIT NONE
+        TYPE(SUBBASIN_TYPE), POINTER :: SBS
+        INTEGER, INTENT(IN) :: ITER
+        END SUBROUTINE GET_BASE_FLOW
       END INTERFACE
 
       TYPE(BASIN_TYPE), POINTER :: BS
@@ -26,9 +34,13 @@
 
             SBS => BS%SUBBASIN(J)
 
-            DO N = 1, NTIME
+            DO N = 1, NTIME - 1
 
+                CALL LOSS_CALC(SBS, N)
 
+                CALL GET_BASE_FLOW(SBS, N)
+
+                CALL TRANSFORM_CALC(SBS, N)
 
             ENDDO
 

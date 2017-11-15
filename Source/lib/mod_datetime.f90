@@ -1,8 +1,8 @@
 !
 ! datetime-fortran - A Fortran library for date and time manipulation
-! Copyright (c) 2013-2017, Wavebit Scientific LLC
+! Copyright (c) 2013-2016, Wavebit Scientific LLC
 ! All rights reserved.
-!
+! 
 ! Licensed under the BSD 3-clause license. See LICENSE for details.
 !
 module mod_datetime
@@ -74,11 +74,8 @@ type :: datetime
   procedure,pass(self),public :: tzOffset
   procedure,pass(self),public :: utc
   procedure,pass(self),public :: weekday
-  procedure,pass(self),public :: isoweekday
   procedure,pass(self),public :: weekdayLong
-  procedure,pass(self),public :: isoweekdayLong
   procedure,pass(self),public :: weekdayShort
-  procedure,pass(self),public :: isoweekdayShort
   procedure,pass(self),public :: yearday
 
   ! private methods
@@ -92,7 +89,7 @@ type :: datetime
   procedure,pass(d0),private :: datetime_plus_timedelta
   procedure,pass(d0),private :: timedelta_plus_datetime
   procedure,pass(d0),private :: datetime_minus_datetime
-  procedure,pass(d0),private :: datetime_minus_timedelta
+  procedure,pass(d0),private :: datetime_minus_timedelta 
   procedure,pass(d0),private :: eq
   procedure,pass(d0),private :: neq
   procedure,pass(d0),private :: gt
@@ -117,6 +114,10 @@ interface datetime
   module procedure :: datetime_constructor
 endinterface datetime
 
+!interface operator(+)
+!  module procedure :: timedelta_plus_datetime
+!endinterface
+
 !=======================================================================
 contains
 
@@ -130,14 +131,14 @@ pure elemental type(datetime) function datetime_constructor(year,month,&
   integer,          intent(in),optional :: year        !! year
   integer,          intent(in),optional :: month       !! month
   integer,          intent(in),optional :: day         !! day
-  integer,          intent(in),optional :: hour        !! hour
+  integer,          intent(in),optional :: hour        !! hour 
   integer,          intent(in),optional :: minute      !! minute
   integer,          intent(in),optional :: second      !! second
   integer,          intent(in),optional :: millisecond !! millisecond
   real(kind=real64),intent(in),optional :: tz          !! timezone offset in hours
 
   if(present(year))then
-    datetime_constructor % year = year
+    datetime_constructor % year = year    
   else
     datetime_constructor % year = 1
   endif
@@ -188,7 +189,7 @@ endfunction datetime_constructor
 
 
 
-! datetime getters
+! datetime getters  
 !=======================================================================
 
 pure elemental integer function getYear(self)
@@ -280,12 +281,12 @@ pure elemental subroutine addMilliseconds(self,ms)
 endsubroutine addMilliseconds
 
 
-! datetime-bound methods
+! datetime-bound methods 
 !=======================================================================
 
 pure elemental subroutine addSeconds(self,s)
 
-  !! Adds an integer number of seconds to self. Called by `datetime`
+  !! Adds an integer number of seconds to self. Called by `datetime` 
   !! addition (`+`) and subtraction (`-`) operators.
 
   class(datetime),intent(inout) :: self !! `datetime` instance
@@ -311,7 +312,7 @@ endsubroutine addSeconds
 
 pure elemental subroutine addMinutes(self,m)
 
-  !! Adds an integer number of minutes to self. Called by `datetime`
+  !! Adds an integer number of minutes to self. Called by `datetime` 
   !! addition (`+`) and subtraction (`-`) operators.
 
   class(datetime),intent(inout) :: self !! `datetime` instance
@@ -337,7 +338,7 @@ endsubroutine addMinutes
 
 pure elemental subroutine addHours(self,h)
 
-  !! Adds an integer number of hours to self. Called by `datetime`
+  !! Adds an integer number of hours to self. Called by `datetime` 
   !! addition (`+`) and subtraction (`-`) operators.
 
   class(datetime),intent(inout) :: self !! `datetime` instance
@@ -363,7 +364,7 @@ endsubroutine addHours
 
 pure elemental subroutine addDays(self,d)
 
-  !! Adds an integer number of dayss to self. Called by `datetime`
+  !! Adds an integer number of dayss to self. Called by `datetime` 
   !! addition (`+`) and subtraction (`-`) operators.
 
   class(datetime),intent(inout) :: self !! `datetime` instance
@@ -390,7 +391,7 @@ pure elemental subroutine addDays(self,d)
       self % day = self % day+daysInMonth(self % month,self % year)
     else
       exit
-    endif
+    endif 
   enddo
 
 endsubroutine addDays
@@ -402,7 +403,7 @@ pure elemental character(len=23) function isoformat(self,sep)
   !! Returns character string with time in ISO 8601 format.
 
   class(datetime), intent(in)          :: self !! `datetime instance`
-  character(len=1),intent(in),optional :: sep
+  character(len=1),intent(in),optional :: sep  
     !! separator character, 'T' is default
 
   character(len=1) :: separator
@@ -413,8 +414,8 @@ pure elemental character(len=23) function isoformat(self,sep)
     separator = 'T'
   endif
 
-  ! TODO below is a bit cumbersome and was implemented
-  ! at a time before the interface to strftime. Now we
+  ! TODO below is a bit cumbersome and was implemented 
+  ! at a time before the interface to strftime. Now we 
   ! could do something like:
   !
   ! isoformat = self % strftime('%Y-%m-%d'//separator//'%H:%M:%S')
@@ -433,8 +434,8 @@ endfunction isoformat
 
 pure elemental logical function isValid(self)
 
-  !! Checks whether the `datetime` instance has valid component values.
-  !! Returns `.true.` if the `datetime` instance is valid, and `.false.`
+  !! Checks whether the `datetime` instance has valid component values. 
+  !! Returns `.true.` if the `datetime` instance is valid, and `.false.` 
   !! otherwise.
 
   class(datetime),intent(in) :: self !! `datetime` instance
@@ -457,23 +458,23 @@ pure elemental logical function isValid(self)
     isValid = .false.
     return
   endif
-
-  if(self % hour < 0 .or. self % hour > 23)then
+ 
+  if(self % hour < 0 .or. self % hour > 23)then    
     isValid = .false.
     return
   endif
 
-  if(self % minute < 0 .or. self % minute > 59)then
+  if(self % minute < 0 .or. self % minute > 59)then    
     isValid = .false.
     return
   endif
 
-  if(self % second < 0 .or. self % second > 59)then
+  if(self % second < 0 .or. self % second > 59)then    
     isValid = .false.
     return
   endif
 
-  if(self % millisecond < 0 .or. self % millisecond > 999)then
+  if(self % millisecond < 0 .or. self % millisecond > 999)then    
     isValid = .false.
     return
   endif
@@ -484,7 +485,7 @@ endfunction isValid
 
 type(datetime) function now()
 
-  !! Returns a `datetime` instance with current time.
+  !! Returns a `datetime` instance with current time. 
   !! No input arguments.
 
   character(len=5)     :: zone
@@ -514,7 +515,7 @@ endfunction now
 
 pure elemental integer function weekday(self)
 
-  !! Returns the day of the week calculated using Zeller's congruence.
+  !! Returns the day of the week calculated using Zeller's congruence. 
   !! Returned value is an integer scalar in the range [0-6], such that:
   !!
   !! 0: Sunday
@@ -549,31 +550,6 @@ endfunction weekday
 
 
 
-pure elemental integer function isoweekday(self)
-
-  !! Returns the day of the week per ISO 8601 returned from weekday().
-  !! Returned value is an integer scalar in the range [1-7], such that:
-  !!
-  !! 1: Monday
-  !! 2: Tuesday
-  !! 3: Wednesday
-  !! 4: Thursday
-  !! 5: Friday
-  !! 6: Saturday
-  !! 7: Sunday
-
-  class(datetime),intent(in) :: self !! `datetime` instance
-
-  isoweekday = self % weekday()
-
-  if (isoweekday == 0) then
-    isoweekday = 7
-  end if
-
-endfunction isoweekday
-
-
-
 pure elemental character(len=9) function weekdayLong(self)
 
   !! Returns the full name of the day of the week.
@@ -587,23 +563,6 @@ pure elemental character(len=9) function weekdayLong(self)
   weekdayLong = days(self % weekday()+1)
 
 endfunction weekdayLong
-
-
-
-pure elemental character(len=9) function isoweekdayLong(self)
-
-  !! Returns the full name of the day of the week for ISO 8601
-  !! ordered weekdays.
-
-  class(datetime),intent(in) :: self !! `datetime` instance
-
-  character(len=9),parameter,dimension(7) :: &
-  days = ['Monday   ','Tuesday  ','Wednesday','Thursday ',&
-          'Friday   ','Saturday ','Sunday   ']
-
-  isoweekdayLong = days(self % isoweekday())
-
-endfunction isoweekdayLong
 
 
 
@@ -622,25 +581,10 @@ endfunction weekdayShort
 
 
 
-pure elemental character(len=3) function isoweekdayShort(self)
-
-  !! Returns the short (3-letter) name of the day of the week
-  !! based on ISO 8601 ordering.
-
-  class(datetime),intent(in) :: self !! `datetime` instance
-
-  character(len=3),parameter,dimension(7) :: &
-                   days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
-
-  isoweekdayShort = days(self % isoweekday())
-
-endfunction isoweekdayShort
-
-
 function isocalendar(self)
 
-  !! Returns an array of 3 integers, year, week number, and week day,
-  !! as defined by ISO 8601 week date. Essentially a wrapper around C
+  !! Returns an array of 3 integers, year, week number, and week day, 
+  !! as defined by ISO 8601 week date. Essentially a wrapper around C 
   !! `strftime` function.
 
   class(datetime),intent(in) :: self !! `datetime` instance
@@ -651,7 +595,7 @@ function isocalendar(self)
   character(len=20)    :: string
 
   rc = c_strftime(string,len(string),'%G %V %u'//c_null_char,&
-                  self % tm())
+                  self % tm())  
 
   read(unit=string(1:4),fmt='(I4)')year
   read(unit=string(6:7),fmt='(I2)')week
@@ -665,10 +609,10 @@ endfunction isocalendar
 
 integer function secondsSinceEpoch(self)
 
-  !! Returns an integer number of seconds since the UNIX Epoch,
-  !! `1970-01-01 00:00:00`. Note that this is a wrapper around C's
-  !! `strftime('%s')`, so the number of seconds will reflect the time
-  !! zone of the local machine on which the function is being called.
+  !! Returns an integer number of seconds since the UNIX Epoch, 
+  !! `1970-01-01 00:00:00`. Note that this is a wrapper around C's 
+  !! `strftime('%s')`, so the number of seconds will reflect the time 
+  !! zone of the local machine on which the function is being called. 
 
   class(datetime),intent(in) :: self !! `datetime` instance
 
@@ -755,7 +699,7 @@ endfunction tzOffset
 
 pure elemental type(datetime) function utc(self)
 
-  !! Returns the `datetime` instance at Coordinated Universal Time (UTC).
+  !! Returns the `datetime` instance at Coordinated Universal Time (UTC). 
 
   class(datetime),intent(in) :: self !! `datetime` instance
 
@@ -897,8 +841,8 @@ endfunction datetime_minus_datetime
 
 pure elemental logical function gt(d0,d1)
 
-  !! `datetime` comparison operator that eturns `.true.` if `d0` is
-  !! greater than `d1` and `.false.` otherwise. Overloads the
+  !! `datetime` comparison operator that eturns `.true.` if `d0` is 
+  !! greater than `d1` and `.false.` otherwise. Overloads the 
   !! operator `>`.
 
   class(datetime),intent(in) :: d0 !! lhs `datetime` instance
@@ -972,7 +916,7 @@ endfunction gt
 
 pure elemental logical function lt(d0,d1)
 
-  !! `datetime` comparison operator that returns `.true.` if `d0` is
+  !! `datetime` comparison operator that returns `.true.` if `d0` is 
   !! less than `d1` and `.false.` otherwise. Overloads the operator `<`.
 
   class(datetime),intent(in) :: d0 !! lhs `datetime` instance
@@ -986,7 +930,7 @@ endfunction lt
 
 pure elemental logical function eq(d0,d1)
 
-  !! `datetime` comparison operator that returns `.true.` if `d0` is
+  !! `datetime` comparison operator that returns `.true.` if `d0` is 
   !! equal to `d1` and `.false.` otherwise. Overloads the operator `==`.
 
   class(datetime),intent(in) :: d0 !! lhs `datetime` instance
@@ -1012,7 +956,7 @@ endfunction eq
 
 pure elemental logical function neq(d0,d1)
 
-  !! `datetime` comparison operator that eturns `.true.` if `d0` is
+  !! `datetime` comparison operator that eturns `.true.` if `d0` is 
   !! not equal to `d1` and `.false.` otherwise. Overloads the operator `/=`.
 
   class(datetime),intent(in) :: d0 !! lhs `datetime` instance
@@ -1026,8 +970,8 @@ endfunction neq
 
 pure elemental logical function ge(d0,d1)
 
-  !! `datetime` comparison operator. Returns `.true.` if `d0` is greater
-  !! than or equal to `d1` and `.false.` otherwise. Overloads the
+  !! `datetime` comparison operator. Returns `.true.` if `d0` is greater 
+  !! than or equal to `d1` and `.false.` otherwise. Overloads the 
   !! operator `>=`.
 
   class(datetime),intent(in) :: d0 !! lhs `datetime` instance
@@ -1041,8 +985,8 @@ endfunction ge
 
 pure elemental logical function le(d0,d1)
 
-  !! `datetime` comparison operator. Returns `.true.` if `d0` is less
-  !! than or equal to `d1`, and `.false.` otherwise. Overloads the
+  !! `datetime` comparison operator. Returns `.true.` if `d0` is less 
+  !! than or equal to `d1`, and `.false.` otherwise. Overloads the 
   !! operator `<=`.
 
   class(datetime),intent(in) :: d0 !! lhs `datetime` instance
@@ -1072,9 +1016,9 @@ endfunction isLeapYear
 
 pure function datetimeRange(d0,d1,t)
 
-  !! Given start and end `datetime` instances `d0` and `d1` and time
-  !! increment as `timedelta` instance `t`, returns an array of
-  !! `datetime` instances. The number of elements is the number of whole
+  !! Given start and end `datetime` instances `d0` and `d1` and time 
+  !! increment as `timedelta` instance `t`, returns an array of 
+  !! `datetime` instances. The number of elements is the number of whole 
   !! time increments contained between datetimes `d0` and `d1`.
 
   type(datetime), intent(in) :: d0 !! start time
@@ -1120,8 +1064,8 @@ pure elemental integer function daysInMonth(month,year)
 
   if(month < 1 .or. month > 12)then
     ! Should raise an error and abort here, however we want to keep
-    ! the pure and elemental attributes. Make sure this function is
-    ! called with the month argument in range.
+    ! the pure and elemental attributes. Make sure this function is 
+    ! called with the month argument in range. 
     daysInMonth = 0
     return
   endif
@@ -1154,7 +1098,7 @@ endfunction daysInYear
 
 pure elemental real(kind=real64) function date2num(d)
 
-  !! Given a datetime instance d, returns number of days since
+  !! Given a datetime instance d, returns number of days since 
   !! `0001-01-01 00:00:00`, taking into account the timezone offset.
 
   type(datetime),intent(in) :: d !! `datetime` instance
@@ -1181,17 +1125,17 @@ pure elemental real(kind=real64) function date2num(d)
            + d_utc % hour*h2d  &
            + d_utc % minute*m2d&
            + (d_utc % second+1e-3_real64*d_utc % millisecond)*s2d
-
+ 
 endfunction date2num
 
 
 
 pure elemental type(datetime) function num2date(num)
 
-  !! Given number of days since `0001-01-01 00:00:00`, returns a
+  !! Given number of days since `0001-01-01 00:00:00`, returns a 
   !! correspoding `datetime` instance.
 
-  real(kind=real64),intent(in) :: num
+  real(kind=real64),intent(in) :: num 
     !! number of days since `0001-01-01 00:00:00`
 
   integer :: year,month,day,hour,minute,second,millisecond
@@ -1254,7 +1198,7 @@ endfunction num2date
 type(datetime) function strptime(str,format)
 
   !! A wrapper function around C/C++ strptime function.
-  !! Returns a `datetime` instance.
+  !! Returns a `datetime` instance. 
 
   character(len=*),intent(in) :: str    !! time string
   character(len=*),intent(in) :: format !! time format
@@ -1271,7 +1215,7 @@ endfunction strptime
 
 pure elemental type(datetime) function tm2date(ctime)
 
-  !! Given a `tm_struct` instance, returns a corresponding `datetime`
+  !! Given a `tm_struct` instance, returns a corresponding `datetime` 
   !! instance.
 
   type(tm_struct),intent(in) :: ctime !! C-style time struct

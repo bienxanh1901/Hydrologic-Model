@@ -6,11 +6,26 @@ C=================================================================
       USE CONSTANTS
       USE TIME
       IMPLICIT NONE
+      INTERFACE
+        SUBROUTINE SCS_CURVE_NUMBER(SBS, ITER)
+        USE PARAM
+        USE CONSTANTS
+        USE TIME
+        IMPLICIT NONE
+        TYPE(SUBBASIN_TYPE), POINTER :: SBS
+        INTEGER, INTENT(IN) :: ITER
+        END SUBROUTINE SCS_CURVE_NUMBER
+      END INTERFACE
       TYPE(SUBBASIN_TYPE), POINTER :: SBS
       INTEGER, INTENT(IN) :: ITER
-      REAL(8) :: PE2, IMP, PRECIP, IA
 
-
+      SELECT CASE(SBS%LOSSRATE)
+        CASE(SCS_CURVE_LOSS)
+            CALL SCS_CURVE_NUMBER(SBS, ITER)
+        CASE DEFAULT
+            WRITE(*,*) 'Error: Invalid type of loss method!!!'
+            STOP
+      END SELECT
 
       RETURN
       END SUBROUTINE LOSS_CALC

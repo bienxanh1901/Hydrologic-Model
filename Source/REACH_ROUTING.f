@@ -1,3 +1,50 @@
+C=================================================================
+C REACH_ROUTING
+C=================================================================
+      SUBROUTINE REACH_ROUTING(BS, RCH, ITER)
+      USE PARAM
+      USE CONSTANTS
+      USE TIME
+      IMPLICIT NONE
+      INTERFACE
+      END INTERFACE
+      TYPE(REACH_TYPE), POINTER :: RCH
+      TYPE(BASIN_TYPE), POINTER :: BS
+      TYPE(SUBBASIN_TYPE), POINTER :: SBS
+      TYPE(SOURCE_TYPE), POINTER :: SRC
+      TYPE(RESERVOIR_TYPE), POINTER :: RES
+      INTEGER, INTENT(IN) :: ITER
+      INTEGER :: I
+
+
+      RETURN
+      END SUBROUTINE REACH_ROUTING
+C=================================================================
+C
+C=================================================================
+C=================================================================
+C MUSKINGUM_CALC
+C=================================================================
+      SUBROUTINE MUSKINGUM_CALC(BS, RCH, ITER)
+      USE PARAM
+      USE CONSTANTS
+      USE TIME
+      IMPLICIT NONE
+      INTERFACE
+      END INTERFACE
+      TYPE(REACH_TYPE), POINTER :: RCH
+      TYPE(BASIN_TYPE), POINTER :: BS
+      TYPE(SUBBASIN_TYPE), POINTER :: SBS
+      TYPE(SOURCE_TYPE), POINTER :: SRC
+      TYPE(RESERVOIR_TYPE), POINTER :: RES
+      INTEGER, INTENT(IN) :: ITER
+      INTEGER :: I
+
+      RETURN
+      END SUBROUTINE MUSKINGUM_CALC
+C=================================================================
+C
+C=================================================================
       SUBROUTINE GET_REACH_INFLOW(BS, RCH, ITER)
       USE PARAM
       USE CONSTANTS
@@ -9,7 +56,7 @@
       TYPE(SOURCE_TYPE), POINTER :: SRC
       TYPE(RESERVOIR_TYPE), POINTER :: RES
       INTEGER, INTENT(IN) :: ITER
-      INTEGER :: I, J
+      INTEGER :: I
 
       RCH%INFLOW(ITER) = 0.0D0
 

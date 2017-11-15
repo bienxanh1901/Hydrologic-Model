@@ -11,7 +11,7 @@ C=================================================================
         USE PARAM
         USE TIME
         IMPLICIT NONE
-        TYPE(SUBBASIN_TYPE) :: SBS
+        TYPE(SUBBASIN_TYPE), POINTER :: SBS
         END SUBROUTINE GET_SCS_UHG
       END INTERFACE
       TYPE(SUBBASIN_TYPE), POINTER :: SBS

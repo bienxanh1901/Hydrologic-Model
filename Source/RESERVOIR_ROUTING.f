@@ -1,3 +1,50 @@
+C=================================================================
+C RESERVOIR_ROUTING
+C=================================================================
+      SUBROUTINE RESERVOIR_ROUTING(BS, RES, ITER)
+      USE PARAM
+      USE CONSTANTS
+      USE TIME
+      IMPLICIT NONE
+      INTERFACE
+      END INTERFACE
+      TYPE(REACH_TYPE), POINTER :: RCH
+      TYPE(BASIN_TYPE), POINTER :: BS
+      TYPE(SUBBASIN_TYPE), POINTER :: SBS
+      TYPE(SOURCE_TYPE), POINTER :: SRC
+      TYPE(RESERVOIR_TYPE), POINTER :: RES
+      INTEGER, INTENT(IN) :: ITER
+      INTEGER :: I
+
+
+      RETURN
+      END SUBROUTINE RESERVOIR_ROUTING
+C=================================================================
+C
+C=================================================================
+C=================================================================
+C OUTFLOW_STRUCTURE
+C=================================================================
+      SUBROUTINE OUTFLOW_STRUCTURE(BS, RES, ITER)
+      USE PARAM
+      USE CONSTANTS
+      USE TIME
+      IMPLICIT NONE
+      INTERFACE
+      END INTERFACE
+      TYPE(REACH_TYPE), POINTER :: RCH
+      TYPE(BASIN_TYPE), POINTER :: BS
+      TYPE(SUBBASIN_TYPE), POINTER :: SBS
+      TYPE(SOURCE_TYPE), POINTER :: SRC
+      TYPE(RESERVOIR_TYPE), POINTER :: RES
+      INTEGER, INTENT(IN) :: ITER
+      INTEGER :: I
+
+      RETURN
+      END SUBROUTINE OUTFLOW_STRUCTURE
+C=================================================================
+C
+C=================================================================
       SUBROUTINE GET_RESERVOIR_INFLOW(BS, RES, ITER)
       USE PARAM
       USE CONSTANTS
@@ -9,7 +56,7 @@
       TYPE(SOURCE_TYPE), POINTER :: SRC
       TYPE(RESERVOIR_TYPE), POINTER :: RES
       INTEGER, INTENT(IN) :: ITER
-      INTEGER :: I, J
+      INTEGER :: I
 
       RES%INFLOW(ITER) = 0.0D0
 

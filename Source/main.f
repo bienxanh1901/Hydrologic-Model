@@ -2,8 +2,6 @@
       USE PARAM
       USE CONSTANTS
       IMPLICIT NONE
-      REAL(8) :: T
-      INTEGER :: I
 
 C Introduction
       CALL GETCWD(ROOT_DIR)
