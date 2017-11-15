@@ -29,6 +29,10 @@ C STRUCT FOR BASIN CHARACTERISTICS
         REAL(8), ALLOCATABLE, DIMENSION(:) :: U
         !Loss method
         INTEGER :: LOSSRATE
+        !Potential maximum retention (S)
+        !Accumulate precipitation excess (PE)
+        !Accumulate rainfall depth (P)
+        REAL(8) :: S, P, PE
         !Output
         REAL(8), ALLOCATABLE, DIMENSION(:) :: LOSS, EXCESS, DIRECT_FLOW, TOTAL_FLOW
         !Downstream
@@ -46,6 +50,8 @@ C STRUCT FOR REACH
         INTEGER :: ROUTE
         !Parameter for Muskingum method
         REAL(8) :: K, X
+        !Loss/gain
+        REAL(8) :: LOSS_VALUE, LOSS_RATIO
         !Output
         REAL(8), ALLOCATABLE, DIMENSION(:) :: INFLOW, OUTFLOW
         !Downstream

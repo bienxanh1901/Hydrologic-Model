@@ -40,22 +40,46 @@
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
+		<Unit filename="ALLOCATING.f">
+			<Option weight="5" />
+		</Unit>
+		<Unit filename="BASE_FLOW_METHOD.f">
+			<Option weight="5" />
+		</Unit>
+		<Unit filename="BASING_CONNECTION.f">
+			<Option weight="5" />
+		</Unit>
 		<Unit filename="CHECK.f">
 			<Option weight="1" />
 		</Unit>
-		<Unit filename="CONSTANTS.f">
+		<Unit filename="INITIALING.f">
+			<Option weight="5" />
+		</Unit>
+		<Unit filename="LOSS_METHOD.f">
+			<Option weight="5" />
+		</Unit>
+		<Unit filename="MOD_CONSTANTS.f">
 			<Option weight="0" />
 		</Unit>
-		<Unit filename="MODULE_PARAM.f">
+		<Unit filename="MOD_PARAM.f">
 			<Option weight="4" />
-		</Unit>
-		<Unit filename="MODULE_UHG.f">
-			<Option weight="5" />
 		</Unit>
 		<Unit filename="MOD_TIME.f">
 			<Option weight="4" />
 		</Unit>
+		<Unit filename="MOD_UHG.f">
+			<Option weight="5" />
+		</Unit>
+		<Unit filename="REACH_ROUTING.f">
+			<Option weight="5" />
+		</Unit>
 		<Unit filename="READ.f">
+			<Option weight="5" />
+		</Unit>
+		<Unit filename="RESERVOIR_ROUTING.f">
+			<Option weight="5" />
+		</Unit>
+		<Unit filename="RUN_OFF_CALC.f">
 			<Option weight="5" />
 		</Unit>
 		<Unit filename="TOOL.f">

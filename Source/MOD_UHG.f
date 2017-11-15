@@ -5,7 +5,16 @@ C=================================================================
       USE CONSTANTS
       USE PARAM
       IMPLICIT NONE
-      TYPE(SUBBASIN_TYPE) :: SBS
+      INTERFACE
+        SUBROUTINE GET_SCS_UHG(SBS)
+        USE CONSTANTS
+        USE PARAM
+        USE TIME
+        IMPLICIT NONE
+        TYPE(SUBBASIN_TYPE) :: SBS
+        END SUBROUTINE GET_SCS_UHG
+      END INTERFACE
+      TYPE(SUBBASIN_TYPE), POINTER :: SBS
 
       SELECT CASE (SBS%TRANSFORM)
         CASE(SCS_UHG_TYPE)
@@ -28,10 +37,10 @@ C=================================================================
       USE PARAM
       USE TIME
       IMPLICIT NONE
-      TYPE(SUBBASIN_TYPE) :: SBS
+      TYPE(SUBBASIN_TYPE), POINTER :: SBS
       INTEGER, PARAMETER :: N = 33
       REAL(8) :: UHG_DATA(1:2,1:N)
-      REAL(8) :: TP, UP, T
+      REAL(8) :: TP, UP, T, TC
       INTEGER :: I
 
 C This dimensionless unit hydrograph was developed by Victor Mockus(1957)
@@ -50,7 +59,18 @@ C This dimensionless unit hydrograph was developed by Victor Mockus(1957)
      &                    0.077D0, 0.055D0, 0.04D0, 0.029D0, 0.021D0,
      &                    0.015D0, 0.011D0, 0.005D0, 0.0D0/)
 
-      TP = 0.50D0*DT/3600.0D0 + SBS%TLAG
+      IF(SBS%TLAG.EQ.0) THEN
+
+        !IF(SBS%LENGTH.EQ.0.OR.SBS%SLOPE.EQ.0)
+
+        TC = (SBS%LENGTH*1000.0D0)**0.8*(2540.0D0 - 22.86D0*SBS%CN)**0.7D0/
+     &       (14104.0D0*SBS%CN**0.70D0*SBS%SLOPE**0.50D0)
+
+        SBS%TLAG = 3.0D0*TC/5.0D0
+        TP = 0.50D0*DT/3600.0D0 + SBS%TLAG
+
+      ENDIF
+
       UP = 2.080D0*SBS%AREA/TP
 
       DO I = 1,N

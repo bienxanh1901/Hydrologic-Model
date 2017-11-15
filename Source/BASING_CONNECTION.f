@@ -21,16 +21,28 @@ C=================================================================
       INTEGER :: I, J
       TYPE(BASIN_TYPE), POINTER :: BS
       TYPE(REACH_TYPE), POINTER :: RCH
+      TYPE(RESERVOIR_TYPE), POINTER :: RES
 
       DO I = 1, NBASIN
 
         BS => BASIN(I)
+        BS%MAX_LEVEL = 0
 
         DO J = 1, BS%NREACH
 
             RCH => BS%REACH(J)
 
             RCH%LEVEL = RCH%LEVEL + FIND_LEVEL(BS, RCH%DOWNSTREAM)
+            BS%MAX_LEVEL = MAX(BS%MAX_LEVEL, RCH%LEVEL)
+
+        ENDDO
+
+        DO J = 1, BS%NRESERVOIR
+
+            RES => BS%RESERVOIR(J)
+
+            RES%LEVEL = RES%LEVEL + FIND_LEVEL(BS, RES%DOWNSTREAM)
+            BS%MAX_LEVEL = MAX(BS%MAX_LEVEL, RES%LEVEL)
 
         ENDDO
 

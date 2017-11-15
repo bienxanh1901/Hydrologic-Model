@@ -1,7 +1,7 @@
 C=================================================================
 C SUBROUTINE READ INPUT
 C=================================================================
-      SUBROUTINE READ_INPUT
+      SUBROUTINE READING_INPUT
       USE PARAM
       USE CONSTANTS
       USE TIME
@@ -17,7 +17,7 @@ C=================================================================
 C Open log file
       OPEN(UNIT=ULOG, FILE=TRIM(FLOG),STATUS='REPLACE')
 C Open input file
-      CALL GETCWD(ROOT_DIR)
+
       FUNIT = 10
       F1 = 'Input.dat'
       CALL CHK_FILE(TRIM(F1))
@@ -29,8 +29,8 @@ C Read name list common
       DT = 0.0D0
       TSTART = ""
       TEND = ""
-      INPUT_DIR = ""
-      OUPUT_DIR = ""
+      INPUT_DIR = "INPUT"
+      OUPUT_DIR = "OUTPUT"
 
       READ(FUNIT,INP, ERR=99)
       READ(FUNIT,CTRL, ERR=99)
@@ -70,7 +70,7 @@ C Set date and time
 99    WRITE(*,*) 'ERROR WHILE READING FILE: ', TRIM(F1)
       CLOSE(FUNIT)
       STOP
-      END SUBROUTINE READ_INPUT
+      END SUBROUTINE READING_INPUT
 C=================================================================
 C
 C=================================================================
@@ -222,14 +222,14 @@ C=================================================================
       INTEGER, INTENT(IN) :: FUNIT
       TYPE(BASIN_TYPE) :: BS
       INTEGER :: LOSSRATE, BASE_FLOW_TYPE, TRANSFORM, I, J, FU, IERR
-      REAL(8) :: AREA, CN, IMPERVIOUS, TLAG
+      REAL(8) :: AREA, CN, IMPERVIOUS, TLAG, LENGTH, SLOPE
       REAL(8) :: BF_CONST, BF_MONTHLY(1:12)
       CHARACTER(100) :: NAME, DOWNSTREAM, PRECIP_GATE
       CHARACTER(3) :: ICH
       TYPE(SUBBASIN_TYPE), POINTER :: SBS
 
       NAMELIST /SBG1/ NAME, DOWNSTREAM, PRECIP_GATE, LOSSRATE, TRANSFORM,
-     &                AREA, CN, IMPERVIOUS, TLAG
+     &                AREA, CN, IMPERVIOUS, TLAG, LENGTH, SLOPE
       NAMELIST /SBG2/ BASE_FLOW_TYPE, BF_CONST, BF_MONTHLY
 
       ALLOCATE(BS%SUBBASIN(1:BS%NSUBBASIN), STAT=IERR)
@@ -247,6 +247,8 @@ C=================================================================
         LOSSRATE = 0
         TRANSFORM = SCS_UHG_TYPE
         AREA = 0.0D0
+        LENGTH = 0.0D0
+        SLOPE = 0.0D0
         CN = 0.0D0
         IMPERVIOUS = 0.0D0
         TLAG = 0.0D0
@@ -282,13 +284,14 @@ C=================================================================
 
         !Loss method
         SBS%LOSSRATE = LOSSRATE
-        IF(LOSSRATE.EQ.SCS_CURVE_LOSS) SBS%IMPERVIOUS = IMPERVIOUS
+        IF(LOSSRATE.EQ.SCS_CURVE_LOSS) SBS%IMPERVIOUS = IMPERVIOUS/100.0D0
 
         !Transform method
         SBS%TRANSFORM = TRANSFORM
         SBS%CN = CN
         SBS%TLAG = TLAG
-        IF(SBS%TLAG.GE.1) CALL GET_UHG(BS%SUBBASIN(I))
+        SBS%LENGTH = LENGTH
+        SBS%SLOPE = SLOPE
 
         SBS%PRECIP => NULL()
         DO J = 1, BS%NGATE
@@ -385,12 +388,12 @@ C=================================================================
       INTEGER, INTENT(IN) :: FUNIT
       TYPE(BASIN_TYPE) :: BS
       INTEGER :: ROUTE, I, IERR
-      REAL(8) :: K, X
+      REAL(8) :: K, X, LOSS_VALUE, LOSS_RATIO
       CHARACTER(100) :: DOWNSTREAM, NAME
       CHARACTER(3) :: ICH
       TYPE(REACH_TYPE), POINTER :: RCH
 
-      NAMELIST /REACHNL/ NAME, DOWNSTREAM, K, X, ROUTE
+      NAMELIST /REACHNL/ NAME, DOWNSTREAM, K, X, ROUTE, LOSS_RATIO, LOSS_VALUE
 
       ALLOCATE(BS%REACH(1:BS%NREACH), STAT=IERR)
       CALL ChkMemErr('REACH', IERR)
@@ -405,12 +408,16 @@ C=================================================================
         ROUTE = MUSKINGUM_METHOD
         K = 2
         X = 0.25
+        LOSS_VALUE = 0.0D0
+        LOSS_RATIO = 0.0D0
 
         READ(FUNIT, REACHNL, ERR=99)
 
         RCH%NAME = TRIM(NAME)
         RCH%DOWNSTREAM = TRIM(DOWNSTREAM)
         RCH%ROUTE = ROUTE
+        RCH%LOSS_RATIO = LOSS_RATIO
+        RCH%LOSS_VALUE = LOSS_VALUE
         IF(ROUTE.EQ.MUSKINGUM_METHOD) THEN
 
             RCH%K = K
@@ -553,6 +560,7 @@ C=================================================================
 
         ELSE
 
+            RES%TURBIN_GATE => NULL()
             DO J = 1, BS%NGATE
 
                 IF(TRIM(BS%GATE(J)%NAME).EQ.TRIM(TURBIN_GATE)) RES%TURBIN_GATE => BS%GATE(J)
