@@ -17,9 +17,9 @@ C=================================================================
       INTEGER :: I
       CHARACTER(100) :: COMMAND
 
-      COMMAND = 'mkdir -p '//TRIM(OUPUT_DIR)
+      COMMAND = 'mkdir -p '//TRIM(OUTPUT_DIR)
       CALL SYSTEM(TRIM(COMMAND))
-      CALL SYSTEM('cd '//TRIM(OUPUT_DIR))
+      CALL SYSTEM('cd '//TRIM(OUTPUT_DIR))
 
       DO I = 1,NBASIN
 

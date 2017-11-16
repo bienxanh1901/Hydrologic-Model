@@ -7,19 +7,19 @@ C=================================================================
       USE TIME
       IMPLICIT NONE
       INTEGER :: FUNIT
-      CHARACTER(100) :: F1
+      CHARACTER(5) :: F1
       CHARACTER(16) :: TSTART, TEND
       NAMELIST /INP/ NBASIN, NTIME, DT
       NAMELIST /CTRL/ TSTART, TEND
-      NAMELIST /IODIR/ INPUT_DIR, OUPUT_DIR
+      NAMELIST /IODIR/ INPUT_DIR, OUTPUT_DIR
 
 
 C Open log file
       OPEN(UNIT=ULOG, FILE=TRIM(FLOG),STATUS='REPLACE')
 C Open input file
 
-      FUNIT = 10
-      F1 = 'Input.dat'
+      FUNIT = 30
+      F1 = 'Input'
       CALL CHK_FILE(TRIM(F1))
       OPEN(UNIT=FUNIT, FILE=TRIM(F1),STATUS='OLD')
 
@@ -27,10 +27,10 @@ C Read name list common
       NBASIN = 0
       NTIME = 0
       DT = 0.0D0
-      TSTART = ""
-      TEND = ""
-      INPUT_DIR = "INPUT"
-      OUPUT_DIR = "OUTPUT"
+      TSTART = ''
+      TEND = ''
+      INPUT_DIR = 'Input_file'
+      OUTPUT_DIR = 'OUTPUT'
 
       READ(FUNIT,INP, ERR=99)
       READ(FUNIT,CTRL, ERR=99)
@@ -64,7 +64,7 @@ C Read BASIN
       CALL READ_BASIN
 
 C Set date and time
-      CALL SET_DATE_TIME(TSTART, TEND)
+c      CALL SET_DATE_TIME(TSTART, TEND)
 
       RETURN
 99    WRITE(*,*) 'ERROR WHILE READING FILE: ', TRIM(F1)
@@ -84,9 +84,9 @@ C=================================================================
       INTEGER :: FUNIT, IERR, I
       INTEGER :: NSUBBASIN, NSOURCE, NREACH, NRESERVOIR, NGATE
       CHARACTER(2) :: ICH
-      CHARACTER(100) :: F1
+      CHARACTER(100) :: F1, NAME
 
-      NAMELIST /BSNL/ NSUBBASIN, NSOURCE, NREACH, NRESERVOIR, NGATE
+      NAMELIST /BSNL/ NSUBBASIN, NSOURCE, NREACH, NRESERVOIR, NGATE, NAME
 
 C Allocate array
       ALLOCATE(BASIN(1:NBASIN),STAT=IERR)
@@ -95,7 +95,7 @@ C Allocate array
       DO I = 1, NBASIN
 C Open input file
         WRITE(ICH,'(I2.2)') I
-        FUNIT = 10
+        FUNIT = 30
         F1 = TRIM(INPUT_DIR)//'/Basin_'//ICH
         CALL CHK_FILE(TRIM(F1))
         OPEN(UNIT=FUNIT, FILE=TRIM(F1),STATUS='OLD')
@@ -106,7 +106,9 @@ C Read name list BASIN
         NREACH = 0
         NRESERVOIR = 0
         NGATE = 0
+        NAME='BASIN_'//ICH
         READ(FUNIT,BSNL,ERR=99)
+        BASIN(I)%NAME = TRIM(NAME)
         BASIN(I)%NSUBBASIN = NSUBBASIN
         BASIN(I)%NSOURCE = NSOURCE
         BASIN(I)%NREACH = NREACH
@@ -155,7 +157,7 @@ C=================================================================
       CHARACTER(16) :: TSTART, TEND
       TYPE(GATE_TYPE), POINTER :: GT
 
-      NAMELIST /GATENL/ NAME, GATETYPE, TSTART, TEND, DATAFILE, INTERVAL
+      NAMELIST /GTNL/ NAME, GATETYPE, TSTART, TEND, DATAFILE, INTERVAL
 
       ALLOCATE(BS%GATE(1:BS%NGATE), STAT=IERR)
       CALL ChkMemErr('GATE', IERR)
@@ -166,7 +168,8 @@ C=================================================================
 
         !Initial values
         WRITE(ICH,'(I3.3)') I
-        NAME = "GATE_"//ICH
+        !NAME = "GATE_"//ICH
+        NAME = ""
         TSTART = ""
         TEND = ""
         DATAFILE = ""
@@ -175,12 +178,12 @@ C=================================================================
 
 
         !Read sub-BASIN  ith
-        READ(FUNIT,GATENL,ERR=99)
+        READ(FUNIT,GTNL)
 
         !BASIN characteristic
         GT%NAME = TRIM(NAME)
-        GT%START_TIME = strptime(TRIM(TSTART), '%d-%m-%Y %H:%M')
-        GT%END_TIME = strptime(TRIM(TEND), '%d-%m-%Y %H:%M')
+*        GT%START_TIME = strptime(TRIM(TSTART), '%d-%m-%Y %H:%M')
+*        GT%END_TIME = strptime(TRIM(TEND), '%d-%m-%Y %H:%M')
         GT%GATETYPE = GATETYPE
         GT%INTERVAL = INTERVAL
 
@@ -228,9 +231,8 @@ C=================================================================
       CHARACTER(3) :: ICH
       TYPE(SUBBASIN_TYPE), POINTER :: SBS
 
-      NAMELIST /SBG1/ NAME, DOWNSTREAM, PRECIP_GATE, LOSSRATE, TRANSFORM,
-     &                AREA, CN, IMPERVIOUS, TLAG, LENGTH, SLOPE
-      NAMELIST /SBG2/ BASE_FLOW_TYPE, BF_CONST, BF_MONTHLY
+      NAMELIST /SBSNL/ NAME, DOWNSTREAM, PRECIP_GATE, LOSSRATE, TRANSFORM,
+     &                AREA, CN, IMPERVIOUS, TLAG, LENGTH, SLOPE, BASE_FLOW_TYPE, BF_CONST, BF_MONTHLY
 
       ALLOCATE(BS%SUBBASIN(1:BS%NSUBBASIN), STAT=IERR)
       CALL ChkMemErr('SUB BASIN', IERR)
@@ -256,8 +258,7 @@ C=================================================================
         BF_MONTHLY = 0.0D0
 
         !Read sub-BASIN  ith
-        READ(FUNIT,SBG1,ERR=99)
-        READ(FUNIT,SBG2,ERR=99)
+        READ(FUNIT,SBSNL,ERR=99)
 
         !Stop if the file contains precipitation value is not set.
 *        IF(TRIM(PRECIPF).EQ."") THEN
@@ -450,10 +451,9 @@ C=================================================================
       CHARACTER(100) :: DOWNSTREAM, NAME, RTCFN, DCFN, TURBIN_GATE, F1
       CHARACTER(3) :: ICH
       TYPE(RESERVOIR_TYPE), POINTER :: RES
-      NAMELIST /RES1/ NAME, DOWNSTREAM, ROUTE, Z0
-      NAMELIST /RES2/ ROUTING_CURVE, RTCFN
-      NAMELIST /RES3/ DC_CTRL, DOORW, DC_COEFF, ZSW, DCFN
-      NAMELIST /RES4/ TB_TYPE, TB_CONST_DATA, TURBIN_GATE
+      NAMELIST /RESNL/ NAME, DOWNSTREAM, ROUTE, Z0, ROUTING_CURVE, RTCFN,
+     &                 DC_CTRL, DOORW, DC_COEFF, ZSW, DCFN, TB_TYPE,
+     &                 TB_CONST_DATA, TURBIN_GATE
 
 
       ALLOCATE(BS%RESERVOIR(1:BS%NRESERVOIR), STAT=IERR)
@@ -482,10 +482,7 @@ C=================================================================
         TURBIN_GATE = ""
 
 
-        READ(FUNIT, RES1, ERR=99)
-        READ(FUNIT, RES2, ERR=99)
-        READ(FUNIT, RES3, ERR=99)
-        READ(FUNIT, RES4, ERR=99)
+        READ(FUNIT, RESNL)
 
 
         RES%NAME = TRIM(NAME)

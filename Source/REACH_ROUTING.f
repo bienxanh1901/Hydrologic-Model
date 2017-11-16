@@ -65,6 +65,7 @@ C=================================================================
       QIT1 = RCH%INFLOW(ITER - 1)
       QIT2 = RCH%INFLOW(ITER)
       QOT1 = RCH%OUTFLOW(ITER - 1)
+      qot2 = 0.0D0
       N = INT(DT)
       DO I = 1, N
 

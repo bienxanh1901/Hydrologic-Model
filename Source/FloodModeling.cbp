@@ -8,7 +8,7 @@
 		<Build>
 			<Target title="Debug">
 				<Option output="bin/Debug/FloodModeling" prefix_auto="1" extension_auto="1" />
-				<Option working_dir="../Validate/SESAN4/model" />
+				<Option working_dir="../Validate/SESAN4_3A/thang_1" />
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gfortran" />
@@ -16,15 +16,12 @@
 					<Add option="-fcheck=bounds" />
 					<Add option="-fcheck=all" />
 					<Add option="-g" />
-					<Add option="-fbounds-check -ffixed-line-length-120" />
-					<Add directory="lib" />
+					<Add option="-ffixed-line-length-120 -fbounds-check" />
 				</Compiler>
-				<Linker>
-					<Add directory="lib" />
-				</Linker>
 			</Target>
 			<Target title="Release">
 				<Option output="bin/Release/FloodModeling" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="../Validate/SESAN4_3A/thang_1" />
 				<Option object_output="obj/Release/" />
 				<Option type="1" />
 				<Option compiler="gfortran" />
@@ -79,6 +76,9 @@
 		<Unit filename="RESERVOIR_ROUTING.f">
 			<Option weight="5" />
 		</Unit>
+		<Unit filename="ROUTING.f">
+			<Option weight="5" />
+		</Unit>
 		<Unit filename="RUN_OFF_CALC.f">
 			<Option weight="5" />
 		</Unit>
@@ -86,6 +86,9 @@
 			<Option weight="0" />
 		</Unit>
 		<Unit filename="TRANSFORM_METHOD.f">
+			<Option weight="5" />
+		</Unit>
+		<Unit filename="WRITEFILE.f">
 			<Option weight="5" />
 		</Unit>
 		<Unit filename="lib/datetime.f90">

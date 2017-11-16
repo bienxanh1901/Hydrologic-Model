@@ -1,4 +1,0 @@
-&OBSER NBASING=1, NTIME=8736, DT = 3600, OBSF='input_PRE.dat' /
-&FLCALC MODEL='NAM', UHG_TYPE=1, CHAF='input_NAM.dat' /
-&FLRT ISROUTING=.TRUE., FRTF='input_FRT.dat' /
- 

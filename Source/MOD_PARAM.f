@@ -143,7 +143,7 @@ C-------------------------------------------------------------------------------
       INTEGER :: NBASIN
       TYPE(BASIN_TYPE), POINTER, DIMENSION(:) :: BASIN
       !Inout
-      CHARACTER(100) :: INPUT_DIR, OUPUT_DIR, ROOT_DIR
+      CHARACTER(100) :: INPUT_DIR, OUTPUT_DIR, ROOT_DIR
       END MODULE PARAM
 C=================================================================
 C

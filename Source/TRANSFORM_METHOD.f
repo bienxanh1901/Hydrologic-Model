@@ -1,62 +1,66 @@
 C=================================================================
-C SUBROUTINE UNIT_HYDROGRAPH_METHOD
+C TRANSFORM_CALC
 C=================================================================
-      SUBROUTINE LOSS_CALC(SBS, ITER)
+      SUBROUTINE TRANSFORM_CALC(SBS, ITER)
       USE PARAM
       USE CONSTANTS
       USE TIME
       IMPLICIT NONE
       INTERFACE
-        SUBROUTINE SCS_CURVE_NUMBER(SBS, ITER)
+        SUBROUTINE SCS_UHG(SBS, ITER)
         USE PARAM
         USE CONSTANTS
         USE TIME
         IMPLICIT NONE
         TYPE(SUBBASIN_TYPE), POINTER :: SBS
         INTEGER, INTENT(IN) :: ITER
-        END SUBROUTINE SCS_CURVE_NUMBER
+        END SUBROUTINE SCS_UHG
       END INTERFACE
       TYPE(SUBBASIN_TYPE), POINTER :: SBS
       INTEGER, INTENT(IN) :: ITER
 
-      SELECT CASE(SBS%LOSSRATE)
-        CASE(SCS_CURVE_LOSS)
-            CALL SCS_CURVE_NUMBER(SBS, ITER)
+      SELECT CASE(SBS%TRANSFORM)
+        CASE(SCS_UHG_TYPE)
+            CALL SCS_UHG(SBS, ITER)
         CASE DEFAULT
-            WRITE(*,*) 'Error: Invalid type of loss method!!!'
+            WRITE(*,*) 'Error: Invalid type of transform method!!!'
             STOP
       END SELECT
 
       RETURN
-      END SUBROUTINE LOSS_CALC
+      END SUBROUTINE TRANSFORM_CALC
 C=================================================================
 C
 C=================================================================
 C=================================================================
-C SUBROUTINE UNIT_HYDROGRAPH_METHOD
+C SCS_UHG
 C=================================================================
-      SUBROUTINE SCS_CURVE_NUMBER(SBS, ITER)
+      SUBROUTINE SCS_UHG(SBS, ITER)
       USE PARAM
       USE CONSTANTS
       USE TIME
       IMPLICIT NONE
+      INTERFACE
+      END INTERFACE
       TYPE(SUBBASIN_TYPE), POINTER :: SBS
       INTEGER, INTENT(IN) :: ITER
-      REAL(8) :: PE2, IMP, PRECIP, IA
+      INTEGER :: M, L, N1
+      REAL(8) :: SUMP
 
-      PE2 = 0.0D0
-      IA = 0.2D0*SBS%S
-      PRECIP = SBS%PRECIP%GATE_DATA(ITER)
-      IMP = PRECIP*SBS%IMPERVIOUS
-      SBS%P = SBS%P + PRECIP - IMP
-      IF(SBS%P.GT.IA) PE2 = (SBS%P - IA)*(SBS%P - IA)/(SBS%P + 0.8D0*SBS%S)
-      SBS%EXCESS(ITER) = PE2 - SBS%PE + IMP
-      SBS%PE = PE2
-      SBS%LOSS(ITER) = PRECIP - SBS%EXCESS(ITER)
+      SUMP = 0.0D0
+      N1 = MAX(1,ITER - SBS%NUHG)
+      DO M = N1,ITER
 
+        L = ITER - M + 1
+        SUMP = SUMP + SBS%EXCESS(M)*SBS%U(L)/10.0D0
+
+      ENDDO
+
+      SBS%DIRECT_FLOW(ITER) = SUMP
+      SBS%TOTAL_FLOW(ITER) = SUMP + SBS%BASE_FLOW(ITER)
 
       RETURN
-      END SUBROUTINE SCS_CURVE_NUMBER
+      END SUBROUTINE SCS_UHG
 C=================================================================
 C
 C=================================================================

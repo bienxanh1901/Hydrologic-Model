@@ -67,10 +67,11 @@ C This dimensionless unit hydrograph was developed by Victor Mockus(1957)
      &       (14104.0D0*SBS%CN**0.70D0*SBS%SLOPE**0.50D0)
 
         SBS%TLAG = 3.0D0*TC/5.0D0
-        TP = 0.50D0*DT/3600.0D0 + SBS%TLAG
+
 
       ENDIF
 
+      TP = 0.50D0*DT/3600.0D0 + SBS%TLAG
       UP = 2.080D0*SBS%AREA/TP
 
       DO I = 1,N

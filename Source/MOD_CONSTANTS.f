@@ -22,9 +22,12 @@ C=================================================================
       INTEGER, PARAMETER :: SCS_CURVE_LOSS = 1
       !definition transform method
       INTEGER, PARAMETER :: SCS_UHG_TYPE = 1
+      !definition for gate
+      INTEGER, PARAMETER :: PRECIPITATION_GATE = 1
+      INTEGER, PARAMETER :: DISCHARGE_GATE = 2
 
       !define log file
-      INTEGER :: ULOG
+      INTEGER :: ULOG = 11
       CHARACTER(7) :: FLOG = "RUN.LOG"
       END MODULE CONSTANTS
 C=================================================================
