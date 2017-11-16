@@ -84,7 +84,7 @@
                 RCH => BS%REACH(J)
                 IF(RCH%LEVEL.NE.K) CYCLE
                 CALL GET_REACH_INFLOW(BS, RCH, 0)
-                RCH%OUTFLOW(0) = (RCH%INFLOW(0) - RCH%LOSS_VALUE)*(1.0D0 - RCH%LOSS_RATIO)
+                RCH%OUTFLOW(0) = RCH%INFLOW(0)
 
             ENDDO
 
@@ -105,7 +105,9 @@
                 ENDIF
 
                 RES%ELEVATION(0) = RES%Z0
-                CALL INTERP(RES%Z0, RES%STORAGE(0), RES%SE_CURVE(1,1:RES%NSE), RES%SE_CURVE(2,1:RES%NSE), RES%NSE)
+                CALL INTERP(RES%SE_CURVE(1,1:RES%NSE),
+     &                      RES%SE_CURVE(2,1:RES%NSE),
+     &                      RES%Z0, RES%STORAGE(0), RES%NSE)
 
             ENDDO
 

@@ -40,7 +40,7 @@
 
                 CALL GET_BASE_FLOW(SBS, N)
 
-                CALL TRANSFORM_CALC(SBS, N)
+*                CALL TRANSFORM_CALC(SBS, N)
 
             ENDDO
 

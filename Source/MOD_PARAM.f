@@ -68,7 +68,7 @@ C STRUCT FOR REACH
         !Routing method
         INTEGER :: ROUTE
         !Parameter for reservoir structure method
-        REAL(8) :: Z0, DOORW, DC_COEFF, ZBT
+        REAL(8) :: Z0, DOORW, DC_COEFF, ZSW
 
         !Storage method
         INTEGER :: ROUTING_CURVE
@@ -76,10 +76,10 @@ C STRUCT FOR REACH
         INTEGER :: NSE
         REAL(8), ALLOCATABLE, DIMENSION(:,:) :: SE_CURVE
         !Discharge control
-        INTEGER :: DC_CTRL, NDE
+        INTEGER :: DC_CTRL, NED
         REAL(8), ALLOCATABLE, DIMENSION(:,:) :: ED_CURVE
         REAL(8), ALLOCATABLE, DIMENSION(:,:) :: EH_CURVE
-        INTEGER, ALLOCATABLE, DIMENSION(:) :: NDOOR_OPEN
+        INTEGER, ALLOCATABLE, DIMENSION(:) :: NDOOR
         !Turbin discharge
         INTEGER :: TB_TYPE
         REAL(8) :: TB_CONST_DATA
@@ -124,7 +124,9 @@ C-------------------------------------------------------------------------------
 C---------------------------------------------------------------------------------------------------------
       TYPE BASIN_TYPE
 
-        ! max level of basin objects
+        !basin name
+        CHARACTER(100) :: NAME
+        !max level of basin objects
         INTEGER :: MAX_LEVEL = 0
         !Number of objects
         INTEGER :: NSUBBASIN, NREACH, NRESERVOIR, NSOURCE, NPRECIP, NGATE

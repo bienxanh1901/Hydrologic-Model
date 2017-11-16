@@ -89,7 +89,7 @@ C This dimensionless unit hydrograph was developed by Victor Mockus(1957)
 
         T = T + DT/3600.0D0
 
-        CALL INTERP(UHG_DATA(1,I), UHG_DATA(2,I), T, SBS%U(I), N)
+        CALL INTERP(UHG_DATA(1,1:N), UHG_DATA(2,1:N), T, SBS%U(I), N)
 
       ENDDO
 

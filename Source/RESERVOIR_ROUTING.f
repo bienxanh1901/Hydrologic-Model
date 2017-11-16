@@ -7,15 +7,27 @@ C=================================================================
       USE TIME
       IMPLICIT NONE
       INTERFACE
+        SUBROUTINE OUTFLOW_STRUCTURE_METHOD(BS, RES, ITER)
+        USE PARAM
+        USE CONSTANTS
+        USE TIME
+        IMPLICIT NONE
+        TYPE(BASIN_TYPE), POINTER :: BS
+        TYPE(RESERVOIR_TYPE), POINTER :: RES
+        INTEGER, INTENT(IN) :: ITER
+        END SUBROUTINE OUTFLOW_STRUCTURE_METHOD
       END INTERFACE
-      TYPE(REACH_TYPE), POINTER :: RCH
       TYPE(BASIN_TYPE), POINTER :: BS
-      TYPE(SUBBASIN_TYPE), POINTER :: SBS
-      TYPE(SOURCE_TYPE), POINTER :: SRC
       TYPE(RESERVOIR_TYPE), POINTER :: RES
       INTEGER, INTENT(IN) :: ITER
-      INTEGER :: I
 
+      SELECT CASE(RES%ROUTE)
+        CASE(OUTFLOW_STRUCTURE)
+            CALL OUTFLOW_STRUCTURE_METHOD(BS, RES, ITER)
+        CASE DEFAULT
+            WRITE(*,*) 'Error: Invalid type of Reach routing method!!!'
+            STOP
+      END SELECT
 
       RETURN
       END SUBROUTINE RESERVOIR_ROUTING
@@ -25,23 +37,149 @@ C=================================================================
 C=================================================================
 C OUTFLOW_STRUCTURE
 C=================================================================
-      SUBROUTINE OUTFLOW_STRUCTURE(BS, RES, ITER)
+      SUBROUTINE OUTFLOW_STRUCTURE_METHOD(BS, RES, ITER)
       USE PARAM
       USE CONSTANTS
       USE TIME
       IMPLICIT NONE
       INTERFACE
+        SUBROUTINE GET_RESERVOIR_INFLOW(BS, RES, ITER)
+        USE PARAM
+        USE CONSTANTS
+        USE TIME
+        IMPLICIT NONE
+        TYPE(BASIN_TYPE), POINTER :: BS
+        TYPE(RESERVOIR_TYPE), POINTER :: RES
+        INTEGER, INTENT(IN) :: ITER
+        END SUBROUTINE GET_RESERVOIR_INFLOW
+
+          SUBROUTINE SPILLWAY_DISCHARGE(RES, Z, Q)
+          USE PARAM
+          USE CONSTANTS
+          USE TIME
+          IMPLICIT NONE
+          TYPE(RESERVOIR_TYPE), POINTER :: RES
+          REAL(8), INTENT(IN) :: Z
+          REAL(8), INTENT(OUT):: Q
+          END SUBROUTINE SPILLWAY_DISCHARGE
+
       END INTERFACE
-      TYPE(REACH_TYPE), POINTER :: RCH
       TYPE(BASIN_TYPE), POINTER :: BS
-      TYPE(SUBBASIN_TYPE), POINTER :: SBS
-      TYPE(SOURCE_TYPE), POINTER :: SRC
       TYPE(RESERVOIR_TYPE), POINTER :: RES
       INTEGER, INTENT(IN) :: ITER
-      INTEGER :: I
+      INTEGER :: N, I
+      REAL(8) :: QIT1, QIT2, DT1, QOT1, QOT2
+      REAL(8) :: ZT, VT, DV
+
+      DT1 = 1.0D0/3600.0D0
+      CALL GET_RESERVOIR_INFLOW(BS, RES, ITER)
+      QIT1 = RES%INFLOW(ITER - 1)
+      QIT2 = RES%INFLOW(ITER)
+      QOT1 = RES%OUTFLOW(ITER - 1)
+      ZT = RES%ELEVATION(ITER - 1)
+      VT = RES%STORAGE(ITER - 1)
+
+      N = INT(DT)
+
+      DO I = 1,N
+
+        CALL SPILLWAY_DISCHARGE(RES, ZT, QOT2)
+        IF(.NOT.ASSOCIATED(RES%TURBIN_GATE)) THEN
+
+            QOT2 = QOT2 + RES%TB_CONST_DATA
+
+        ELSE
+
+            QOT2 = QOT2 + RES%TURBIN_GATE%GATE_DATA(ITER)
+
+        ENDIF
+
+        DV = (0.5D0*((QIT2 + QIT1) - (QOT2 + QOT1)))*DT1
+        VT = VT + DV
+        CALL INTERP(RES%SE_CURVE(2,1:RES%NSE),
+     &              RES%SE_CURVE(1,1:RES%NSE),
+     &              VT, ZT, RES%NSE)
+
+
+      ENDDO
+
+      RES%OUTFLOW(ITER) = QOT2
+      RES%ELEVATION(ITER) = ZT
+      RES%STORAGE(ITER) = VT
 
       RETURN
-      END SUBROUTINE OUTFLOW_STRUCTURE
+      END SUBROUTINE OUTFLOW_STRUCTURE_METHOD
+C=================================================================
+C
+C=================================================================
+C=================================================================
+C SPILLWAY_DISCHARGE
+C=================================================================
+      SUBROUTINE SPILLWAY_DISCHARGE(RES, Z, Q)
+      USE PARAM
+      USE CONSTANTS
+      USE TIME
+      IMPLICIT NONE
+      INTERFACE
+        SUBROUTINE GET_DOOR_AREA(RES, Z, S, H)
+        USE PARAM
+        IMPLICIT NONE
+        TYPE(RESERVOIR_TYPE), POINTER :: RES
+        REAL(8), INTENT(IN) :: Z
+        REAL(8), INTENT(OUT) :: S, H
+        END SUBROUTINE GET_DOOR_AREA
+      END INTERFACE
+      TYPE(RESERVOIR_TYPE), POINTER :: RES
+      REAL(8), INTENT(IN) :: Z
+      REAL(8), INTENT(OUT):: Q
+      REAL(8) :: S, H, DH
+
+      IF(RES%DC_CTRL.EQ.DC_ELEVATION_TYPE) THEN
+
+        IF(Z.LT.RES%ED_CURVE(1,1)) THEN
+
+            Q = 0.0D0
+            RETURN
+
+        ELSE IF(Z.GE.RES%ED_CURVE(RES%NED,1)) THEN
+
+            Q = RES%ED_CURVE(RES%NED,2)
+            RETURN
+
+        ELSE
+
+            CALL INTERP(RES%ED_CURVE(1,1:RES%NED),
+     &              RES%ED_CURVE(2,1:RES%NED), Z, Q, RES%NSE)
+
+        ENDIF
+
+      ELSE IF(RES%DC_CTRL.EQ.DC_DOOR_TYPE) THEN
+
+        IF(Z.LT.RES%EH_CURVE(1,1)) THEN
+
+            Q = 0.0D0
+            RETURN
+
+        ELSE
+
+            CALL GET_DOOR_AREA(RES, Z, S, H)
+            DH = Z - RES%ZSW
+            IF(DH.GE.H) THEN
+
+                Q = RES%DC_COEFF*S*DSQRT(9.81D0*2.0D0*(DH - 0.5*H))
+
+            ELSE
+
+                Q = 0.44D0*S*DSQRT(9.81*2.0*DH)
+
+            ENDIF
+
+        ENDIF
+
+      ENDIF
+
+      RETURN
+      END SUBROUTINE SPILLWAY_DISCHARGE
 C=================================================================
 C
 C=================================================================
@@ -56,6 +194,7 @@ C=================================================================
       TYPE(SOURCE_TYPE), POINTER :: SRC
       TYPE(RESERVOIR_TYPE), POINTER :: RES
       INTEGER, INTENT(IN) :: ITER
+      TYPE(RESERVOIR_TYPE), POINTER :: RES2
       INTEGER :: I
 
       RES%INFLOW(ITER) = 0.0D0
@@ -93,5 +232,63 @@ C=================================================================
 
       ENDDO
 
+      DO I = 1, BS%NRESERVOIR
+
+        RES2 => BS%RESERVOIR(I)
+        IF(TRIM(RES2%DOWNSTREAM).EQ.TRIM(RES%NAME)) THEN
+
+            RES%INFLOW(ITER) = RES%INFLOW(ITER) + RES2%OUTFLOW(ITER)
+
+        ENDIF
+
+      ENDDO
+
       RETURN
       END SUBROUTINE GET_RESERVOIR_INFLOW
+C=================================================================
+C GET_DOOR_AREA
+C=================================================================
+      SUBROUTINE GET_DOOR_AREA(RES, Z, S, H)
+      USE PARAM
+      IMPLICIT NONE
+      TYPE(RESERVOIR_TYPE), POINTER :: RES
+      REAL(8), INTENT(IN) :: Z
+      REAL(8), INTENT(OUT) :: S, H
+      INTEGER :: J
+
+      IF(Z.LT.RES%EH_CURVE(1,1)) THEN
+
+        S = 0.0D0
+        H = 0.0D0
+        RETURN
+
+      ELSE IF(Z.GE.RES%EH_CURVE(1, RES%NED)) THEN
+
+
+        H = RES%EH_CURVE(2, RES%NED)
+        S = H*RES%NDOOR(RES%NED)*RES%DOORW
+        RETURN
+
+      ELSE
+
+        DO J = 2,RES%NED
+            IF(Z.GE.RES%EH_CURVE(1, J-1).AND.
+     &         Z.LT.RES%EH_CURVE(1,J)) THEN
+
+                H = RES%EH_CURVE(2,J)
+                S = H*RES%NDOOR(J)*RES%DOORW
+
+                RETURN
+
+            ENDIF
+        ENDDO
+
+      ENDIF
+
+
+
+      RETURN
+      END SUBROUTINE GET_DOOR_AREA
+C=================================================================
+C
+C=================================================================

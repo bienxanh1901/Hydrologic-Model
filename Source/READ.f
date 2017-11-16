@@ -446,13 +446,13 @@ C=================================================================
       INTEGER, INTENT(IN) :: FUNIT
       TYPE(BASIN_TYPE) :: BS
       INTEGER :: ROUTE, DC_CTRL, I, J, FU, IERR, ROUTING_CURVE, TB_TYPE
-      REAL(8) :: Z0, DOORW, DC_COEFF, ZBT, TB_CONST_DATA
+      REAL(8) :: Z0, DOORW, DC_COEFF, ZSW, TB_CONST_DATA
       CHARACTER(100) :: DOWNSTREAM, NAME, RTCFN, DCFN, TURBIN_GATE, F1
       CHARACTER(3) :: ICH
       TYPE(RESERVOIR_TYPE), POINTER :: RES
       NAMELIST /RES1/ NAME, DOWNSTREAM, ROUTE, Z0
       NAMELIST /RES2/ ROUTING_CURVE, RTCFN
-      NAMELIST /RES3/ DC_CTRL, DOORW, DC_COEFF, ZBT, DCFN
+      NAMELIST /RES3/ DC_CTRL, DOORW, DC_COEFF, ZSW, DCFN
       NAMELIST /RES4/ TB_TYPE, TB_CONST_DATA, TURBIN_GATE
 
 
@@ -475,7 +475,7 @@ C=================================================================
         DC_CTRL = DC_ELEVATION_TYPE
         DOORW = 0.0D0
         DC_COEFF = 0.0D0
-        ZBT = 0.0D0
+        ZSW = 0.0D0
         DCFN = ""
         TB_TYPE = CONSTANT_DATA
         TB_CONST_DATA = 0.0D0
@@ -517,32 +517,32 @@ C=================================================================
         CALL CHK_FILE(TRIM(F1))
         OPEN(UNIT=FU, FILE=TRIM(F1), STATUS='OLD')
 
-        READ(FU,*) RES%NDE
+        READ(FU,*) RES%NED
 
         IF(DC_CTRL.EQ.DC_DOOR_TYPE) THEN
 
             RES%DOORW = DOORW
             RES%DC_COEFF = DC_COEFF
-            RES%ZBT = ZBT
+            RES%ZSW = ZSW
 
-            ALLOCATE(RES%NDOOR_OPEN(1:RES%NDE), STAT=IERR)
+            ALLOCATE(RES%NDOOR(1:RES%NED), STAT=IERR)
             CALL ChkMemErr('NDOOR_OPEN', IERR)
-            ALLOCATE(RES%EH_CURVE(1:2,1:RES%NDE), STAT=IERR)
+            ALLOCATE(RES%EH_CURVE(1:2,1:RES%NED), STAT=IERR)
             CALL ChkMemErr('EH_CURVE', IERR)
 
 
-            DO J = 1, RES%NDE
+            DO J = 1, RES%NED
 
-                READ(FU,*) RES%EH_CURVE(1:2,J), RES%NDOOR_OPEN(J)
+                READ(FU,*) RES%EH_CURVE(1:2,J), RES%NDOOR(J)
 
             ENDDO
 
         ELSE IF(DC_CTRL.EQ.DC_ELEVATION_TYPE) THEN
 
-            ALLOCATE(RES%ED_CURVE(1:2,1:RES%NDE),STAT=IERR)
+            ALLOCATE(RES%ED_CURVE(1:2,1:RES%NED),STAT=IERR)
             CALL ChkMemErr('ED_CURVE', IERR)
 
-            DO J = 1, RES%NDE
+            DO J = 1, RES%NED
 
                 READ(FU,*) RES%ED_CURVE(1:2,J)
 
