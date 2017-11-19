@@ -3,8 +3,10 @@
       USE CONSTANTS
       IMPLICIT NONE
 
+C Open log file
+      OPEN(UNIT=ULOG, FILE=TRIM(FLOG),STATUS='REPLACE')
 C Introduction
-!      CALL GETCWD(ROOT_DIR)
+      CALL GETCWD(ROOT_DIR)
 C Read input parameters
       WRITE(*,*) 'READING INPUT DATA!!!'
       CALL READING_INPUT

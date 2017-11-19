@@ -81,7 +81,7 @@ C This dimensionless unit hydrograph was developed by Victor Mockus(1957)
 
       ENDDO
 
-      SBS%NUHG = INT(UHG_DATA(2,N)/(DT/3600.0D0))
+      SBS%NUHG = INT(UHG_DATA(1,N)/(DT/3600.0D0))
 
       ALLOCATE(SBS%U(0:SBS%NUHG))
       SBS%U = 0.0D0

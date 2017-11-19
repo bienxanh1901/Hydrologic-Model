@@ -60,12 +60,12 @@ C=================================================================
       REAL(8) :: QIT1, QIT2, DT1, QOT1, QOT2
       REAL(8) :: C0, C1, C2, C3
 
-      DT1 = 1.0D0/3600.0D0
+      DT1 = 1.0D0
       CALL GET_REACH_INFLOW(BS, RCH, ITER)
       QIT1 = RCH%INFLOW(ITER - 1)
       QIT2 = RCH%INFLOW(ITER)
       QOT1 = RCH%OUTFLOW(ITER - 1)
-      qot2 = 0.0D0
+      QOT2 = 0.0D0
       N = INT(DT)
       DO I = 1, N
 
@@ -74,7 +74,6 @@ C=================================================================
         C2 = (DT1 + 2.0D0*RCH%K*RCH%X)/C0
         C3 = (2.0D0*RCH%K*(1.0D0 - RCH%X) - DT1)/C0
         QOT2 = C1*QIT2 + C2*QIT1 + C3*QOT1
-        QOT1 = QOT2
 
       ENDDO
 

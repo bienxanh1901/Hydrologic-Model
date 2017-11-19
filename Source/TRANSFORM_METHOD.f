@@ -48,7 +48,7 @@ C=================================================================
       REAL(8) :: SUMP
 
       SUMP = 0.0D0
-      N1 = MAX(1,ITER - SBS%NUHG)
+      N1 = MAX(1,ITER - SBS%NUHG + 1)
       DO M = N1,ITER
 
         L = ITER - M + 1

@@ -17,21 +17,16 @@ C=================================================================
       INTEGER :: I
       CHARACTER(100) :: COMMAND
 
-      COMMAND = 'mkdir -p '//TRIM(OUTPUT_DIR)
+      COMMAND = 'mkdir '//TRIM(OUTPUT_DIR)
       CALL SYSTEM(TRIM(COMMAND))
-      CALL SYSTEM('cd '//TRIM(OUTPUT_DIR))
 
       DO I = 1,NBASIN
 
         BS => BASIN(I)
-        COMMAND = 'mkdir -p '//TRIM(BS%NAME)
+        COMMAND = 'mkdir '//TRIM(OUTPUT_DIR)//"\"//TRIM(BS%NAME)
         CALL SYSTEM(TRIM(COMMAND))
-        CALL SYSTEM('cd '//TRIM(BS%NAME))
 
         CALL WRITE_BASIN(BS)
-
-        CALL SYSTEM('cd ..')
-
 
       ENDDO
 
@@ -48,52 +43,62 @@ C=================================================================
       USE TIME
       IMPLICIT NONE
       INTERFACE
-        SUBROUTINE WRITE_SUBASING(SBS)
+        SUBROUTINE WRITE_SUBASING(SBS,FUNIT)
         USE PARAM
         USE TIME
         IMPLICIT NONE
         TYPE(SUBBASIN_TYPE), POINTER :: SBS
+        INTEGER, INTENT(IN) :: FUNIT
         END SUBROUTINE WRITE_SUBASING
 
-        SUBROUTINE WRITE_REACH(RCH)
+        SUBROUTINE WRITE_REACH(RCH,FUNIT)
         USE PARAM
         USE TIME
         IMPLICIT NONE
         TYPE(REACH_TYPE), POINTER :: RCH
+        INTEGER, INTENT(IN) :: FUNIT
         END SUBROUTINE WRITE_REACH
 
-        SUBROUTINE WRITE_RESERVOIR(RES)
+        SUBROUTINE WRITE_RESERVOIR(RES,FUNIT)
         USE PARAM
         USE TIME
         IMPLICIT NONE
         TYPE(RESERVOIR_TYPE), POINTER :: RES
+        INTEGER, INTENT(IN) :: FUNIT
         END SUBROUTINE WRITE_RESERVOIR
       END INTERFACE
       TYPE(BASIN_TYPE), POINTER :: BS
       TYPE(SUBBASIN_TYPE), POINTER :: SBS
       TYPE(REACH_TYPE), POINTER :: RCH
       TYPE(RESERVOIR_TYPE), POINTER :: RES
-      INTEGER :: I
+      INTEGER :: I, FUNIT
+      CHARACTER(100) :: COMMAND
 
-
+      FUNIT = 20
       DO I = 1,BS%NSUBBASIN
 
         SBS => BS%SUBBASIN(I)
-        CALL WRITE_SUBASING(SBS)
+        COMMAND = TRIM(OUTPUT_DIR)//"\"//TRIM(BS%NAME)//"\"//TRIM(SBS%NAME)//".csv"
+        OPEN(UNIT=FUNIT, FILE=TRIM(COMMAND), STATUS='REPLACE')
+        CALL WRITE_SUBASING(SBS,FUNIT)
 
       ENDDO
 
       DO I = 1,BS%NREACH
 
         RCH => BS%REACH(I)
-        CALL WRITE_REACH(RCH)
+        COMMAND =TRIM(OUTPUT_DIR)//"\"//TRIM(BS%NAME)//"\"//TRIM(RCH%NAME)//".csv"
+        OPEN(UNIT=FUNIT, FILE=TRIM(COMMAND), STATUS='REPLACE')
+        CALL WRITE_REACH(RCH,FUNIT)
 
       ENDDO
 
       DO I = 1,BS%NRESERVOIR
 
         RES => BS%RESERVOIR(I)
-        CALL WRITE_RESERVOIR(RES)
+        COMMAND =TRIM(OUTPUT_DIR)//"\"//TRIM(BS%NAME)//"\"//TRIM(RES%NAME)//".csv"
+        OPEN(UNIT=FUNIT, FILE=TRIM(COMMAND), STATUS='REPLACE')
+        CALL WRITE_RESERVOIR(RES,FUNIT)
 
       ENDDO
 
@@ -105,17 +110,16 @@ C=================================================================
 C=================================================================
 C WRITE_SUBASING
 C=================================================================
-      SUBROUTINE WRITE_SUBASING(SBS)
+      SUBROUTINE WRITE_SUBASING(SBS,FUNIT)
       USE PARAM
       USE TIME
       IMPLICIT NONE
       INTERFACE
       END INTERFACE
       TYPE(SUBBASIN_TYPE), POINTER :: SBS
-      INTEGER :: N, FUNIT
+      INTEGER, INTENT(IN) :: FUNIT
+      INTEGER :: N
 
-      FUNIT = 20
-      OPEN(UNIT=FUNIT, FILE=TRIM(SBS%NAME)//'.csv', STATUS='REPLACE')
       WRITE(FUNIT,21) 'TIME', 'PRECIP(mm)','LOSS(mm)','EXCESS(mm)',
      &                'DIRECT FLOW(m3/s)', 'BASE FLOW(m3/s)', 'TOTAL FLOW(m3/s)'
       DO N = 0,NTIME - 1
@@ -138,17 +142,16 @@ C=================================================================
 C=================================================================
 C WRITE_REACH
 C=================================================================
-      SUBROUTINE WRITE_REACH(RCH)
+      SUBROUTINE WRITE_REACH(RCH,FUNIT)
       USE PARAM
       USE TIME
       IMPLICIT NONE
       INTERFACE
       END INTERFACE
       TYPE(REACH_TYPE), POINTER :: RCH
-      INTEGER :: N, FUNIT
+      INTEGER, INTENT(IN) :: FUNIT
+      INTEGER :: N
 
-      FUNIT = 20
-      OPEN(UNIT=FUNIT, FILE=TRIM(RCH%NAME)//'.csv', STATUS='REPLACE')
       WRITE(FUNIT,21) 'TIME', 'INFLOW (m3/s)', 'OUTFLOW (m3/s)'
       DO N = 0,NTIME - 1
 
@@ -168,22 +171,21 @@ C=================================================================
 C=================================================================
 C WRITE_RESERVOIR
 C=================================================================
-      SUBROUTINE WRITE_RESERVOIR(RES)
+      SUBROUTINE WRITE_RESERVOIR(RES,FUNIT)
       USE PARAM
       USE TIME
       IMPLICIT NONE
       INTERFACE
       END INTERFACE
       TYPE(RESERVOIR_TYPE), POINTER :: RES
-      INTEGER :: N, FUNIT
+      INTEGER, INTENT(IN) :: FUNIT
+      INTEGER :: N
 
-      FUNIT = 20
-      OPEN(UNIT=FUNIT, FILE=TRIM(RES%NAME)//'.csv', STATUS='REPLACE')
       WRITE(FUNIT,21) 'TIME', 'INFLOW(m3/s)',
-     &                'STORAGE(m3)', 'ELEVATION(m)', 'OUTFLOW(m3/s)'
+     &                'STORAGE(1000m3)', 'ELEVATION(m)', 'OUTFLOW(m3/s)'
       DO N = 0,NTIME - 1
 
-        WRITE(FUNIT,22) N,RES%INFLOW(N), RES%STORAGE(N),
+        WRITE(FUNIT,22) N,RES%INFLOW(N), RES%STORAGE(N)/1000.0D0,
      &                  RES%ELEVATION(N), RES%OUTFLOW(N)
 
       ENDDO

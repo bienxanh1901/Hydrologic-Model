@@ -13,9 +13,6 @@ C=================================================================
       NAMELIST /CTRL/ TSTART, TEND
       NAMELIST /IODIR/ INPUT_DIR, OUTPUT_DIR
 
-
-C Open log file
-      OPEN(UNIT=ULOG, FILE=TRIM(FLOG),STATUS='REPLACE')
 C Open input file
 
       FUNIT = 30
@@ -34,7 +31,7 @@ C Read name list common
 
       READ(FUNIT,INP, ERR=99)
       READ(FUNIT,CTRL, ERR=99)
-      READ(FUNIT,IODIR, ERR=99)
+      READ(FUNIT,IODIR,ERR=99)
       CLOSE(FUNIT)
       !Check parameter
       IF(NBASIN.EQ.0) THEN
@@ -178,7 +175,7 @@ C=================================================================
 
 
         !Read sub-BASIN  ith
-        READ(FUNIT,GTNL)
+        READ(FUNIT,GTNL, ERR=99)
 
         !BASIN characteristic
         GT%NAME = TRIM(NAME)
@@ -193,10 +190,10 @@ C=================================================================
 
         READ(FU,*) GT%NDATA
 
-        ALLOCATE(GT%GATE_DATA(1:GT%NDATA), STAT=IERR)
+        ALLOCATE(GT%GATE_DATA(0:GT%NDATA - 1), STAT=IERR)
         CALL ChkMemErr('GATE_DATA', IERR)
 
-        DO J = 1, GT%NDATA
+        DO J = 0, GT%NDATA - 1
 
             READ(FU,*) GT%GATE_DATA(J)
 
@@ -259,15 +256,6 @@ C=================================================================
 
         !Read sub-BASIN  ith
         READ(FUNIT,SBSNL,ERR=99)
-
-        !Stop if the file contains precipitation value is not set.
-*        IF(TRIM(PRECIPF).EQ."") THEN
-*
-*            WRITE(*,*) "Please set the file name for precipitation data PRECIPF!!"
-*            STOP
-*
-*        ENDIF
-
         !BASIN characteristic
         SBS%NAME = TRIM(NAME)
         SBS%DOWNSTREAM = TRIM(DOWNSTREAM)
@@ -482,7 +470,7 @@ C=================================================================
         TURBIN_GATE = ""
 
 
-        READ(FUNIT, RESNL)
+        READ(FUNIT, RESNL,ERR=99)
 
 
         RES%NAME = TRIM(NAME)
@@ -504,6 +492,8 @@ C=================================================================
             READ(FU,*) RES%SE_CURVE(1:2,J)
 
         ENDDO
+
+        RES%SE_CURVE(2,:) = RES%SE_CURVE(2,:)*1000.0D0
 
         CLOSE(FU)
 

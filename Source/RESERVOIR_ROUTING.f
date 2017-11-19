@@ -71,7 +71,7 @@ C=================================================================
       REAL(8) :: QIT1, QIT2, DT1, QOT1, QOT2
       REAL(8) :: ZT, VT, DV
 
-      DT1 = 1.0D0/3600.0D0
+      DT1 = 1.0D0
       CALL GET_RESERVOIR_INFLOW(BS, RES, ITER)
       QIT1 = RES%INFLOW(ITER - 1)
       QIT2 = RES%INFLOW(ITER)
@@ -141,9 +141,9 @@ C=================================================================
             Q = 0.0D0
             RETURN
 
-        ELSE IF(Z.GE.RES%ED_CURVE(RES%NED,1)) THEN
+        ELSE IF(Z.GE.RES%ED_CURVE(1,RES%NED)) THEN
 
-            Q = RES%ED_CURVE(RES%NED,2)
+            Q = RES%ED_CURVE(2,RES%NED)
             RETURN
 
         ELSE

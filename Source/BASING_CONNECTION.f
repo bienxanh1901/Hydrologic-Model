@@ -80,7 +80,7 @@ C=================================================================
         DO J = 1, BS%NREACH
 
             RCH => BS%REACH(J)
-            IF(TRIM(DOWNSTREAM).NE.TRIM(RCH%NAME)) THEN
+            IF(TRIM(DOWNSTREAM).EQ.TRIM(RCH%NAME)) THEN
 
                 LEVEL = LEVEL + FIND_LEVEL(BS, RCH%DOWNSTREAM)
                 RETURN
@@ -92,7 +92,7 @@ C=================================================================
         DO J = 1, BS%NRESERVOIR
 
             RES => BS%RESERVOIR(J)
-            IF(TRIM(DOWNSTREAM).NE.TRIM(RES%NAME)) THEN
+            IF(TRIM(DOWNSTREAM).EQ.TRIM(RES%NAME)) THEN
 
                 LEVEL = LEVEL + FIND_LEVEL(BS, RES%DOWNSTREAM)
                 RETURN
