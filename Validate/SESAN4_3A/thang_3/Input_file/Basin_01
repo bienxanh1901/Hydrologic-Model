@@ -7,22 +7,22 @@
 	  
 &GTNL NAME     = "PRECIP"           , 
 	  GATETYPE = 1                  , 
-	  TSTART   = "01-01-2016 01:00" , 
-	  TEND     = "31-01-2016 23:00" , 
+	  TSTART   = "01-03-2016 00:00" , 
+	  TEND     = "31-03-2016 23:00" , 
 	  DATAFILE = "TRAMMUA.DAT"      , 
 	  INTERVAL = 3600               /
 	  
 &GTNL NAME     = "GATE1"            , 
 	  GATETYPE = 1                  , 
-	  TSTART   = "01-01-2016 01:00" , 
-	  TEND     = "31-01-2016 23:00" , 
+	  TSTART   = "01-03-2016 00:00" , 
+	  TEND     = "31-03-2016 23:00" , 
 	  DATAFILE = "QIN3A.DAT"        , 
 	  INTERVAL = 3600               /
 
 &GTNL NAME     = "TURBIN4"          , 
 	  GATETYPE = 1                  , 
-	  TSTART   = "01-01-2016 01:00" , 
-	  TEND     = "31-01-2016 23:00" , 
+	  TSTART   = "01-03-2016 00:00" , 
+	  TEND     = "31-03-2016 23:00" , 
 	  DATAFILE = "QTURBIN.DAT"        , 
 	  INTERVAL = 3600               /	  
 	  
@@ -53,7 +53,7 @@
 		 
 &RESNL NAME = "SESAN4" ,
 	   ROUTE = 1 ,
-	   Z0 = 210.06 ,
+	   Z0 = 210.03 ,
 	   ROUTING_CURVE = 1 ,
 	   RTCFN = "ES_SESAN4.DAT" ,
 	   DC_CTRL = 2 ,
