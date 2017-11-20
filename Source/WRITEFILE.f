@@ -4,6 +4,7 @@ C=================================================================
       SUBROUTINE WRITE_OUTPUT
       USE PARAM
       USE TIME
+      USE CONSTANTS
       IMPLICIT NONE
       INTERFACE
         SUBROUTINE WRITE_BASIN(BS)
@@ -17,13 +18,14 @@ C=================================================================
       INTEGER :: I
       CHARACTER(100) :: COMMAND
 
+      CALL get_environment_variable("PATH", FILE_PATH)
       COMMAND = 'mkdir '//TRIM(OUTPUT_DIR)
       CALL SYSTEM(TRIM(COMMAND))
 
       DO I = 1,NBASIN
 
         BS => BASIN(I)
-        COMMAND = 'mkdir '//TRIM(OUTPUT_DIR)//"\"//TRIM(BS%NAME)
+        COMMAND = 'mkdir '//TRIM(OUTPUT_DIR)//TRIM(FILE_PATH)//TRIM(BS%NAME)
         CALL SYSTEM(TRIM(COMMAND))
 
         CALL WRITE_BASIN(BS)
@@ -41,6 +43,7 @@ C=================================================================
       SUBROUTINE WRITE_BASIN(BS)
       USE PARAM
       USE TIME
+      USE CONSTANTS
       IMPLICIT NONE
       INTERFACE
         SUBROUTINE WRITE_SUBASING(SBS,FUNIT)
@@ -78,7 +81,7 @@ C=================================================================
       DO I = 1,BS%NSUBBASIN
 
         SBS => BS%SUBBASIN(I)
-        COMMAND = TRIM(OUTPUT_DIR)//"\"//TRIM(BS%NAME)//"\"//TRIM(SBS%NAME)//".csv"
+        COMMAND = TRIM(OUTPUT_DIR)//TRIM(FILE_PATH)//TRIM(BS%NAME)//TRIM(FILE_PATH)//TRIM(SBS%NAME)//".csv"
         OPEN(UNIT=FUNIT, FILE=TRIM(COMMAND), STATUS='REPLACE')
         CALL WRITE_SUBASING(SBS,FUNIT)
 
@@ -87,7 +90,7 @@ C=================================================================
       DO I = 1,BS%NREACH
 
         RCH => BS%REACH(I)
-        COMMAND =TRIM(OUTPUT_DIR)//"\"//TRIM(BS%NAME)//"\"//TRIM(RCH%NAME)//".csv"
+        COMMAND =TRIM(OUTPUT_DIR)//TRIM(FILE_PATH)//TRIM(BS%NAME)//TRIM(FILE_PATH)//TRIM(RCH%NAME)//".csv"
         OPEN(UNIT=FUNIT, FILE=TRIM(COMMAND), STATUS='REPLACE')
         CALL WRITE_REACH(RCH,FUNIT)
 
@@ -96,7 +99,7 @@ C=================================================================
       DO I = 1,BS%NRESERVOIR
 
         RES => BS%RESERVOIR(I)
-        COMMAND =TRIM(OUTPUT_DIR)//"\"//TRIM(BS%NAME)//"\"//TRIM(RES%NAME)//".csv"
+        COMMAND =TRIM(OUTPUT_DIR)//TRIM(FILE_PATH)//TRIM(BS%NAME)//TRIM(FILE_PATH)//TRIM(RES%NAME)//".csv"
         OPEN(UNIT=FUNIT, FILE=TRIM(COMMAND), STATUS='REPLACE')
         CALL WRITE_RESERVOIR(RES,FUNIT)
 

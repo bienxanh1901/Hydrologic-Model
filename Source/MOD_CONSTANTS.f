@@ -29,6 +29,7 @@ C=================================================================
       !define log file
       INTEGER :: ULOG = 11
       CHARACTER(7) :: FLOG = "RUN.LOG"
+      CHARACTER(1):: FILE_PATH
       END MODULE CONSTANTS
 C=================================================================
 C
