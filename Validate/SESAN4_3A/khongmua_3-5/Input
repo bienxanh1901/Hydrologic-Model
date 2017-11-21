@@ -1,0 +1,9 @@
+&INP NBASIN = 1, 
+	 NTIME  = 2208, 
+	 DT     = 3600.0/
+	 
+&CTRL TSTART = "01-03-2016 00:00", 
+	  TEND   = "31-05-2016 23:00"/
+	  
+&IODIR INPUT_DIR  = "Input_file",
+	   OUTPUT_DIR = "Output"/
