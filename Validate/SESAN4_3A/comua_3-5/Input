@@ -1,5 +1,4 @@
 &INP NBASIN = 1, 
-	 NTIME  = 2208, 
 	 DT     = 3600.0/
 	 
 &CTRL TSTART = "01-03-2016 00:00", 

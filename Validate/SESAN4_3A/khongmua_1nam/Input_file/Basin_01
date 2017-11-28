@@ -13,14 +13,14 @@
 	  INTERVAL = 3600               /
 	  
 &GTNL NAME     = "GATE1"            , 
-	  GATETYPE = 1                  , 
+	  GATETYPE = 2                  , 
 	  TSTART   = "01-01-2016 01:00" , 
 	  TEND     = "31-12-2016 23:00" , 
 	  DATAFILE = "QIN3A.DAT"        , 
 	  INTERVAL = 3600               /
 
 &GTNL NAME     = "TURBIN4"          , 
-	  GATETYPE = 1                  , 
+	  GATETYPE = 2                  , 
 	  TSTART   = "01-01-2016 01:00" , 
 	  TEND     = "31-12-2016 23:00" , 
 	  DATAFILE = "QTURBIN.DAT"        , 
@@ -56,7 +56,6 @@
 	   Z0 = 210.06 ,
 	   ROUTING_CURVE = 1 ,
 	   RTCFN = "ES_SESAN4.DAT" ,
-	   DC_CTRL = 2 ,
 	   DCFN = "ED_SESAN4A.DAT" ,
 	   TB_TYPE = 3 , 
 	   TURBIN_GATE = "TURBIN4" /
