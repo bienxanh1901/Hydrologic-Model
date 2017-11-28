@@ -9,7 +9,7 @@ C=================================================================
       INTEGER :: FUNIT
       CHARACTER(5) :: F1
       CHARACTER(16) :: TSTART, TEND
-      NAMELIST /INP/ NBASIN, NTIME, DT
+      NAMELIST /INP/ NBASIN, DT
       NAMELIST /CTRL/ TSTART, TEND
       NAMELIST /IODIR/ INPUT_DIR, OUTPUT_DIR
 
@@ -57,15 +57,15 @@ C Read name list common
 *        STOP 'Stop program'
 *
 *      ENDIF
+C Set date and time
+      CALL SET_DATE_TIME(TSTART, TEND)
 C Read BASIN
       CALL READ_BASIN
 
-C Set date and time
-c      CALL SET_DATE_TIME(TSTART, TEND)
-
       RETURN
-99    WRITE(*,*) 'ERROR WHILE READING FILE: ', TRIM(F1)
+99    CALL WRITE_LOG('ERROR WHILE READING FILE: '//TRIM(F1))
       CLOSE(FUNIT)
+      CLOSE(ULOG)
       STOP
       END SUBROUTINE READING_INPUT
 C=================================================================
@@ -130,8 +130,9 @@ C Read sub reservoir
       ENDDO
       CLOSE(FUNIT)
       RETURN
-99    WRITE(*,*) 'ERROR WHILE READING FILE: ', TRIM(F1)
+99    CALL WRITE_LOG('ERROR WHILE READING FILE: '//TRIM(F1))
       CLOSE(FUNIT)
+      CLOSE(ULOG)
       STOP
       END SUBROUTINE READ_BASIN
 C=================================================================
@@ -143,6 +144,7 @@ C=================================================================
       SUBROUTINE READ_GATE(FUNIT, BS)
       USE PARAM
       USE CONSTANTS
+      USE TIME
       USE datetime_module
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: FUNIT
@@ -153,6 +155,7 @@ C=================================================================
       CHARACTER(3) :: ICH
       CHARACTER(16) :: TSTART, TEND
       TYPE(GATE_TYPE), POINTER :: GT
+      TYPE(timedelta) :: DTIME
 
       NAMELIST /GTNL/ NAME, GATETYPE, TSTART, TEND, DATAFILE, INTERVAL
 
@@ -165,8 +168,7 @@ C=================================================================
 
         !Initial values
         WRITE(ICH,'(I3.3)') I
-        !NAME = "GATE_"//ICH
-        NAME = ""
+        NAME = "GATE_"//ICH
         TSTART = ""
         TEND = ""
         DATAFILE = ""
@@ -179,16 +181,17 @@ C=================================================================
 
         !BASIN characteristic
         GT%NAME = TRIM(NAME)
-*        GT%START_TIME = strptime(TRIM(TSTART), '%d-%m-%Y %H:%M')
-*        GT%END_TIME = strptime(TRIM(TEND), '%d-%m-%Y %H:%M')
+        GT%TS = strptime(TRIM(TSTART), '%d-%m-%Y %H:%M')
+        GT%TE = strptime(TRIM(TEND), '%d-%m-%Y %H:%M')
+        DTIME = GT%TE - GT%TS
+
+        GT%NDATA = INT(DTIME%total_seconds()/INTERVAL) + 1
         GT%GATETYPE = GATETYPE
-        GT%INTERVAL = INTERVAL
+        GT%DT = INTERVAL
 
         F1 = TRIM(INPUT_DIR)//'/'//TRIM(DATAFILE)
         CALL CHK_FILE(TRIM(F1))
         OPEN(UNIT=FU, FILE=TRIM(F1), STATUS='OLD')
-
-        READ(FU,*) GT%NDATA
 
         ALLOCATE(GT%GATE_DATA(0:GT%NDATA - 1), STAT=IERR)
         CALL ChkMemErr('GATE_DATA', IERR)
@@ -205,8 +208,9 @@ C=================================================================
 
 
       RETURN
-99    WRITE(*,*) 'ERROR WHILE READING GATE DATA: '
+99    CALL WRITE_LOG('ERROR WHILE READING GATE DATA '//TRIM(ICH))
       CLOSE(FUNIT)
+      CLOSE(ULOG)
       STOP
       END SUBROUTINE READ_GATE
 C=================================================================
@@ -293,8 +297,9 @@ C=================================================================
 
 
       RETURN
-99    WRITE(*,*) 'ERROR WHILE READING SUB BASIN DATA'
+99    CALL WRITE_LOG('ERROR WHILE READING SUB BASIN DATA '//TRIM(ICH))
       CLOSE(FUNIT)
+      CLOSE(ULOG)
       STOP
       END SUBROUTINE READ_SUB_BASIN
 C=================================================================
@@ -360,8 +365,9 @@ C=================================================================
       ENDDO
 
       RETURN
-99    WRITE(*,*) 'ERROR WHILE READING SOURCE DATA'
+99    CALL WRITE_LOG('ERROR WHILE READING SOURCE DATA '//TRIM(ICH))
       CLOSE(FUNIT)
+      CLOSE(ULOG)
       STOP
       END SUBROUTINE READ_SOURCE
 C=================================================================
@@ -409,7 +415,7 @@ C=================================================================
         RCH%LOSS_VALUE = LOSS_VALUE
         IF(ROUTE.EQ.MUSKINGUM_METHOD) THEN
 
-            RCH%K = K
+            RCH%K = K*3600.0D0
             RCH%X = X
 
         ENDIF
@@ -417,8 +423,9 @@ C=================================================================
       ENDDO
 
       RETURN
-99    WRITE(*,*) 'ERROR WHILE READING REACH DATA'
+99    CALL WRITE_LOG('ERROR WHILE READING REACH DATA '//TRIM(ICH))
       CLOSE(FUNIT)
+      CLOSE(ULOG)
       STOP
       END SUBROUTINE READ_REACH
 C=================================================================
@@ -434,13 +441,13 @@ C=================================================================
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: FUNIT
       TYPE(BASIN_TYPE) :: BS
-      INTEGER :: ROUTE, DC_CTRL, I, J, FU, IERR, ROUTING_CURVE, TB_TYPE
+      INTEGER :: ROUTE, I, J, FU, IERR, ROUTING_CURVE, TB_TYPE
       REAL(8) :: Z0, DOORW, DC_COEFF, ZSW, TB_CONST_DATA
       CHARACTER(100) :: DOWNSTREAM, NAME, RTCFN, DCFN, TURBIN_GATE, F1
       CHARACTER(3) :: ICH
       TYPE(RESERVOIR_TYPE), POINTER :: RES
       NAMELIST /RESNL/ NAME, DOWNSTREAM, ROUTE, Z0, ROUTING_CURVE, RTCFN,
-     &                 DC_CTRL, DOORW, DC_COEFF, ZSW, DCFN, TB_TYPE,
+     &                 DOORW, DC_COEFF, ZSW, DCFN, TB_TYPE,
      &                 TB_CONST_DATA, TURBIN_GATE
 
 
@@ -456,11 +463,10 @@ C=================================================================
         WRITE(ICH,'(I3.3)') I
         NAME = "RESERVOIR_"//ICH
         DOWNSTREAM = ""
-        ROUTE = OUTFLOW_STRUCTURE
+        ROUTE = SPECIFIED_RELEASE
         Z0 = 0.0D0
         ROUTING_CURVE = ELEVATION_STORAGE
         RTCFN = ""
-        DC_CTRL = DC_ELEVATION_TYPE
         DOORW = 0.0D0
         DC_COEFF = 0.0D0
         ZSW = 0.0D0
@@ -498,7 +504,6 @@ C=================================================================
         CLOSE(FU)
 
         !Read discharge - elevation curve
-        RES%DC_CTRL = DC_CTRL
 
         F1 = TRIM(INPUT_DIR)//'/'//TRIM(DCFN)
         CALL CHK_FILE(TRIM(F1))
@@ -506,7 +511,7 @@ C=================================================================
 
         READ(FU,*) RES%NED
 
-        IF(DC_CTRL.EQ.DC_DOOR_TYPE) THEN
+        IF(ROUTE.EQ.OUTFLOW_STRUCTURE) THEN
 
             RES%DOORW = DOORW
             RES%DC_COEFF = DC_COEFF
@@ -524,7 +529,7 @@ C=================================================================
 
             ENDDO
 
-        ELSE IF(DC_CTRL.EQ.DC_ELEVATION_TYPE) THEN
+        ELSE IF(ROUTE.EQ.SPECIFIED_RELEASE) THEN
 
             ALLOCATE(RES%ED_CURVE(1:2,1:RES%NED),STAT=IERR)
             CALL ChkMemErr('ED_CURVE', IERR)
@@ -561,8 +566,9 @@ C=================================================================
       ENDDO
 
       RETURN
-99    WRITE(*,*) 'ERROR WHILE READING RESERVOIR DATA'
+99    CALL WRITE_LOG('ERROR WHILE READING RESERVOIR DATA '//TRIM(ICH))
       CLOSE(FUNIT)
+      CLOSE(ULOG)
       STOP
       END SUBROUTINE READ_RESERVOIR
 C=================================================================

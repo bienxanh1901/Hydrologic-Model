@@ -18,7 +18,7 @@ module mod_datetime
 use,intrinsic :: iso_fortran_env,only:real32,real64
 use,intrinsic :: iso_c_binding,only:c_char,c_int,c_null_char
 use :: mod_timedelta,only:timedelta
-use :: mod_strftime, only:tm_struct,c_strftime,c_strptime
+use :: mod_strftime, only:tm_struct,c_strftime !,c_strptime
 use :: mod_constants
 
 implicit none
@@ -1203,11 +1203,20 @@ type(datetime) function strptime(str,format)
   character(len=*),intent(in) :: str    !! time string
   character(len=*),intent(in) :: format !! time format
 
-  integer         :: rc
-  type(tm_struct) :: tm
+  !integer         :: rc
+  !type(tm_struct) :: tm
 
   !rc = c_strptime(trim(str)//c_null_char,trim(format)//c_null_char,tm)
-  strptime = tm2date(tm)
+  !strptime = tm2date(tm)
+
+  read(str(1:2),'(i2)') strptime % day
+  read(str(4:5),'(i2)') strptime % month
+  read(str(7:10),'(i4)') strptime % year
+  read(str(12:13),'(i2)') strptime % hour
+  read(str(15:16),'(i2)') strptime % minute
+  strptime % second = 0
+  strptime % millisecond = 0
+
 
 endfunction strptime
 

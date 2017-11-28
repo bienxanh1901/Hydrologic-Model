@@ -7,7 +7,7 @@ C=================================================================
       USE TIME
       IMPLICIT NONE
       INTERFACE
-        SUBROUTINE OUTFLOW_STRUCTURE_METHOD(BS, RES, ITER)
+        SUBROUTINE RESERVOIR_ROUTING_METHOD(BS, RES, ITER)
         USE PARAM
         USE CONSTANTS
         USE TIME
@@ -15,19 +15,14 @@ C=================================================================
         TYPE(BASIN_TYPE), POINTER :: BS
         TYPE(RESERVOIR_TYPE), POINTER :: RES
         INTEGER, INTENT(IN) :: ITER
-        END SUBROUTINE OUTFLOW_STRUCTURE_METHOD
+        END SUBROUTINE RESERVOIR_ROUTING_METHOD
       END INTERFACE
       TYPE(BASIN_TYPE), POINTER :: BS
       TYPE(RESERVOIR_TYPE), POINTER :: RES
       INTEGER, INTENT(IN) :: ITER
 
-      SELECT CASE(RES%ROUTE)
-        CASE(OUTFLOW_STRUCTURE)
-            CALL OUTFLOW_STRUCTURE_METHOD(BS, RES, ITER)
-        CASE DEFAULT
-            WRITE(*,*) 'Error: Invalid type of Reach routing method!!!'
-            STOP
-      END SELECT
+      CALL RESERVOIR_ROUTING_METHOD(BS, RES, ITER)
+
 
       RETURN
       END SUBROUTINE RESERVOIR_ROUTING
@@ -35,9 +30,9 @@ C=================================================================
 C
 C=================================================================
 C=================================================================
-C OUTFLOW_STRUCTURE
+C SPECIFIED_RELEASE
 C=================================================================
-      SUBROUTINE OUTFLOW_STRUCTURE_METHOD(BS, RES, ITER)
+      SUBROUTINE RESERVOIR_ROUTING_METHOD(BS, RES, ITER)
       USE PARAM
       USE CONSTANTS
       USE TIME
@@ -108,7 +103,7 @@ C=================================================================
       RES%STORAGE(ITER) = VT
 
       RETURN
-      END SUBROUTINE OUTFLOW_STRUCTURE_METHOD
+      END SUBROUTINE RESERVOIR_ROUTING_METHOD
 C=================================================================
 C
 C=================================================================
@@ -134,7 +129,7 @@ C=================================================================
       REAL(8), INTENT(OUT):: Q
       REAL(8) :: S, H, DH
 
-      IF(RES%DC_CTRL.EQ.DC_ELEVATION_TYPE) THEN
+      IF(RES%ROUTE.EQ.SPECIFIED_RELEASE) THEN
 
         IF(Z.LT.RES%ED_CURVE(1,1)) THEN
 
@@ -153,7 +148,7 @@ C=================================================================
 
         ENDIF
 
-      ELSE IF(RES%DC_CTRL.EQ.DC_DOOR_TYPE) THEN
+      ELSE IF(RES%ROUTE.EQ.OUTFLOW_STRUCTURE) THEN
 
         IF(Z.LT.RES%EH_CURVE(1,1)) THEN
 

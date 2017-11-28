@@ -11,13 +11,11 @@ C=================================================================
       !definition for reach routing method
       INTEGER, PARAMETER :: MUSKINGUM_METHOD = 1
       !definition for reservoir routing method
-      INTEGER, PARAMETER :: OUTFLOW_STRUCTURE = 1
+      INTEGER, PARAMETER :: SPECIFIED_RELEASE = 1
+      INTEGER, PARAMETER :: OUTFLOW_STRUCTURE = 2
       !definition for reservoir routing curve
       INTEGER, PARAMETER :: ELEVATION_STORAGE = 1
       INTEGER, PARAMETER :: ELEVATION_AREA = 2
-      !definition for discharge control type
-      INTEGER, PARAMETER :: DC_DOOR_TYPE = 1
-      INTEGER, PARAMETER :: DC_ELEVATION_TYPE = 2
       !definition loss method
       INTEGER, PARAMETER :: SCS_CURVE_LOSS = 1
       !definition transform method

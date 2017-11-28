@@ -60,13 +60,16 @@ C=================================================================
       REAL(8) :: QIT1, QIT2, DT1, QOT1, QOT2
       REAL(8) :: C0, C1, C2, C3
 
-      DT1 = 1.0D0
+      DT1 = DT
       CALL GET_REACH_INFLOW(BS, RCH, ITER)
-      QIT1 = RCH%INFLOW(ITER - 1)
-      QIT2 = RCH%INFLOW(ITER)
+      QIT1 = (RCH%INFLOW(ITER - 1) - RCH%LOSS_VALUE)*(1.0D0 - RCH%LOSS_RATIO)
+      IF(QIT1.LT.0) QIT1 = 0.0D0
+      QIT2 = (RCH%INFLOW(ITER) - RCH%LOSS_VALUE)*(1.0D0 - RCH%LOSS_RATIO)
+      IF(QIT2.LT.0) QIT2 = 0.0D0
       QOT1 = RCH%OUTFLOW(ITER - 1)
       QOT2 = 0.0D0
-      N = INT(DT)
+*      N = INT(DT)
+      N = 1
       DO I = 1, N
 
         C0 = 2.0D0*RCH%K*(1.0D0 - RCH%X) + DT1
@@ -144,9 +147,9 @@ C=================================================================
 
       ENDDO
 
-C LOSS/GAIN
-
-      RCH%INFLOW(ITER) = (RCH%INFLOW(ITER) - RCH%LOSS_VALUE)*(1.0D0 - RCH%LOSS_RATIO)
+*C LOSS/GAIN
+*
+*      RCH%INFLOW(ITER) = (RCH%INFLOW(ITER) - RCH%LOSS_VALUE)*(1.0D0 - RCH%LOSS_RATIO)
 
       RETURN
       END SUBROUTINE GET_REACH_INFLOW

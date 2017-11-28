@@ -44,6 +44,7 @@
       TYPE(RESERVOIR_TYPE), POINTER :: RES
       TYPE(SUBBASIN_TYPE), POINTER :: SBS
       INTEGER :: I, J, K
+      REAL(8) :: QIN
 
       DO I = 1, NBASIN
 
@@ -84,7 +85,9 @@
                 RCH => BS%REACH(J)
                 IF(RCH%LEVEL.NE.K) CYCLE
                 CALL GET_REACH_INFLOW(BS, RCH, 0)
-                RCH%OUTFLOW(0) = RCH%INFLOW(0)
+                QIN = (RCH%INFLOW(0) - RCH%LOSS_VALUE)*(1.0D0 - RCH%LOSS_RATIO)
+                IF(QIN.LT.0D0) QIN = 0.0D0
+                RCH%OUTFLOW(0) = QIN
 
             ENDDO
 

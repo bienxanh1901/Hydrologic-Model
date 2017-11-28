@@ -76,7 +76,7 @@ C STRUCT FOR REACH
         INTEGER :: NSE
         REAL(8), ALLOCATABLE, DIMENSION(:,:) :: SE_CURVE
         !Discharge control
-        INTEGER :: DC_CTRL, NED
+        INTEGER :: NED
         REAL(8), ALLOCATABLE, DIMENSION(:,:) :: ED_CURVE
         REAL(8), ALLOCATABLE, DIMENSION(:,:) :: EH_CURVE
         INTEGER, ALLOCATABLE, DIMENSION(:) :: NDOOR
@@ -112,8 +112,8 @@ C STRUCT FOR  GATE
         CHARACTER(100) :: NAME
         !Type of gate
         INTEGER :: GATETYPE
-        TYPE(DATETIME) :: START_TIME, END_TIME
-        INTEGER :: NDATA, INTERVAL
+        TYPE(DATETIME) :: TS, TE
+        INTEGER :: NDATA, DT
         !Data
         CHARACTER(100) :: GATE_FILE
         REAL(8), ALLOCATABLE, DIMENSION(:) :: GATE_DATA

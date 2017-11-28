@@ -21,7 +21,7 @@ private
 
 public :: tm_struct
 public :: c_strftime
-public :: c_strptime
+!public :: c_strptime
 
 type,bind(c) :: tm_struct
 
@@ -72,24 +72,24 @@ interface
 
 
 
-  function c_strptime(str,format,tm) bind(c,name='strptime') result(rc)
-
-    !! Returns a time struct object based on the input time string str,
-    !! formatted using format. Refer to C standard library documentation
-    !! for more information.
-
-    import :: c_char,c_int
-    import :: tm_struct
-
-    implicit none
-
-    ! Arguments
-    character(kind=c_char),dimension(*),intent(in)  :: str    !! input string
-    character(kind=c_char),dimension(*),intent(in)  :: format !! time format
-    type(tm_struct),                    intent(out) :: tm     !! result tm_struct
-    integer(kind=c_int)                             :: rc     !! return code
-
-  endfunction c_strptime
+!  function c_strptime(str,format,tm) bind(c,name='strptime') result(rc)
+!
+!    !! Returns a time struct object based on the input time string str,
+!    !! formatted using format. Refer to C standard library documentation
+!    !! for more information.
+!
+!    import :: c_char,c_int
+!    import :: tm_struct
+!
+!    implicit none
+!
+!    ! Arguments
+!    character(kind=c_char),dimension(*),intent(in)  :: str    !! input string
+!    character(kind=c_char),dimension(*),intent(in)  :: format !! time format
+!    type(tm_struct),                    intent(out) :: tm     !! result tm_struct
+!    integer(kind=c_int)                             :: rc     !! return code
+!
+!  endfunction c_strptime
 
 endinterface
 !=======================================================================

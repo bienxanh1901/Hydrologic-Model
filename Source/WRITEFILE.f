@@ -18,7 +18,8 @@ C=================================================================
       INTEGER :: I
       CHARACTER(100) :: COMMAND
 
-      CALL get_environment_variable("PATH", FILE_PATH)
+      !CALL get_environment_variable("PATH", FILE_PATH)
+      FILE_PATH="\"
       COMMAND = 'mkdir '//TRIM(OUTPUT_DIR)
       CALL SYSTEM(TRIM(COMMAND))
 
@@ -116,18 +117,23 @@ C=================================================================
       SUBROUTINE WRITE_SUBASING(SBS,FUNIT)
       USE PARAM
       USE TIME
+      USE datetime_module
       IMPLICIT NONE
       INTERFACE
       END INTERFACE
       TYPE(SUBBASIN_TYPE), POINTER :: SBS
       INTEGER, INTENT(IN) :: FUNIT
       INTEGER :: N
+      CHARACTER(16) :: DTWRT1, DTWRT2
 
-      WRITE(FUNIT,21) 'TIME', 'PRECIP(mm)','LOSS(mm)','EXCESS(mm)',
+      WRITE(FUNIT,21) 'DAY','TIME', 'PRECIP(mm)','LOSS(mm)','EXCESS(mm)',
      &                'DIRECT FLOW(m3/s)', 'BASE FLOW(m3/s)', 'TOTAL FLOW(m3/s)'
+
       DO N = 0,NTIME - 1
 
-        WRITE(FUNIT,22) N,SBS%PRECIP%GATE_DATA(N), SBS%LOSS(N),
+        DTWRT1 = TIME_ARR(N)%strftime('%m/%d/%y')
+        DTWRT2 = TIME_ARR(N)%strftime('%H:%M')
+        WRITE(FUNIT,22) TRIM(DTWRT1),TRIM(DTWRT2),SBS%PRECIP%GATE_DATA(N), SBS%LOSS(N),
      &                  SBS%EXCESS(N), SBS%DIRECT_FLOW(N),
      &                  SBS%BASE_FLOW(N), SBS%TOTAL_FLOW(N)
 
@@ -136,8 +142,8 @@ C=================================================================
       CLOSE(FUNIT)
 
       RETURN
-21    FORMAT(7(A,','))
-22    FORMAT(I5,',',6(F15.8,','))
+21    FORMAT(8(A,','))
+22    FORMAT(2(A,','),6(F15.8,','))
       END SUBROUTINE WRITE_SUBASING
 C=================================================================
 C
@@ -148,25 +154,30 @@ C=================================================================
       SUBROUTINE WRITE_REACH(RCH,FUNIT)
       USE PARAM
       USE TIME
+      USE datetime_module
       IMPLICIT NONE
       INTERFACE
       END INTERFACE
       TYPE(REACH_TYPE), POINTER :: RCH
       INTEGER, INTENT(IN) :: FUNIT
       INTEGER :: N
+      CHARACTER(16) :: DTWRT1, DTWRT2
 
-      WRITE(FUNIT,21) 'TIME', 'INFLOW (m3/s)', 'OUTFLOW (m3/s)'
+      WRITE(FUNIT,21) 'DAY','TIME', 'INFLOW (m3/s)', 'OUTFLOW (m3/s)'
+
       DO N = 0,NTIME - 1
 
-        WRITE(FUNIT,22) N,RCH%INFLOW(N), RCH%OUTFLOW(N)
+        DTWRT1 = TIME_ARR(N)%strftime('%m/%d/%y')
+        DTWRT2 = TIME_ARR(N)%strftime('%H:%M')
+        WRITE(FUNIT,22) TRIM(DTWRT1),TRIM(DTWRT2),RCH%INFLOW(N), RCH%OUTFLOW(N)
 
       ENDDO
 
       CLOSE(FUNIT)
 
       RETURN
-21    FORMAT(3(A,','))
-22    FORMAT(I5,',',2(F15.8,','))
+21    FORMAT(4(A,','))
+22    FORMAT(2(A,','),2(F15.8,','))
       END SUBROUTINE WRITE_REACH
 C=================================================================
 C
@@ -177,18 +188,23 @@ C=================================================================
       SUBROUTINE WRITE_RESERVOIR(RES,FUNIT)
       USE PARAM
       USE TIME
+      USE datetime_module
       IMPLICIT NONE
       INTERFACE
       END INTERFACE
       TYPE(RESERVOIR_TYPE), POINTER :: RES
       INTEGER, INTENT(IN) :: FUNIT
       INTEGER :: N
+      CHARACTER(16) :: DTWRT1, DTWRT2
 
-      WRITE(FUNIT,21) 'TIME', 'INFLOW(m3/s)',
+      WRITE(FUNIT,21) 'DAY','TIME', 'INFLOW(m3/s)',
      &                'STORAGE(1000m3)', 'ELEVATION(m)', 'OUTFLOW(m3/s)'
+
       DO N = 0,NTIME - 1
 
-        WRITE(FUNIT,22) N,RES%INFLOW(N), RES%STORAGE(N)/1000.0D0,
+        DTWRT1 = TIME_ARR(N)%strftime('%m/%d/%y')
+        DTWRT2 = TIME_ARR(N)%strftime('%H:%M')
+        WRITE(FUNIT,22) TRIM(DTWRT1),TRIM(DTWRT2),RES%INFLOW(N), RES%STORAGE(N)/1000.0D0,
      &                  RES%ELEVATION(N), RES%OUTFLOW(N)
 
       ENDDO
@@ -196,9 +212,23 @@ C=================================================================
       CLOSE(FUNIT)
 
       RETURN
-21    FORMAT(5(A,','))
-22    FORMAT(I5,',',4(F15.8,','))
+21    FORMAT(6(A,','))
+22    FORMAT(2(A,','),4(F15.8,','))
       END SUBROUTINE WRITE_RESERVOIR
 C=================================================================
 C
 C=================================================================
+      SUBROUTINE WRITE_LOG(TRACE_LOG)
+      USE CONSTANTS
+      IMPLICIT NONE
+      CHARACTER(*) :: TRACE_LOG
+
+      WRITE(*,*) TRIM(TRACE_LOG)
+      WRITE(ULOG,*) TRIM(TRACE_LOG)
+
+      WRITE(*,*)
+      WRITE(ULOG,*)
+
+
+      RETURN
+      END SUBROUTINE WRITE_LOG
