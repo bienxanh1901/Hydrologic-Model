@@ -23,6 +23,7 @@ C=================================================================
       TYPE(REACH_TYPE), POINTER :: RCH
       TYPE(RESERVOIR_TYPE), POINTER :: RES
 
+      CALL WRITE_LOG('FINDING BASIN CONNECTION!!!')
       DO I = 1, NBASIN
 
         BS => BASIN(I)

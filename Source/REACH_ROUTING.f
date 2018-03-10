@@ -43,15 +43,6 @@ C=================================================================
       USE TIME
       IMPLICIT NONE
       INTERFACE
-        SUBROUTINE GET_REACH_INFLOW(BS, RCH, ITER)
-        USE PARAM
-        USE CONSTANTS
-        USE TIME
-        IMPLICIT NONE
-        TYPE(BASIN_TYPE), POINTER :: BS
-        TYPE(REACH_TYPE), POINTER :: RCH
-        INTEGER, INTENT(IN) :: ITER
-        END SUBROUTINE GET_REACH_INFLOW
       END INTERFACE
       TYPE(REACH_TYPE), POINTER :: RCH
       TYPE(BASIN_TYPE), POINTER :: BS
@@ -61,7 +52,6 @@ C=================================================================
       REAL(8) :: C0, C1, C2, C3
 
       DT1 = DT
-      CALL GET_REACH_INFLOW(BS, RCH, ITER)
       QIT1 = (RCH%INFLOW(ITER - 1) - RCH%LOSS_VALUE)*(1.0D0 - RCH%LOSS_RATIO)
       IF(QIT1.LT.0) QIT1 = 0.0D0
       QIT2 = (RCH%INFLOW(ITER) - RCH%LOSS_VALUE)*(1.0D0 - RCH%LOSS_RATIO)

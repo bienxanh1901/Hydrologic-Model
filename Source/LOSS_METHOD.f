@@ -19,6 +19,7 @@ C=================================================================
       TYPE(SUBBASIN_TYPE), POINTER :: SBS
       INTEGER, INTENT(IN) :: ITER
 
+      IF(.NOT.ASSOCIATED(SBS%PRECIP)) RETURN
       SELECT CASE(SBS%LOSSRATE)
         CASE(SCS_CURVE_LOSS)
             CALL SCS_CURVE_NUMBER(SBS, ITER)

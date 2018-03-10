@@ -57,7 +57,6 @@ C=================================================================
       ENDDO
 
       SBS%DIRECT_FLOW(ITER) = SUMP
-      SBS%TOTAL_FLOW(ITER) = SUMP + SBS%BASE_FLOW(ITER)
 
       RETURN
       END SUBROUTINE SCS_UHG

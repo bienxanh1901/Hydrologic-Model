@@ -5,32 +5,30 @@
 
 C Open log file
       OPEN(UNIT=ULOG, FILE=TRIM(FLOG),STATUS='REPLACE')
+
 C Introduction
       CALL GETCWD(ROOT_DIR)
-      CALL WRITE_LOG('WORKING DIRECTORY: '//TRIM(ROOT_DIR))
-C Read input parameters
-      CALL WRITE_LOG('READING INPUT DATA!!!')
-      CALL READING_INPUT
-C Find the connection of basing
-      CALL WRITE_LOG('FINDING BASIN CONNECTION!!!')
+      CALL WRITE_LOG('WORKING DIRECTORY: ')
+      CALL WRITE_LOG('  '//TRIM(ROOT_DIR))
 
+C Read input parameters
+      CALL READING_INPUT
+
+C Find the connection of basing
       CALL BASIN_CONNECTION
+
 C Allocate necessary variables
-      CALL WRITE_LOG('ALLOCATING MEMMORY!!!')
       CALL ALLOCATING_VARIABLES
+
 C Initial variables
-      CALL WRITE_LOG('INITIALING VARIABLES!!!')
       CALL INITIALING_VARIABLES
 
 C Starting calculate
-      CALL WRITE_LOG('CALCULATING RUNOFF!!!')
       CALL CALCULATING_RUNOFF
 
-      CALL WRITE_LOG('STARTING ROUTING!!!')
       CALL ROUTING_CALC
 
 C Write result
-      CALL WRITE_LOG('WRITING OUTPUT!!!')
       CALL WRITE_OUTPUT
 
       CALL WRITE_LOG('END OF CALCULATION!!!')

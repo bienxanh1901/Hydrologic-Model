@@ -18,6 +18,8 @@ C=================================================================
       INTEGER :: I
       CHARACTER(100) :: COMMAND
 
+      CALL WRITE_LOG('WRITING OUTPUT!!!')
+
       !CALL get_environment_variable("PATH", FILE_PATH)
       FILE_PATH="\"
       COMMAND = 'mkdir '//TRIM(OUTPUT_DIR)
@@ -232,3 +234,25 @@ C=================================================================
 
       RETURN
       END SUBROUTINE WRITE_LOG
+C=================================================================
+C
+C=================================================================
+      SUBROUTINE WRITE_ERRORS(ERROR_LOG)
+      USE CONSTANTS
+      IMPLICIT NONE
+      CHARACTER(*) :: ERROR_LOG
+
+      WRITE(*,*) '      ERROR!!!'
+      WRITE(ULOG,*) '       ERROR!!!'
+      WRITE(*,*) '      ', TRIM(ERROR_LOG)
+      WRITE(ULOG,*) '       ',TRIM(ERROR_LOG)
+
+      WRITE(*,*)
+      WRITE(ULOG,*)
+
+      CLOSE(ULOG)
+      STOP
+
+
+      RETURN
+      END SUBROUTINE WRITE_ERRORS

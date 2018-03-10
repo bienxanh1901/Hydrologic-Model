@@ -13,6 +13,8 @@ C=================================================================
       NAMELIST /CTRL/ TSTART, TEND
       NAMELIST /IODIR/ INPUT_DIR, OUTPUT_DIR
 
+
+      CALL WRITE_LOG('READING INPUT DATA!!!')
 C Open input file
 
       FUNIT = 30
@@ -26,53 +28,39 @@ C Read name list common
       DT = 0.0D0
       TSTART = ''
       TEND = ''
-      INPUT_DIR = 'Input_file'
+      INPUT_DIR = ''
       OUTPUT_DIR = 'OUTPUT'
 
       READ(FUNIT,INP, ERR=99)
       READ(FUNIT,CTRL, ERR=99)
       READ(FUNIT,IODIR,ERR=99)
       CLOSE(FUNIT)
-      !Check parameter
-      IF(NBASIN.EQ.0) THEN
 
-        WRITE(*,*) 'ERROR!!!'
-        WRITE(*,*) 'Number of BASIN is zero or has not been set'
-        STOP 'Stop program'
+C Check parameter
+      IF(NBASIN.EQ.0) CALL WRITE_ERRORS('Number of BASIN(NBASIN) is zero or has not been set!')
 
-      ENDIF
-      !Check time control
-*      IF(TRIM(TSTART).EQ.'') THEN
-*
-*        WRITE(*,*) 'ERROR!!!'
-*        WRITE(*,*) 'Please set start time with format ''DD-MM-YYYY HH:MM'' and restart application'
-*        STOP 'Stop program'
-*
-*      ENDIF
-*
-*      IF(TRIM(TEND).EQ.'') THEN
-*
-*        WRITE(*,*) 'ERROR!!!'
-*        WRITE(*,*) 'Please set end time with format ''DD-MM-YYYY HH:MM'' and restart the application'
-*        STOP 'Stop program'
-*
-*      ENDIF
+      IF(DT.EQ.0.0D0) CALL WRITE_ERRORS('Time interval(DT) is zero or has not been set!')
+
+      IF(TRIM(TSTART).EQ.'') CALL WRITE_ERRORS('Please set start time(TSTART) with format ''DD-MM-YYYY HH:MM'' and restart application')
+
+      IF(TRIM(TEND).EQ.'') CALL WRITE_ERRORS('Please set end time(TEND) with format ''DD-MM-YYYY HH:MM'' and restart the application')
+
+      IF(TRIM(INPUT_DIR).EQ.'') CALL WRITE_ERRORS('Please set input directory(INPUT_DIR) and restart the application')
+
 C Set date and time
       CALL SET_DATE_TIME(TSTART, TEND)
+
 C Read BASIN
       CALL READ_BASIN
 
       RETURN
-99    CALL WRITE_LOG('ERROR WHILE READING FILE: '//TRIM(F1))
-      CLOSE(FUNIT)
-      CLOSE(ULOG)
-      STOP
+99    CALL WRITE_ERRORS('Problem occurred while reading file: '//TRIM(F1))
       END SUBROUTINE READING_INPUT
 C=================================================================
 C
 C=================================================================
 C=================================================================
-C SUBROUTINE READ INPUT
+C
 C=================================================================
       SUBROUTINE READ_BASIN
       USE PARAM
@@ -85,13 +73,17 @@ C=================================================================
 
       NAMELIST /BSNL/ NSUBBASIN, NSOURCE, NREACH, NRESERVOIR, NGATE, NAME
 
+
 C Allocate array
       ALLOCATE(BASIN(1:NBASIN),STAT=IERR)
       CALL ChkMemErr('BASIN', IERR)
 
       DO I = 1, NBASIN
+
+
 C Open input file
         WRITE(ICH,'(I2.2)') I
+        CALL WRITE_LOG('  READING BASIN '//TRIM(ICH))
         FUNIT = 30
         F1 = TRIM(INPUT_DIR)//'/Basin_'//ICH
         CALL CHK_FILE(TRIM(F1))
@@ -115,7 +107,7 @@ C Read name list BASIN
 C Read gate
         IF(NGATE.GT.0) CALL READ_GATE(FUNIT, BASIN(I))
 
-C Read sub BASIN
+C Read sub basin
         IF(NSUBBASIN.GT.0) CALL READ_SUB_BASIN(FUNIT, BASIN(I))
 
 C Read source
@@ -124,22 +116,19 @@ C Read source
 C Read reach
         IF(NREACH.GT.0) CALL READ_REACH(FUNIT, BASIN(I))
 
-C Read sub reservoir
+C Read reservoir
         IF(NRESERVOIR.GT.0) CALL READ_RESERVOIR(FUNIT, BASIN(I))
 
       ENDDO
       CLOSE(FUNIT)
       RETURN
-99    CALL WRITE_LOG('ERROR WHILE READING FILE: '//TRIM(F1))
-      CLOSE(FUNIT)
-      CLOSE(ULOG)
-      STOP
+99    CALL WRITE_ERRORS('Problem occurred while reading file: '//TRIM(F1))
       END SUBROUTINE READ_BASIN
 C=================================================================
 C
 C=================================================================
 C=================================================================
-C READ SUB BASIN INPUT
+C
 C=================================================================
       SUBROUTINE READ_GATE(FUNIT, BS)
       USE PARAM
@@ -168,6 +157,7 @@ C=================================================================
 
         !Initial values
         WRITE(ICH,'(I3.3)') I
+        CALL WRITE_LOG('    READING GATE '//TRIM(ICH))
         NAME = "GATE_"//ICH
         TSTART = ""
         TEND = ""
@@ -176,10 +166,18 @@ C=================================================================
         INTERVAL = 0
 
 
-        !Read sub-BASIN  ith
         READ(FUNIT,GTNL, ERR=99)
 
-        !BASIN characteristic
+C Check parameter
+        IF(TRIM(TSTART).EQ.'') CALL WRITE_ERRORS('Please set start time(TSTART) with format ''DD-MM-YYYY HH:MM'' and restart application')
+
+        IF(TRIM(TEND).EQ.'') CALL WRITE_ERRORS('Please set end time(TEND) with format ''DD-MM-YYYY HH:MM'' and restart the application')
+
+        IF(TRIM(TEND).EQ.'') CALL WRITE_ERRORS('Please set data file name(DATAFILE) and restart the application')
+
+        IF(INTERVAL.EQ.0) CALL WRITE_ERRORS('Time INTERVAL is zero or has not been set!')
+
+C
         GT%NAME = TRIM(NAME)
         GT%TS = strptime(TRIM(TSTART), '%d-%m-%Y %H:%M')
         GT%TE = strptime(TRIM(TEND), '%d-%m-%Y %H:%M')
@@ -208,9 +206,7 @@ C=================================================================
 
 
       RETURN
-99    CALL WRITE_LOG('ERROR WHILE READING GATE DATA '//TRIM(ICH))
-      CLOSE(FUNIT)
-      CLOSE(ULOG)
+99    CALL WRITE_ERRORS('Problem occurred while reading GATE DATA: '//TRIM(ICH))
       STOP
       END SUBROUTINE READ_GATE
 C=================================================================
@@ -243,12 +239,13 @@ C=================================================================
         SBS => BS%SUBBASIN(I)
         !Initial values
         WRITE(ICH,'(I3.3)') I
+        CALL WRITE_LOG('    READING SUB_BASIN '//TRIM(ICH))
         NAME = "SUB_BASIN_"//ICH
         DOWNSTREAM = ""
         PRECIP_GATE = ""
-        BASE_FLOW_TYPE = CONSTANT_DATA
+        BASE_FLOW_TYPE = 0
         LOSSRATE = 0
-        TRANSFORM = SCS_UHG_TYPE
+        TRANSFORM = 0
         AREA = 0.0D0
         LENGTH = 0.0D0
         SLOPE = 0.0D0
@@ -258,9 +255,13 @@ C=================================================================
         BF_CONST = 0.0D0
         BF_MONTHLY = 0.0D0
 
-        !Read sub-BASIN  ith
         READ(FUNIT,SBSNL,ERR=99)
-        !BASIN characteristic
+
+C Check parameter
+        IF(TRIM(DOWNSTREAM).EQ.'') CALL WRITE_LOG('    WARNING!!: No DOWNSTREAM for sub basin '//TRIM(NAME))
+
+
+C
         SBS%NAME = TRIM(NAME)
         SBS%DOWNSTREAM = TRIM(DOWNSTREAM)
         SBS%BASE_FLOW_TYPE = BASE_FLOW_TYPE
@@ -287,6 +288,14 @@ C=================================================================
         SBS%SLOPE = SLOPE
 
         SBS%PRECIP => NULL()
+
+        IF(TRIM(PRECIP_GATE).EQ.'') THEN
+
+            CALL WRITE_LOG('    WARNING!!: No Precipitation gate is set for sub_basin '//TRIM(NAME))
+            CYCLE
+
+        ENDIF
+
         DO J = 1, BS%NGATE
 
             IF(TRIM(BS%GATE(I)%NAME).EQ.TRIM(PRECIP_GATE)) SBS%PRECIP => BS%GATE(I)
@@ -297,10 +306,7 @@ C=================================================================
 
 
       RETURN
-99    CALL WRITE_LOG('ERROR WHILE READING SUB BASIN DATA '//TRIM(ICH))
-      CLOSE(FUNIT)
-      CLOSE(ULOG)
-      STOP
+99    CALL WRITE_ERRORS('Problem occurred while reading SUB-BASIN DATA: '//TRIM(ICH))
       END SUBROUTINE READ_SUB_BASIN
 C=================================================================
 C
@@ -329,6 +335,7 @@ C=================================================================
         SRC => BS%SOURCE(I)
         !Initial values
         WRITE(ICH,'(I3.3)') I
+        CALL WRITE_LOG('    READING SOURCE '//TRIM(ICH))
         NAME = "SOURCE_"//ICH
         DOWNSTREAM = ""
         SRC_GATE = ""
@@ -340,10 +347,11 @@ C=================================================================
 
         IF(SRC_TYPE.EQ.TIME_SERIES_DATA.AND.TRIM(SRC_GATE).EQ."") THEN
 
-            WRITE(*,*) "Please set the gate name for source time data SRC_GATE!!"
-            STOP
+            CALL WRITE_ERRORS('Please set the gate name for source '//TRIM(NAME))
 
         ENDIF
+
+        IF(TRIM(DOWNSTREAM).EQ.'') CALL WRITE_LOG('    WARNING!!: No DOWNSTREAM for source '//TRIM(NAME))
 
         SRC%NAME = TRIM(NAME)
         SRC%DOWNSTREAM = TRIM(DOWNSTREAM)
@@ -357,7 +365,9 @@ C=================================================================
         ELSE
 
             DO J = 1, BS%NGATE
+
                 IF(TRIM(BS%GATE(J)%NAME).EQ.TRIM(SRC_GATE)) SRC%SRC_DATA => BS%GATE(J)
+
             ENDDO
 
         ENDIF
@@ -365,10 +375,7 @@ C=================================================================
       ENDDO
 
       RETURN
-99    CALL WRITE_LOG('ERROR WHILE READING SOURCE DATA '//TRIM(ICH))
-      CLOSE(FUNIT)
-      CLOSE(ULOG)
-      STOP
+99    CALL WRITE_ERRORS('Problem occurred while reading SOURCE DATA: '//TRIM(ICH))
       END SUBROUTINE READ_SOURCE
 C=================================================================
 C
@@ -398,15 +405,18 @@ C=================================================================
         RCH => BS%REACH(I)
         !Initial values
         WRITE(ICH,'(I3.3)') I
+        CALL WRITE_LOG('    READING REACH '//TRIM(ICH))
         NAME = "REACH_"//ICH
         DOWNSTREAM = ""
-        ROUTE = MUSKINGUM_METHOD
-        K = 2
-        X = 0.25
+        ROUTE = 0
+        K = 0.0D0
+        X = 0.0D0
         LOSS_VALUE = 0.0D0
         LOSS_RATIO = 0.0D0
 
         READ(FUNIT, REACHNL, ERR=99)
+
+        IF(TRIM(DOWNSTREAM).EQ.'') CALL WRITE_LOG('    WARNING!!: No DOWNSTREAM for reach '//TRIM(NAME))
 
         RCH%NAME = TRIM(NAME)
         RCH%DOWNSTREAM = TRIM(DOWNSTREAM)
@@ -423,10 +433,7 @@ C=================================================================
       ENDDO
 
       RETURN
-99    CALL WRITE_LOG('ERROR WHILE READING REACH DATA '//TRIM(ICH))
-      CLOSE(FUNIT)
-      CLOSE(ULOG)
-      STOP
+99    CALL WRITE_ERRORS('Problem occurred while reading REACH DATA: '//TRIM(ICH))
       END SUBROUTINE READ_REACH
 C=================================================================
 C
@@ -461,23 +468,25 @@ C=================================================================
 
         !Initial values
         WRITE(ICH,'(I3.3)') I
+        CALL WRITE_LOG('    READING RESERVOIR '//TRIM(ICH))
         NAME = "RESERVOIR_"//ICH
         DOWNSTREAM = ""
-        ROUTE = SPECIFIED_RELEASE
+        ROUTE = 0
         Z0 = 0.0D0
-        ROUTING_CURVE = ELEVATION_STORAGE
+        ROUTING_CURVE = 0
         RTCFN = ""
         DOORW = 0.0D0
         DC_COEFF = 0.0D0
         ZSW = 0.0D0
         DCFN = ""
-        TB_TYPE = CONSTANT_DATA
+        TB_TYPE = 0
         TB_CONST_DATA = 0.0D0
         TURBIN_GATE = ""
 
 
         READ(FUNIT, RESNL,ERR=99)
 
+        IF(TRIM(DOWNSTREAM).EQ.'') CALL WRITE_LOG('    WARNING!!: No DOWNSTREAM for reservoir '//TRIM(NAME))
 
         RES%NAME = TRIM(NAME)
         RES%DOWNSTREAM = TRIM(DOWNSTREAM)
@@ -553,6 +562,7 @@ C=================================================================
         ELSE
 
             RES%TURBIN_GATE => NULL()
+            IF(TRIM(TURBIN_GATE).EQ.'') CALL WRITE_ERRORS('Please set the gate name turbin gate of reservoir '//TRIM(NAME))
             DO J = 1, BS%NGATE
 
                 IF(TRIM(BS%GATE(J)%NAME).EQ.TRIM(TURBIN_GATE)) RES%TURBIN_GATE => BS%GATE(J)
@@ -566,10 +576,7 @@ C=================================================================
       ENDDO
 
       RETURN
-99    CALL WRITE_LOG('ERROR WHILE READING RESERVOIR DATA '//TRIM(ICH))
-      CLOSE(FUNIT)
-      CLOSE(ULOG)
-      STOP
+99    CALL WRITE_ERRORS('Problem occurred while reading RESERVOIR DATA: '//TRIM(ICH))
       END SUBROUTINE READ_RESERVOIR
 C=================================================================
 C

@@ -46,6 +46,8 @@
       INTEGER :: I, J, K
       REAL(8) :: QIN
 
+      CALL WRITE_LOG('INITIALING VARIABLES!!!')
+
       DO I = 1, NBASIN
 
         BS => BASIN(I)
@@ -71,7 +73,7 @@
 
             ENDIF
 
-            CALL GET_BASE_FLOW(SBS, 0)
+            IF(SBS%BASE_FLOW_TYPE.NE.0)CALL GET_BASE_FLOW(SBS, 0)
 
             SBS%TOTAL_FLOW(0) = SBS%DIRECT_FLOW(0) + SBS%BASE_FLOW(0)
 

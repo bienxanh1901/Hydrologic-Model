@@ -35,6 +35,8 @@
       TYPE(SUBBASIN_TYPE), POINTER :: SBS
       INTEGER :: I, J, N
 
+      CALL WRITE_LOG('CALCULATING RUNOFF!!!')
+
       DO I = 1, NBASIN
 
         BS => BASIN(I)
@@ -45,11 +47,21 @@
 
             DO N = 1, NTIME - 1
 
-                CALL LOSS_CALC(SBS, N)
+                IF(SBS%LOSSRATE.NE.0) THEN
 
-                CALL GET_BASE_FLOW(SBS, N)
+                    CALL LOSS_CALC(SBS, N)
 
-                CALL TRANSFORM_CALC(SBS, N)
+                ELSE
+
+                    IF(ASSOCIATED(SBS%PRECIP))SBS%EXCESS(N) = SBS%PRECIP%GATE_DATA(N)
+
+                ENDIF
+
+                IF(SBS%BASE_FLOW_TYPE.NE.0)CALL GET_BASE_FLOW(SBS, N)
+
+                IF(SBS%TRANSFORM.NE.0)CALL TRANSFORM_CALC(SBS, N)
+
+                SBS%TOTAL_FLOW(N) = SBS%DIRECT_FLOW(N) + SBS%BASE_FLOW(N)
 
             ENDDO
 

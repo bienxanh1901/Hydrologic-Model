@@ -38,25 +38,16 @@ C=================================================================
       USE TIME
       IMPLICIT NONE
       INTERFACE
-        SUBROUTINE GET_RESERVOIR_INFLOW(BS, RES, ITER)
+
+        SUBROUTINE SPILLWAY_DISCHARGE(RES, Z, Q)
         USE PARAM
         USE CONSTANTS
         USE TIME
         IMPLICIT NONE
-        TYPE(BASIN_TYPE), POINTER :: BS
         TYPE(RESERVOIR_TYPE), POINTER :: RES
-        INTEGER, INTENT(IN) :: ITER
-        END SUBROUTINE GET_RESERVOIR_INFLOW
-
-          SUBROUTINE SPILLWAY_DISCHARGE(RES, Z, Q)
-          USE PARAM
-          USE CONSTANTS
-          USE TIME
-          IMPLICIT NONE
-          TYPE(RESERVOIR_TYPE), POINTER :: RES
-          REAL(8), INTENT(IN) :: Z
-          REAL(8), INTENT(OUT):: Q
-          END SUBROUTINE SPILLWAY_DISCHARGE
+        REAL(8), INTENT(IN) :: Z
+        REAL(8), INTENT(OUT):: Q
+        END SUBROUTINE SPILLWAY_DISCHARGE
 
       END INTERFACE
       TYPE(BASIN_TYPE), POINTER :: BS
@@ -67,7 +58,7 @@ C=================================================================
       REAL(8) :: ZT, VT, DV
 
       DT1 = 1.0D0
-      CALL GET_RESERVOIR_INFLOW(BS, RES, ITER)
+
       QIT1 = RES%INFLOW(ITER - 1)
       QIT2 = RES%INFLOW(ITER)
       QOT1 = RES%OUTFLOW(ITER - 1)

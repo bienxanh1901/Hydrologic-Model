@@ -59,7 +59,7 @@ C This dimensionless unit hydrograph was developed by Victor Mockus(1957)
      &                    0.077D0, 0.055D0, 0.04D0, 0.029D0, 0.021D0,
      &                    0.015D0, 0.011D0, 0.005D0, 0.0D0/)
 
-      IF(SBS%TLAG.EQ.0) THEN
+      IF(SBS%TLAG.EQ.0.0) THEN
 
         !IF(SBS%LENGTH.EQ.0.OR.SBS%SLOPE.EQ.0)
 
