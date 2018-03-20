@@ -1,52 +1,40 @@
-      PROGRAM FLOOD_MODELING
-      USE OBSERVATION
-      USE CALC
-      USE BASING
-      USE ROUTING
+      PROGRAM HYDRAULIC_MODELLING
+      USE PARAM
+      USE CONSTANTS
       IMPLICIT NONE
 
+C Open log file
+      OPEN(UNIT=ULOG, FILE=TRIM(FLOG),STATUS='REPLACE')
+
+C Introduction
+      CALL GETCWD(ROOT_DIR)
+      CALL WRITE_LOG('WORKING DIRECTORY: ')
+      CALL WRITE_LOG('  '//TRIM(ROOT_DIR))
+
 C Read input parameters
-      WRITE(*,*) 'READ INPUT DATA!!!'
-      CALL READ_INPUT
-C Loss model
-      WRITE(*,*) 'CALCULATING LOSS'
-      ALLOCATE(LOSS(1:NBASING, 0:NTIME - 1))
-      ALLOCATE(EXCESS(1:NBASING, 0:NTIME - 1))
-      LOSS = 0.0D0
-      EXCESS = 0.0D0
-      CALL SCS_CURVE_NUMBER
-C Flood calculation
-      WRITE(*,*) 'CALCULATING FLOW!!!'
-      ALLOCATE(QF(1:NBASING, 0:NTIME - 1))
-      IF(MODEL.EQ.'UHG') THEN
+      CALL READING_INPUT
 
-        CALL UHG_CALC
+C Find the connection of basing
+      CALL BASIN_CONNECTION
 
-      ELSE IF (MODEL.EQ.'NAM') THEN
+C Allocate necessary variables
+      CALL ALLOCATING_VARIABLES
 
-        CALL NAM_MODEL_CALC
+C Initial variables
+      CALL INITIALING_VARIABLES
 
-      ENDIF
+C Starting calculate
+      CALL CALCULATING_RUNOFF
 
-C Flood routing
-      IF(ISROUTING) THEN
-        WRITE(*,*) 'FLOOD ROUTING!!!'
-        ALLOCATE(QDC(1:NSTOTAL, 0:NTIME - 1))
-        ALLOCATE(QIN(1:NSTOTAL, 0:NTIME - 1))
-        IF(NRS.GT.0) THEN
-            ALLOCATE(ZH(1:NRS, 0:NTIME - 1))
-            ALLOCATE(V(1:NRS, 0:NTIME - 1))
-            ZH = 0.0D0
-            V = 0.0D0
-        ENDIF
-        QDC = 0.0D0
-        QIN = 0.0D0
-        CALL ROUTING_CALC
+      CALL ROUTING_CALC
 
-      ENDIF
-C Write output
-      WRITE(*,*) 'WRITE OUTPUT DATA!!!'
+C Write result
       CALL WRITE_OUTPUT
 
-      END PROGRAM FLOOD_MODELING
+      CALL WRITE_LOG('END OF CALCULATION!!!')
+      CLOSE(ULOG)
+
+      WRITE(*,*) 'PRESS ANY KEY TO STOP!!!'
+      READ(*,*)
+      END PROGRAM HYDRAULIC_MODELLING
 

@@ -1,0 +1,61 @@
+&BSNL NSUBBASIN  = 1 , 
+	  NSOURCE    = 1 , 
+	  NREACH     = 1 , 
+	  NRESERVOIR = 1 , 
+	  NGATE      = 3 , 
+	  NAME       = "SESAN" /
+	  
+&GTNL NAME     = "PRECIP"           , 
+	  GATETYPE = 1                  , 
+	  TSTART   = "01-06-2016 00:00" , 
+	  TEND     = "31-12-2016 23:00" , 
+	  DATAFILE = "TRAMMUA.DAT"      , 
+	  INTERVAL = 3600               /
+	  
+&GTNL NAME     = "GATE1"            , 
+	  GATETYPE = 2                  , 
+	  TSTART   = "01-06-2016 00:00" , 
+	  TEND     = "31-12-2016 23:00" , 
+	  DATAFILE = "QIN3A.DAT"        , 
+	  INTERVAL = 3600               /
+
+&GTNL NAME     = "TURBIN4"          , 
+	  GATETYPE = 2                  , 
+	  TSTART   = "01-06-2016 00:00" , 
+	  TEND     = "31-12-2016 23:00" , 
+	  DATAFILE = "QTURBIN.DAT"        , 
+	  INTERVAL = 3600               /	  
+	  
+&SBSNL NAME           = "SUB-BASIN-4A" , 
+	   DOWNSTREAM     = "SESAN4" , 
+	   PRECIP_GATE    = "PRECIP" , 
+	   LOSSRATE       = 1        , 
+	   TRANSFORM      = 1        , 
+	   AREA           = 1051.0D0 , 
+	   CN             = 5.0D0   , 
+	   IMPERVIOUS     = 5       , 
+       TLAG           = 8.0      , 
+	   BASE_FLOW_TYPE = 1        , 
+	   BF_CONST       = 0.0      /
+	   
+&SRCNL NAME       = "QIN3A"   , 
+	   SRC_TYPE   = 3         , 
+	   DOWNSTREAM = "SESAN3A" , 
+	   SRC_GATE   = "GATE1"   /
+	   
+&REACHNL NAME       = "SESAN3A" , 
+		 DOWNSTREAM = "SESAN4"  , 
+		 K          = 2.0D0     , 
+		 X          = 0.25D0    , 
+		 LOSS_VALUE = 6.0D0     , 
+		 LOSS_RATIO = 0.015D0     , 
+		 ROUTE      = 1         /
+		 
+&RESNL NAME = "SESAN4" ,
+	   ROUTE = 1 ,
+	   Z0 = 210.19 ,
+	   ROUTING_CURVE = 1 ,
+	   RTCFN = "ES_SESAN4.DAT" ,
+	   DCFN = "ED_SESAN4A.DAT" ,
+	   TB_TYPE = 3 , 
+	   TURBIN_GATE = "TURBIN4" /

@@ -1,452 +1,583 @@
 C=================================================================
 C SUBROUTINE READ INPUT
 C=================================================================
-      SUBROUTINE READ_INPUT
-      USE CALC, ONLY: MODEL
-      USE BASING, ONLY: NBASING
-      USE OBSERVATION, ONLY: NTIME, DT
-      USE UNIT_HYDROGRAPH
-      USE ROUTING
+      SUBROUTINE READING_INPUT
+      USE PARAM
+      USE CONSTANTS
+      USE TIME
       IMPLICIT NONE
       INTEGER :: FUNIT
-      CHARACTER(30) :: F1, OBSF, CHAF, FRTF
-      LOGICAL :: EX
-      NAMELIST /OBSER/ NBASING, NTIME, DT, OBSF
-      NAMELIST /FLCALC/ MODEL, UHG_TYPE, CHAF
-      NAMELIST /FLRT/ ISROUTING, RIVER_MDL, FRTF
+      CHARACTER(5) :: F1
+      CHARACTER(16) :: TSTART, TEND
+      NAMELIST /INP/ NBASIN, DT
+      NAMELIST /CTRL/ TSTART, TEND
+      NAMELIST /IODIR/ INPUT_DIR, OUTPUT_DIR
 
+
+      CALL WRITE_LOG('READING INPUT DATA!!!')
 C Open input file
-      F1 = 'Input.dat'
-      INQUIRE(FILE=TRIM(F1), EXIST=EX)
-      IF(.NOT.EX) THEN
-        WRITE(*,*) "ERROR!!!"
-        WRITE(*,'(3A)')"File ", TRIM(F1), " does not exist in the current directory!!! "
-        STOP
-      ENDIF
 
-      FUNIT = 10
+      FUNIT = 30
+      F1 = 'Input'
+      CALL CHK_FILE(TRIM(F1))
       OPEN(UNIT=FUNIT, FILE=TRIM(F1),STATUS='OLD')
 
-C Read name list OBSER
-      NBASING = 0
+C Read name list common
+      NBASIN = 0
       NTIME = 0
       DT = 0.0D0
-      OBSF = 'OBSFILE'
-      READ(FUNIT,OBSER,ERR=99)
+      TSTART = ''
+      TEND = ''
+      INPUT_DIR = ''
+      OUTPUT_DIR = 'OUTPUT'
 
-      !Check value
-c      IF(NBASING.LE.0) CALL ARLET_INVALID_VALUE('NBASING')
-c      IF(NTIME.LE.0) CALL ARLET_INVALID_VALUE('NTIME')
-c      IF(DT.LE.0.0D0) CALL ARLET_INVALID_VALUE('DT')
-      OBSF = TRIM(OBSF)
-C Read name list FLCALC
-      MODEL = ''
-      UHG_TYPE = 0
-      CHAF = 'CHARFILE'
-      READ(FUNIT,FLCALC,ERR=99)
+      READ(FUNIT,INP, ERR=99)
+      READ(FUNIT,CTRL, ERR=99)
+      READ(FUNIT,IODIR,ERR=99)
+      CLOSE(FUNIT)
 
-      !Check value
-c     IF(MODEL.EQ.'') CALL ARLET_INVALID_VALUE('MODEL')
-c     IF(MODEL.EQ.'UHG') THEN
-c       IF(UHG_TYPE.LE.0.OR.UHG_TYPE.GT.1) THEN
-c            WRITE(*,*) 'ERROR!'
-c            WRITE(*,*) 'UHG_TYPE = 1 : SCS HYDROGRAPH'
-c            WRITE(*,*) 'PLEASE CHOOSE AND RERUN'
-c            GOTO 100
-c        ENDIF
-c      ENDIF
-      CHAF = TRIM(CHAF)
-C Read name list FLRT
-      ISROUTING=.FALSE.
-      RIVER_MDL = 'Muskingum'
-      FRTF = 'RTFILE'
-      READ(FUNIT,FLRT,ERR=99)
-      CALL READ_INPUT_CHAR(CHAF)
-      CALL READ_INPUT_OBSER(OBSF)
-      IF(ISROUTING) CALL READ_INPUT_RTNG(FRTF)
+C Check parameter
+      IF(NBASIN.EQ.0) CALL WRITE_ERRORS('Number of BASIN(NBASIN) is zero or has not been set!')
 
+      IF(DT.EQ.0.0D0) CALL WRITE_ERRORS('Time interval(DT) is zero or has not been set!')
+
+      IF(TRIM(TSTART).EQ.'') CALL WRITE_ERRORS('Please set start time(TSTART) with format ''DD-MM-YYYY HH:MM'' and restart application')
+
+      IF(TRIM(TEND).EQ.'') CALL WRITE_ERRORS('Please set end time(TEND) with format ''DD-MM-YYYY HH:MM'' and restart the application')
+
+      IF(TRIM(INPUT_DIR).EQ.'') CALL WRITE_ERRORS('Please set input directory(INPUT_DIR) and restart the application')
+
+C Set date and time
+      CALL SET_DATE_TIME(TSTART, TEND)
+
+C Read BASIN
+      CALL READ_BASIN
 
       RETURN
-99    WRITE(*,*) 'ERROR WHILE READING FILE: ', TRIM(F1)
-C100   STOP
-      END SUBROUTINE READ_INPUT
+99    CALL WRITE_ERRORS('Problem occurred while reading file: '//TRIM(F1))
+      END SUBROUTINE READING_INPUT
 C=================================================================
 C
 C=================================================================
-
 C=================================================================
-C SUBROUTINE READ INPUT F1
+C
 C=================================================================
-      SUBROUTINE READ_INPUT_CHAR(FILE_NAME)
-      USE CALC
-      USE OBSERVATION
-      USE BASING
-      USE UNIT_HYDROGRAPH
+      SUBROUTINE READ_BASIN
+      USE PARAM
+      USE CONSTANTS
       IMPLICIT NONE
+      INTEGER :: FUNIT, IERR, I
+      INTEGER :: NSUBBASIN, NSOURCE, NREACH, NRESERVOIR, NGATE
+      CHARACTER(2) :: ICH
+      CHARACTER(100) :: F1, NAME
 
-      CHARACTER(*), INTENT(IN) :: FILE_NAME
-      INTEGER :: FUNIT
-      LOGICAL :: EX
-C CHECK AND OPEN INPUT FILE
-      INQUIRE(FILE=TRIM(FILE_NAME), EXIST=EX)
-      IF(.NOT.EX) THEN
-        WRITE(*,*) "ERROR!!!"
-        WRITE(*,'(3A)')"File ", TRIM(FILE_NAME), " does not exist in the current directory!!! "
-        STOP
-      ENDIF
+      NAMELIST /BSNL/ NSUBBASIN, NSOURCE, NREACH, NRESERVOIR, NGATE, NAME
 
-      FUNIT = 10
-      OPEN(UNIT=FUNIT, FILE=TRIM(FILE_NAME),STATUS='OLD')
 
 C Allocate array
-      ALLOCATE(BASE(1:NBASING))
+      ALLOCATE(BASIN(1:NBASIN),STAT=IERR)
+      CALL ChkMemErr('BASIN', IERR)
 
-      IF(MODEL.EQ.'UHG') THEN
+      DO I = 1, NBASIN
 
-C READ PARAMETER FOR UNIT HYDROGRAPH METHOD
-        CALL GET_UHG
-        CALL READ_DATA_FOR_UHG(FUNIT)
 
-      ELSE IF(MODEL.EQ.'NAM') THEN
+C Open input file
+        WRITE(ICH,'(I2.2)') I
+        CALL WRITE_LOG('  READING BASIN '//TRIM(ICH))
+        FUNIT = 30
+        F1 = TRIM(INPUT_DIR)//'/Basin_'//ICH
+        CALL CHK_FILE(TRIM(F1))
+        OPEN(UNIT=FUNIT, FILE=TRIM(F1),STATUS='OLD')
 
-C READ PARAMETER FOR NAM MODEL
-        ALLOCATE(NAMPRM(1:NBASING))
+C Read name list BASIN
+        NSUBBASIN = 0
+        NSOURCE = 0
+        NREACH = 0
+        NRESERVOIR = 0
+        NGATE = 0
+        NAME='BASIN_'//ICH
+        READ(FUNIT,BSNL,ERR=99)
+        BASIN(I)%NAME = TRIM(NAME)
+        BASIN(I)%NSUBBASIN = NSUBBASIN
+        BASIN(I)%NSOURCE = NSOURCE
+        BASIN(I)%NREACH = NREACH
+        BASIN(I)%NRESERVOIR = NRESERVOIR
+        BASIN(I)%NGATE = NGATE
 
-        CALL READ_DATA_FOR_NAM(FUNIT)
+C Read gate
+        IF(NGATE.GT.0) CALL READ_GATE(FUNIT, BASIN(I))
 
-      ENDIF
+C Read sub basin
+        IF(NSUBBASIN.GT.0) CALL READ_SUB_BASIN(FUNIT, BASIN(I))
 
+C Read source
+        IF(NSOURCE.GT.0) CALL READ_SOURCE(FUNIT, BASIN(I))
+
+C Read reach
+        IF(NREACH.GT.0) CALL READ_REACH(FUNIT, BASIN(I))
+
+C Read reservoir
+        IF(NRESERVOIR.GT.0) CALL READ_RESERVOIR(FUNIT, BASIN(I))
+
+      ENDDO
       CLOSE(FUNIT)
       RETURN
-      END SUBROUTINE READ_INPUT_CHAR
-C=================================================================
-C
-C=================================================================
-
-C=================================================================
-C SUBROUTINE READ INPUT F1
-C=================================================================
-      SUBROUTINE READ_INPUT_OBSER(FILE_NAME)
-      USE OBSERVATION
-      USE BASING
-      IMPLICIT NONE
-
-      CHARACTER(*), INTENT(IN) :: FILE_NAME
-      INTEGER :: I, J, K, FUNIT, NSTATS_TOTAL, CNT
-      CHARACTER(100) :: CTMP
-      LOGICAL :: EX
-      REAL(8), ALLOCATABLE, DIMENSION(:) :: HX
-      REAL(8), ALLOCATABLE, DIMENSION(:,:) :: XTMP
-C CHECK AND OPEN INPUT FILE
-      INQUIRE(FILE=TRIM(FILE_NAME), EXIST=EX)
-      IF(.NOT.EX) THEN
-        WRITE(*,*) "ERROR!!!"
-        WRITE(*,'(3A)')"File ", TRIM(FILE_NAME), " does not exist in the current directory!!! "
-        STOP
-      ENDIF
-
-      FUNIT = 10
-      OPEN(UNIT=FUNIT, FILE=TRIM(FILE_NAME),STATUS='OLD')
-
-      ALLOCATE(XF(1:NBASING,0:NTIME - 1))
-      NSTATS_TOTAL = 0
-
-      DO I=1,NBASING
-
-        NSTATS_TOTAL = NSTATS_TOTAL + BASE(I)%NSTATS
-
-      ENDDO
-
-      ALLOCATE(HX(1:NSTATS_TOTAL))
-      ALLOCATE(XTMP(1:NSTATS_TOTAL, 0:NTIME - 1))
-
-C READ PRECIPITATION COEFFICIENT OF EACH STATION
-      READ(FUNIT,*) CTMP
-      READ(FUNIT,*)(HX(I),I=1,NSTATS_TOTAL)
-
-C READ PRECIPITATION OF EACH STATION INTIME
-      READ(FUNIT,*) CTMP
-      DO I = 0, NTIME - 1
-
-        READ(FUNIT,*) (XTMP(J,I), J = 1, NSTATS_TOTAL)
-
-      ENDDO
-
-      CLOSE(FUNIT)
-
-C CALCULATION AVERAGE PRECIPITATION
-
-      XF = 0.0D0
-
-      DO I=1,NTIME - 1
-        K = 1
-        CNT = 0
-        STLOOP:DO J=1,NSTATS_TOTAL
-            CNT = CNT + 1
-            XF(K,I) = XF(K,I) + HX(J)*XTMP(J,I)
-            IF(CNT.EQ.BASE(K)%NSTATS)THEN
-                K = K + 1
-                CNT = 0
-            ENDIF
-
-        ENDDO STLOOP
-
-      ENDDO
-
-      DEALLOCATE(HX,XTMP)
-      RETURN
-      END SUBROUTINE READ_INPUT_OBSER
+99    CALL WRITE_ERRORS('Problem occurred while reading file: '//TRIM(F1))
+      END SUBROUTINE READ_BASIN
 C=================================================================
 C
 C=================================================================
 C=================================================================
-C SUBROUTINE READ INPUT F1
+C
 C=================================================================
-      SUBROUTINE READ_INPUT_RTNG(FILE_NAME)
-      USE ROUTING
+      SUBROUTINE READ_GATE(FUNIT, BS)
+      USE PARAM
+      USE CONSTANTS
+      USE TIME
+      USE datetime_module
       IMPLICIT NONE
+      INTEGER, INTENT(IN) :: FUNIT
+      TYPE(BASIN_TYPE) :: BS
+      INTEGER :: GATETYPE, I, J, FU, IERR
+      INTEGER :: INTERVAL
+      CHARACTER(100) :: NAME, DATAFILE, F1
+      CHARACTER(3) :: ICH
+      CHARACTER(16) :: TSTART, TEND
+      TYPE(GATE_TYPE), POINTER :: GT
+      TYPE(timedelta) :: DTIME
 
-      CHARACTER(*), INTENT(IN) :: FILE_NAME
-      CHARACTER(100) :: CTMP
-      INTEGER :: FUNIT, I, J, K
-      LOGICAL :: EX
-C CHECK AND OPEN INPUT FILE
-      INQUIRE(FILE=TRIM(FILE_NAME), EXIST=EX)
-      IF(.NOT.EX) THEN
-        WRITE(*,*) "ERROR!!!"
-        WRITE(*,'(3A)')"File ", TRIM(FILE_NAME), " does not exist in the current directory!!! "
-        STOP
-      ENDIF
+      NAMELIST /GTNL/ NAME, GATETYPE, TSTART, TEND, DATAFILE, INTERVAL
 
-      FUNIT = 10
-      OPEN(UNIT=FUNIT, FILE=TRIM(FILE_NAME),STATUS='OLD')
-      READ(FUNIT,*) CTMP
-      READ(FUNIT,*)NRV, NRS
-      NSTOTAL = NRV + NRS
-      ALLOCATE(FRTYPE(1:NSTOTAL))
-      IF(NRV.GT.0) ALLOCATE(RIVER(1:NRV))
-      IF(NRS.GT.0) ALLOCATE(RESERVOIR(1:NRS))
+      ALLOCATE(BS%GATE(1:BS%NGATE), STAT=IERR)
+      CALL ChkMemErr('GATE', IERR)
+      FU = 10
 
-      !Read comments
-      DO I = 1,14
-        READ(FUNIT,*) CTMP
+      DO I = 1, BS%NGATE
+        GT => BS%GATE(I)
+
+        !Initial values
+        WRITE(ICH,'(I3.3)') I
+        CALL WRITE_LOG('    READING GATE '//TRIM(ICH))
+        NAME = "GATE_"//ICH
+        TSTART = ""
+        TEND = ""
+        DATAFILE = ""
+        GATETYPE = 0
+        INTERVAL = 0
+
+
+        READ(FUNIT,GTNL, ERR=99)
+
+C Check parameter
+        IF(TRIM(TSTART).EQ.'') CALL WRITE_ERRORS('Please set start time(TSTART) with format ''DD-MM-YYYY HH:MM'' and restart application')
+
+        IF(TRIM(TEND).EQ.'') CALL WRITE_ERRORS('Please set end time(TEND) with format ''DD-MM-YYYY HH:MM'' and restart the application')
+
+        IF(TRIM(TEND).EQ.'') CALL WRITE_ERRORS('Please set data file name(DATAFILE) and restart the application')
+
+        IF(INTERVAL.EQ.0) CALL WRITE_ERRORS('Time INTERVAL is zero or has not been set!')
+
+C
+        GT%NAME = TRIM(NAME)
+        GT%TS = strptime(TRIM(TSTART), '%d-%m-%Y %H:%M')
+        GT%TE = strptime(TRIM(TEND), '%d-%m-%Y %H:%M')
+        DTIME = GT%TE - GT%TS
+
+        GT%NDATA = INT(DTIME%total_seconds()/INTERVAL) + 1
+        GT%GATETYPE = GATETYPE
+        GT%DT = INTERVAL
+
+        F1 = TRIM(INPUT_DIR)//'/'//TRIM(DATAFILE)
+        CALL CHK_FILE(TRIM(F1))
+        OPEN(UNIT=FU, FILE=TRIM(F1), STATUS='OLD')
+
+        ALLOCATE(GT%GATE_DATA(0:GT%NDATA - 1), STAT=IERR)
+        CALL ChkMemErr('GATE_DATA', IERR)
+
+        DO J = 0, GT%NDATA - 1
+
+            READ(FU,*) GT%GATE_DATA(J)
+
+        ENDDO
+
+        CLOSE(FU)
+
       ENDDO
 
-      !Read data
-      J = 0
-      K = 0
-      DO I = 1, NSTOTAL
 
-        READ(FUNIT,*) CTMP
-        READ(FUNIT,*) FRTYPE(I)
+      RETURN
+99    CALL WRITE_ERRORS('Problem occurred while reading GATE DATA: '//TRIM(ICH))
+      STOP
+      END SUBROUTINE READ_GATE
+C=================================================================
+C
+C=================================================================
+C=================================================================
+C READ SUB BASIN INPUT
+C=================================================================
+      SUBROUTINE READ_SUB_BASIN(FUNIT, BS)
+      USE PARAM
+      USE CONSTANTS
+      IMPLICIT NONE
+      INTEGER, INTENT(IN) :: FUNIT
+      TYPE(BASIN_TYPE) :: BS
+      INTEGER :: LOSSRATE, BASE_FLOW_TYPE, TRANSFORM, I, J, FU, IERR
+      REAL(8) :: AREA, CN, IMPERVIOUS, TLAG, LENGTH, SLOPE
+      REAL(8) :: BF_CONST, BF_MONTHLY(1:12)
+      CHARACTER(100) :: NAME, DOWNSTREAM, PRECIP_GATE
+      CHARACTER(3) :: ICH
+      TYPE(SUBBASIN_TYPE), POINTER :: SBS
 
-        IF(FRTYPE(I).EQ.1) THEN
-            J = J + 1
-            CALL READ_DATA_FOR_RIVER(FUNIT, J)
+      NAMELIST /SBSNL/ NAME, DOWNSTREAM, PRECIP_GATE, LOSSRATE, TRANSFORM,
+     &                AREA, CN, IMPERVIOUS, TLAG, LENGTH, SLOPE, BASE_FLOW_TYPE, BF_CONST, BF_MONTHLY
 
-        ELSE IF(FRTYPE(I).EQ.2) THEN
-            K = K + 1
-            CALL READ_DATA_FOR_RESERVOIR(FUNIT, K)
+      ALLOCATE(BS%SUBBASIN(1:BS%NSUBBASIN), STAT=IERR)
+      CALL ChkMemErr('SUB BASIN', IERR)
+      FU = 10
+
+      DO I = 1, BS%NSUBBASIN
+        SBS => BS%SUBBASIN(I)
+        !Initial values
+        WRITE(ICH,'(I3.3)') I
+        CALL WRITE_LOG('    READING SUB_BASIN '//TRIM(ICH))
+        NAME = "SUB_BASIN_"//ICH
+        DOWNSTREAM = ""
+        PRECIP_GATE = ""
+        BASE_FLOW_TYPE = 0
+        LOSSRATE = 0
+        TRANSFORM = 0
+        AREA = 0.0D0
+        LENGTH = 0.0D0
+        SLOPE = 0.0D0
+        CN = 0.0D0
+        IMPERVIOUS = 0.0D0
+        TLAG = 0.0D0
+        BF_CONST = 0.0D0
+        BF_MONTHLY = 0.0D0
+
+        READ(FUNIT,SBSNL,ERR=99)
+
+C Check parameter
+        IF(TRIM(DOWNSTREAM).EQ.'') CALL WRITE_LOG('    WARNING!!: No DOWNSTREAM for sub basin '//TRIM(NAME))
+
+
+C
+        SBS%NAME = TRIM(NAME)
+        SBS%DOWNSTREAM = TRIM(DOWNSTREAM)
+        SBS%BASE_FLOW_TYPE = BASE_FLOW_TYPE
+        SBS%AREA = AREA
+        IF(BASE_FLOW_TYPE.EQ.CONSTANT_DATA) THEN
+
+            SBS%BF_CONST = BF_CONST
+
+        ELSEIF(BASE_FLOW_TYPE.EQ.MONTHLY_DATA) THEN
+
+            SBS%BF_MONTHLY = BF_MONTHLY
+
+        ENDIF
+
+        !Loss method
+        SBS%LOSSRATE = LOSSRATE
+        IF(LOSSRATE.EQ.SCS_CURVE_LOSS) SBS%IMPERVIOUS = IMPERVIOUS/100.0D0
+
+        !Transform method
+        SBS%TRANSFORM = TRANSFORM
+        SBS%CN = CN
+        SBS%TLAG = TLAG
+        SBS%LENGTH = LENGTH
+        SBS%SLOPE = SLOPE
+
+        SBS%PRECIP => NULL()
+
+        IF(TRIM(PRECIP_GATE).EQ.'') THEN
+
+            CALL WRITE_LOG('    WARNING!!: No Precipitation gate is set for sub_basin '//TRIM(NAME))
+            CYCLE
+
+        ENDIF
+
+        DO J = 1, BS%NGATE
+
+            IF(TRIM(BS%GATE(I)%NAME).EQ.TRIM(PRECIP_GATE)) SBS%PRECIP => BS%GATE(I)
+
+        ENDDO
+
+      ENDDO
+
+
+      RETURN
+99    CALL WRITE_ERRORS('Problem occurred while reading SUB-BASIN DATA: '//TRIM(ICH))
+      END SUBROUTINE READ_SUB_BASIN
+C=================================================================
+C
+C=================================================================
+C=================================================================
+C READ SOURCE INPUT
+C=================================================================
+      SUBROUTINE READ_SOURCE(FUNIT, BS)
+      USE PARAM
+      USE CONSTANTS
+      IMPLICIT NONE
+      INTEGER, INTENT(IN) :: FUNIT
+      TYPE(BASIN_TYPE) :: BS
+      INTEGER :: SRC_TYPE, I, J, IERR
+      REAL(8) :: CONST_DATA
+      CHARACTER(100) :: DOWNSTREAM, NAME, SRC_GATE
+      CHARACTER(3) :: ICH
+      TYPE(SOURCE_TYPE), POINTER :: SRC
+
+      NAMELIST /SRCNL/ SRC_TYPE, CONST_DATA, DOWNSTREAM, NAME, SRC_GATE
+
+      ALLOCATE(BS%SOURCE(1:BS%NSOURCE), STAT=IERR)
+      CALL ChkMemErr('SOURCE', IERR)
+
+      DO I = 1, BS%NSOURCE
+        SRC => BS%SOURCE(I)
+        !Initial values
+        WRITE(ICH,'(I3.3)') I
+        CALL WRITE_LOG('    READING SOURCE '//TRIM(ICH))
+        NAME = "SOURCE_"//ICH
+        DOWNSTREAM = ""
+        SRC_GATE = ""
+        SRC_TYPE = CONSTANT_DATA
+        CONST_DATA = 0.0D0
+
+        !Read source ith
+        READ(FUNIT,SRCNL, ERR=99)
+
+        IF(SRC_TYPE.EQ.TIME_SERIES_DATA.AND.TRIM(SRC_GATE).EQ."") THEN
+
+            CALL WRITE_ERRORS('Please set the gate name for source '//TRIM(NAME))
+
+        ENDIF
+
+        IF(TRIM(DOWNSTREAM).EQ.'') CALL WRITE_LOG('    WARNING!!: No DOWNSTREAM for source '//TRIM(NAME))
+
+        SRC%NAME = TRIM(NAME)
+        SRC%DOWNSTREAM = TRIM(DOWNSTREAM)
+        SRC%SRC_TYPE = SRC_TYPE
+
+        !Source data
+        IF(SRC_TYPE.EQ.CONSTANT_DATA) THEN
+
+            SRC%CONST_DATA = CONST_DATA
+
+        ELSE
+
+            DO J = 1, BS%NGATE
+
+                IF(TRIM(BS%GATE(J)%NAME).EQ.TRIM(SRC_GATE)) SRC%SRC_DATA => BS%GATE(J)
+
+            ENDDO
 
         ENDIF
 
       ENDDO
 
-      CLOSE(FUNIT)
       RETURN
-      END SUBROUTINE READ_INPUT_RTNG
+99    CALL WRITE_ERRORS('Problem occurred while reading SOURCE DATA: '//TRIM(ICH))
+      END SUBROUTINE READ_SOURCE
 C=================================================================
 C
 C=================================================================
 C=================================================================
-C SUBROUTINE READ DATA INPUT FOR UHG
+C READ REACH INPUT
 C=================================================================
-      SUBROUTINE READ_DATA_FOR_UHG(FUNIT)
-      USE BASING
+      SUBROUTINE READ_REACH(FUNIT, BS)
+      USE PARAM
+      USE CONSTANTS
       IMPLICIT NONE
-      CHARACTER(100) :: CTMP
-      INTEGER :: I, FUNIT
+      INTEGER, INTENT(IN) :: FUNIT
+      TYPE(BASIN_TYPE) :: BS
+      INTEGER :: ROUTE, I, IERR
+      REAL(8) :: K, X, LOSS_VALUE, LOSS_RATIO
+      CHARACTER(100) :: DOWNSTREAM, NAME
+      CHARACTER(3) :: ICH
+      TYPE(REACH_TYPE), POINTER :: RCH
 
-      READ(FUNIT,*) CTMP
-      DO I = 1, NBASING
+      NAMELIST /REACHNL/ NAME, DOWNSTREAM, K, X, ROUTE, LOSS_RATIO, LOSS_VALUE
 
-        READ(FUNIT,*) CTMP
-        READ(FUNIT,*) BASE(I)%AREA, BASE(I)%LENGTH, BASE(I)%SLOPE,
-     &                BASE(I)%Q0, BASE(I)%CN,  BASE%IMPERVIOUS, BASE(I)%NSTATS
+      ALLOCATE(BS%REACH(1:BS%NREACH), STAT=IERR)
+      CALL ChkMemErr('REACH', IERR)
 
-        BASE(I)%IMPERVIOUS = BASE(I)%IMPERVIOUS/100.0D0
+      DO I = 1, BS%NREACH
+
+        RCH => BS%REACH(I)
+        !Initial values
+        WRITE(ICH,'(I3.3)') I
+        CALL WRITE_LOG('    READING REACH '//TRIM(ICH))
+        NAME = "REACH_"//ICH
+        DOWNSTREAM = ""
+        ROUTE = 0
+        K = 0.0D0
+        X = 0.0D0
+        LOSS_VALUE = 0.0D0
+        LOSS_RATIO = 0.0D0
+
+        READ(FUNIT, REACHNL, ERR=99)
+
+        IF(TRIM(DOWNSTREAM).EQ.'') CALL WRITE_LOG('    WARNING!!: No DOWNSTREAM for reach '//TRIM(NAME))
+
+        RCH%NAME = TRIM(NAME)
+        RCH%DOWNSTREAM = TRIM(DOWNSTREAM)
+        RCH%ROUTE = ROUTE
+        RCH%LOSS_RATIO = LOSS_RATIO
+        RCH%LOSS_VALUE = LOSS_VALUE
+        IF(ROUTE.EQ.MUSKINGUM_METHOD) THEN
+
+            RCH%K = K*3600.0D0
+            RCH%X = X
+
+        ENDIF
 
       ENDDO
 
       RETURN
-      END SUBROUTINE READ_DATA_FOR_UHG
+99    CALL WRITE_ERRORS('Problem occurred while reading REACH DATA: '//TRIM(ICH))
+      END SUBROUTINE READ_REACH
 C=================================================================
 C
 C=================================================================
 C=================================================================
-C SUBROUTINE READ DATA INPUT FOR NAM
+C READ RESERVOIR INPUT
 C=================================================================
-      SUBROUTINE READ_DATA_FOR_NAM(FUNIT)
-      USE BASING
+      SUBROUTINE READ_RESERVOIR(FUNIT, BS)
+      USE PARAM
+      USE CONSTANTS
+      USE TIME
       IMPLICIT NONE
-      CHARACTER(100) :: CTMP
-      INTEGER :: I, FUNIT
+      INTEGER, INTENT(IN) :: FUNIT
+      TYPE(BASIN_TYPE) :: BS
+      INTEGER :: ROUTE, I, J, FU, IERR, ROUTING_CURVE, TB_TYPE
+      REAL(8) :: Z0, DOORW, DC_COEFF, ZSW, TB_CONST_DATA
+      CHARACTER(100) :: DOWNSTREAM, NAME, RTCFN, DCFN, TURBIN_GATE, F1
+      CHARACTER(3) :: ICH
+      TYPE(RESERVOIR_TYPE), POINTER :: RES
+      NAMELIST /RESNL/ NAME, DOWNSTREAM, ROUTE, Z0, ROUTING_CURVE, RTCFN,
+     &                 DOORW, DC_COEFF, ZSW, DCFN, TB_TYPE,
+     &                 TB_CONST_DATA, TURBIN_GATE
 
-      READ(FUNIT,*) CTMP
-      READ(FUNIT,*) CTMP
-      DO I = 1, NBASING
 
-        READ(FUNIT,*) CTMP
-        READ(FUNIT,*) BASE(I)%AREA, NAMPRM(I)%U40, NAMPRM(I)%L20,
-     &                NAMPRM(I)%EP, NAMPRM(I)%OF0, NAMPRM(I)%FQ0,
-     &                NAMPRM(I)%BF0, BASE(I)%NSTATS
+      ALLOCATE(BS%RESERVOIR(1:BS%NRESERVOIR), STAT=IERR)
+      CALL ChkMemErr('RESERVOIR', IERR)
+      FU = 10
 
-        READ(FUNIT,*) NAMPRM(I)%UMAX, NAMPRM(I)%SLMAX, NAMPRM(I)%CQOF,
-     &                NAMPRM(I)%CKIF, NAMPRM(I)%CK1, NAMPRM(I)%TOF,
-     &                NAMPRM(I)%TIF, NAMPRM(I)%TG, NAMPRM(I)%CKBF
+      DO I = 1, BS%NRESERVOIR
+
+        RES => BS%RESERVOIR(I)
+
+        !Initial values
+        WRITE(ICH,'(I3.3)') I
+        CALL WRITE_LOG('    READING RESERVOIR '//TRIM(ICH))
+        NAME = "RESERVOIR_"//ICH
+        DOWNSTREAM = ""
+        ROUTE = 0
+        Z0 = 0.0D0
+        ROUTING_CURVE = 0
+        RTCFN = ""
+        DOORW = 0.0D0
+        DC_COEFF = 0.0D0
+        ZSW = 0.0D0
+        DCFN = ""
+        TB_TYPE = 0
+        TB_CONST_DATA = 0.0D0
+        TURBIN_GATE = ""
+
+
+        READ(FUNIT, RESNL,ERR=99)
+
+        IF(TRIM(DOWNSTREAM).EQ.'') CALL WRITE_LOG('    WARNING!!: No DOWNSTREAM for reservoir '//TRIM(NAME))
+
+        RES%NAME = TRIM(NAME)
+        RES%DOWNSTREAM = TRIM(DOWNSTREAM)
+        RES%ROUTE = ROUTE
+        RES%Z0 = Z0
+
+        !Read storage - elevation curve
+        F1 = TRIM(INPUT_DIR)//'/'//TRIM(RTCFN)
+        CALL CHK_FILE(TRIM(F1))
+        OPEN(UNIT=FU, FILE=TRIM(F1), STATUS='OLD')
+
+        READ(FU,*) RES%NSE
+        ALLOCATE(RES%SE_CURVE(1:2,1:RES%NSE), STAT=IERR)
+        CALL ChkMemErr('STORAGE-ELEVATION-CURVE', IERR)
+
+        DO J = 1, RES%NSE
+
+            READ(FU,*) RES%SE_CURVE(1:2,J)
+
+        ENDDO
+
+        RES%SE_CURVE(2,:) = RES%SE_CURVE(2,:)*1000.0D0
+
+        CLOSE(FU)
+
+        !Read discharge - elevation curve
+
+        F1 = TRIM(INPUT_DIR)//'/'//TRIM(DCFN)
+        CALL CHK_FILE(TRIM(F1))
+        OPEN(UNIT=FU, FILE=TRIM(F1), STATUS='OLD')
+
+        READ(FU,*) RES%NED
+
+        IF(ROUTE.EQ.OUTFLOW_STRUCTURE) THEN
+
+            RES%DOORW = DOORW
+            RES%DC_COEFF = DC_COEFF
+            RES%ZSW = ZSW
+
+            ALLOCATE(RES%NDOOR(1:RES%NED), STAT=IERR)
+            CALL ChkMemErr('NDOOR_OPEN', IERR)
+            ALLOCATE(RES%EH_CURVE(1:2,1:RES%NED), STAT=IERR)
+            CALL ChkMemErr('EH_CURVE', IERR)
+
+
+            DO J = 1, RES%NED
+
+                READ(FU,*) RES%EH_CURVE(1:2,J), RES%NDOOR(J)
+
+            ENDDO
+
+        ELSE IF(ROUTE.EQ.SPECIFIED_RELEASE) THEN
+
+            ALLOCATE(RES%ED_CURVE(1:2,1:RES%NED),STAT=IERR)
+            CALL ChkMemErr('ED_CURVE', IERR)
+
+            DO J = 1, RES%NED
+
+                READ(FU,*) RES%ED_CURVE(1:2,J)
+
+            ENDDO
+
+        ENDIF
+
+        CLOSE(FU)
+
+        !Turbin data
+        RES%TB_TYPE = TB_TYPE
+        IF(TB_TYPE.EQ.CONSTANT_DATA) THEN
+
+            RES%TB_CONST_DATA = TB_CONST_DATA
+
+        ELSE
+
+            RES%TURBIN_GATE => NULL()
+            IF(TRIM(TURBIN_GATE).EQ.'') CALL WRITE_ERRORS('Please set the gate name turbin gate of reservoir '//TRIM(NAME))
+            DO J = 1, BS%NGATE
+
+                IF(TRIM(BS%GATE(J)%NAME).EQ.TRIM(TURBIN_GATE)) RES%TURBIN_GATE => BS%GATE(J)
+
+            ENDDO
+
+        ENDIF
+
+
+
       ENDDO
 
       RETURN
-      END SUBROUTINE READ_DATA_FOR_NAM
-C=================================================================
-C
-C=================================================================
-C=================================================================
-C SUBROUTINE READ DATA INPUT FOR RIVER FLOOD ROUTING
-C=================================================================
-      SUBROUTINE READ_DATA_FOR_RIVER(FUNIT,I)
-      USE ROUTING
-      USE OBSERVATION
-      IMPLICIT NONE
-      INTEGER :: J, FUNIT, I
-      REAL(8) :: QTMP
-
-      RIVER(I)%K = 0.0D0
-      RIVER(I)%X = 0.0D0
-      READ(FUNIT,*) RIVER(I)%NSRC, RIVER(I)%NBASE,
-     &              RIVER(I)%INP_FLAG, RIVER(I)%K, RIVER(I)%X
-      IF(RIVER(I)%NSRC.GT.0) THEN
-
-        ALLOCATE(RIVER(I)%SRC(1:RIVER(I)%NSRC))
-        READ(FUNIT,*)(RIVER(I)%SRC(J), J = 1, RIVER(I)%NSRC)
-
-      ENDIF
-
-      IF(RIVER(I)%NBASE.GT.0) THEN
-
-        ALLOCATE(RIVER(I)%BASE(1:RIVER(I)%NBASE))
-        READ(FUNIT,*)(RIVER(I)%BASE(J), J = 1, RIVER(I)%NBASE)
-
-      ENDIF
-
-      ALLOCATE(RIVER(I)%QINP(0:NTIME - 1))
-      RIVER(I)%QINP = 0.0D0
-
-      IF(RIVER(I)%INP_FLAG.EQ.1) THEN
-
-        READ(FUNIT,*) QTMP
-        RIVER(I)%QINP = QTMP
-
-      ELSEIF(RIVER(I)%INP_FLAG.EQ.2) THEN
-
-        READ(FUNIT,*) (RIVER(I)%QINP(J), J = 0, NTIME - 1)
-
-      ENDIF
-
-      RETURN
-      END SUBROUTINE READ_DATA_FOR_RIVER
-C=================================================================
-C
-C=================================================================
-C=================================================================
-C SUBROUTINE READ DATA INPUT FOR RIVER FLOOD ROUTING
-C=================================================================
-      SUBROUTINE READ_DATA_FOR_RESERVOIR(FUNIT, I)
-      USE ROUTING
-      USE OBSERVATION
-      IMPLICIT NONE
-      INTEGER :: J, FUNIT, I
-      REAL(8) :: QTMP
-
-      !Read basic param
-      READ(FUNIT,*) RESERVOIR(I)%NSRC, RESERVOIR(I)%NBASE,
-     &              RESERVOIR(I)%INP_FLAG, RESERVOIR(I)%QTB_FLAG,
-     &              RESERVOIR(I)%NVZ, RESERVOIR(I)%DOOR_W,
-     &              RESERVOIR(I)%DC_COEFF,
-     &              RESERVOIR(I)%Z0, RESERVOIR(I)%ZBT
-
-      !Read source from other routing sources
-      IF(RESERVOIR(I)%NSRC.GT.0) THEN
-
-        ALLOCATE(RESERVOIR(I)%SRC(1:RESERVOIR(I)%NSRC))
-        READ(FUNIT,*)(RESERVOIR(I)%SRC(J), J = 1, RESERVOIR(I)%NSRC)
-
-      ENDIF
-
-      !Read source from UHG or NAM calculation
-      IF(RESERVOIR(I)%NBASE.GT.0) THEN
-        ALLOCATE(RESERVOIR(I)%BASE(1:RESERVOIR(I)%NBASE))
-        READ(FUNIT,*) (RESERVOIR(I)%BASE(J), J = 1, RESERVOIR(I)%NBASE)
-      ENDIF
-
-      !Read source from user input file
-      ALLOCATE(RESERVOIR(I)%QINP(0:NTIME - 1))
-      RESERVOIR(I)%QINP = 0.0D0
-
-      IF(RESERVOIR(I)%INP_FLAG.EQ.1) THEN
-
-        QTMP = 0.0D0
-        READ(FUNIT,*) QTMP
-        RESERVOIR(I)%QINP = QTMP
-
-      ELSEIF(RESERVOIR(I)%INP_FLAG.EQ.2) THEN
-
-        READ(FUNIT,*) (RESERVOIR(I)%QINP(J), J = 0, NTIME - 1)
-
-      ENDIF
-
-      !Read turbin flux
-      ALLOCATE(RESERVOIR(I)%QTB(0:NTIME - 1))
-      IF(RESERVOIR(I)%QTB_FLAG.EQ.1) THEN
-
-        QTMP = 0.0D0
-        READ(FUNIT,*) QTMP
-        RESERVOIR(I)%QTB = QTMP
-
-      ELSE IF(RESERVOIR(I)%QTB_FLAG.EQ.2) THEN
-
-        READ(FUNIT,*) (RESERVOIR(I)%QTB(J), J = 0,NTIME - 1)
-
-      ENDIF
-
-      !Read Z~V relation of RESERVOIR
-      ALLOCATE(RESERVOIR(I)%VZ(1:2,1:RESERVOIR(I)%NVZ))
-      READ(FUNIT,*) (RESERVOIR(I)%VZ(1,J), J=1,RESERVOIR(I)%NVZ)
-      READ(FUNIT,*) (RESERVOIR(I)%VZ(2,J), J=1,RESERVOIR(I)%NVZ)
-      RESERVOIR(I)%VZ(1,:) = RESERVOIR(I)%VZ(1,:)*1000000.0D0
-
-      READ(FUNIT,*) RESERVOIR(I)%CTRL_TYPE, RESERVOIR(I)%NDC
-
-      IF(RESERVOIR(I)%CTRL_TYPE.EQ.1) THEN
-
-          !Read discharge control Z - Q
-          ALLOCATE(RESERVOIR(I)%DC_CTR(1:RESERVOIR(I)%NDC, 1:2))
-          READ(FUNIT,*) (RESERVOIR(I)%DC_CTR(J,1),J = 1,RESERVOIR(I)%NDC)
-          READ(FUNIT,*) (RESERVOIR(I)%DC_CTR(J,2),J = 1,RESERVOIR(I)%NDC)
-
-      ELSE
-
-          !Read discharge control Z - Ndoor - door height
-          ALLOCATE(RESERVOIR(I)%DC_CTR(1:RESERVOIR(I)%NDC, 1:3))
-          READ(FUNIT,*) (RESERVOIR(I)%DC_CTR(J,1),J = 1,RESERVOIR(I)%NDC)
-          READ(FUNIT,*) (RESERVOIR(I)%DC_CTR(J,2),J = 1,RESERVOIR(I)%NDC)
-          READ(FUNIT,*) (RESERVOIR(I)%DC_CTR(J,3),J = 1,RESERVOIR(I)%NDC)
-
-      ENDIF
-
-
-      RETURN
-      END SUBROUTINE READ_DATA_FOR_RESERVOIR
+99    CALL WRITE_ERRORS('Problem occurred while reading RESERVOIR DATA: '//TRIM(ICH))
+      END SUBROUTINE READ_RESERVOIR
 C=================================================================
 C
 C=================================================================
