@@ -1,29 +1,27 @@
 C=================================================================
 C REACH_ROUTING
 C=================================================================
-      SUBROUTINE REACH_ROUTING(BS, RCH, ITER)
+      SUBROUTINE REACH_ROUTING(RCH, ITER)
       USE PARAM
       USE CONSTANTS
       USE TIME
       IMPLICIT NONE
       INTERFACE
-        SUBROUTINE MUSKINGUM_CALC(BS, RCH, ITER)
+        SUBROUTINE MUSKINGUM_CALC(RCH, ITER)
         USE PARAM
         USE CONSTANTS
         USE TIME
         IMPLICIT NONE
         TYPE(REACH_TYPE), POINTER :: RCH
-        TYPE(BASIN_TYPE), POINTER :: BS
         INTEGER, INTENT(IN) :: ITER
         END SUBROUTINE MUSKINGUM_CALC
       END INTERFACE
       TYPE(REACH_TYPE), POINTER :: RCH
-      TYPE(BASIN_TYPE), POINTER :: BS
       INTEGER, INTENT(IN) :: ITER
 
       SELECT CASE(RCH%ROUTE)
         CASE(MUSKINGUM_METHOD)
-            CALL MUSKINGUM_CALC(BS, RCH, ITER)
+            CALL MUSKINGUM_CALC(RCH, ITER)
         CASE DEFAULT
             WRITE(*,*) 'Error: Invalid type of Reach routing method!!!'
             STOP
@@ -37,7 +35,7 @@ C=================================================================
 C=================================================================
 C MUSKINGUM_CALC
 C=================================================================
-      SUBROUTINE MUSKINGUM_CALC(BS, RCH, ITER)
+      SUBROUTINE MUSKINGUM_CALC(RCH, ITER)
       USE PARAM
       USE CONSTANTS
       USE TIME
@@ -45,7 +43,6 @@ C=================================================================
       INTERFACE
       END INTERFACE
       TYPE(REACH_TYPE), POINTER :: RCH
-      TYPE(BASIN_TYPE), POINTER :: BS
       INTEGER, INTENT(IN) :: ITER
       INTEGER :: N, I
       REAL(8) :: QIT1, QIT2, DT1, QOT1, QOT2

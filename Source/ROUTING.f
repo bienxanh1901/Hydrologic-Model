@@ -4,22 +4,20 @@
       USE TIME
       IMPLICIT NONE
       INTERFACE
-        SUBROUTINE REACH_ROUTING(BS, RCH, ITER)
+        SUBROUTINE REACH_ROUTING(RCH, ITER)
         USE PARAM
         USE CONSTANTS
         USE TIME
         IMPLICIT NONE
         TYPE(REACH_TYPE), POINTER :: RCH
-        TYPE(BASIN_TYPE), POINTER :: BS
         INTEGER, INTENT(IN) :: ITER
         END SUBROUTINE REACH_ROUTING
 
-        SUBROUTINE RESERVOIR_ROUTING(BS, RES, ITER)
+        SUBROUTINE RESERVOIR_ROUTING(RES, ITER)
         USE PARAM
         USE CONSTANTS
         USE TIME
         IMPLICIT NONE
-        TYPE(BASIN_TYPE), POINTER :: BS
         TYPE(RESERVOIR_TYPE), POINTER :: RES
         INTEGER, INTENT(IN) :: ITER
         END SUBROUTINE RESERVOIR_ROUTING
@@ -68,7 +66,7 @@
 
                     ELSE
 
-                        CALL REACH_ROUTING(BS, RCH, N)
+                        CALL REACH_ROUTING(RCH, N)
 
                     ENDIF
 
@@ -80,7 +78,7 @@
                     IF(RES%LEVEL.NE.K) CYCLE
                     CALL GET_RESERVOIR_INFLOW(BS, RES, N)
                     IF(RES%ROUTE.EQ.0) CYCLE
-                    CALL RESERVOIR_ROUTING(BS, RES, N)
+                    CALL RESERVOIR_ROUTING(RES, N)
 
                 ENDDO
 

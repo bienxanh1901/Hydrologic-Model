@@ -1,27 +1,25 @@
 C=================================================================
 C RESERVOIR_ROUTING
 C=================================================================
-      SUBROUTINE RESERVOIR_ROUTING(BS, RES, ITER)
+      SUBROUTINE RESERVOIR_ROUTING(RES, ITER)
       USE PARAM
       USE CONSTANTS
       USE TIME
       IMPLICIT NONE
       INTERFACE
-        SUBROUTINE RESERVOIR_ROUTING_METHOD(BS, RES, ITER)
+        SUBROUTINE RESERVOIR_ROUTING_METHOD(RES, ITER)
         USE PARAM
         USE CONSTANTS
         USE TIME
         IMPLICIT NONE
-        TYPE(BASIN_TYPE), POINTER :: BS
         TYPE(RESERVOIR_TYPE), POINTER :: RES
         INTEGER, INTENT(IN) :: ITER
         END SUBROUTINE RESERVOIR_ROUTING_METHOD
       END INTERFACE
-      TYPE(BASIN_TYPE), POINTER :: BS
       TYPE(RESERVOIR_TYPE), POINTER :: RES
       INTEGER, INTENT(IN) :: ITER
 
-      CALL RESERVOIR_ROUTING_METHOD(BS, RES, ITER)
+      CALL RESERVOIR_ROUTING_METHOD(RES, ITER)
 
 
       RETURN
@@ -32,7 +30,7 @@ C=================================================================
 C=================================================================
 C SPECIFIED_RELEASE
 C=================================================================
-      SUBROUTINE RESERVOIR_ROUTING_METHOD(BS, RES, ITER)
+      SUBROUTINE RESERVOIR_ROUTING_METHOD(RES, ITER)
       USE PARAM
       USE CONSTANTS
       USE TIME
@@ -50,7 +48,6 @@ C=================================================================
         END SUBROUTINE SPILLWAY_DISCHARGE
 
       END INTERFACE
-      TYPE(BASIN_TYPE), POINTER :: BS
       TYPE(RESERVOIR_TYPE), POINTER :: RES
       INTEGER, INTENT(IN) :: ITER
       INTEGER :: N, I

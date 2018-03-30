@@ -140,7 +140,7 @@ C=================================================================
       TYPE(BASIN_TYPE) :: BS
       INTEGER :: GATETYPE, I, J, FU, IERR
       INTEGER :: INTERVAL
-      CHARACTER(100) :: NAME, DATAFILE, F1
+      CHARACTER(100) :: NAME, DATAFILE
       CHARACTER(3) :: ICH
       CHARACTER(16) :: TSTART, TEND
       TYPE(GATE_TYPE), POINTER :: GT
@@ -186,10 +186,10 @@ C
         GT%NDATA = INT(DTIME%total_seconds()/INTERVAL) + 1
         GT%GATETYPE = GATETYPE
         GT%DT = INTERVAL
+        GT%DATAFILE = TRIM(INPUT_DIR)//'/'//TRIM(DATAFILE)
 
-        F1 = TRIM(INPUT_DIR)//'/'//TRIM(DATAFILE)
-        CALL CHK_FILE(TRIM(F1))
-        OPEN(UNIT=FU, FILE=TRIM(F1), STATUS='OLD')
+        CALL CHK_FILE(TRIM(GT%DATAFILE))
+        OPEN(UNIT=FU, FILE=TRIM(GT%DATAFILE), STATUS='OLD')
 
         ALLOCATE(GT%GATE_DATA(0:GT%NDATA - 1), STAT=IERR)
         CALL ChkMemErr('GATE_DATA', IERR)

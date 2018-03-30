@@ -109,7 +109,7 @@ C STRUCT FOR  GATE
       TYPE GATE_TYPE
 
         !Gate name
-        CHARACTER(100) :: NAME
+        CHARACTER(100) :: NAME, DATAFILE
         !Type of gate
         INTEGER :: GATETYPE
         TYPE(DATETIME) :: TS, TE
