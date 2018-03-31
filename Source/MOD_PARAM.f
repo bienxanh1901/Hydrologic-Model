@@ -83,7 +83,7 @@ C STRUCT FOR REACH
         !Turbin discharge
         INTEGER :: TB_TYPE
         REAL(8) :: TB_CONST_DATA
-        TYPE(GATE_TYPE), POINTER :: TURBIN_GATE
+        TYPE(GATE_TYPE), POINTER :: TURBIN_GATE, Z_OBS
         !Output
         REAL(8), ALLOCATABLE, DIMENSION(:) :: INFLOW, OUTFLOW, STORAGE, ELEVATION
         !Downstream

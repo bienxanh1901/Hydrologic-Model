@@ -450,12 +450,12 @@ C=================================================================
       TYPE(BASIN_TYPE) :: BS
       INTEGER :: ROUTE, I, J, FU, IERR, ROUTING_CURVE, TB_TYPE
       REAL(8) :: Z0, DOORW, DC_COEFF, ZSW, TB_CONST_DATA
-      CHARACTER(100) :: DOWNSTREAM, NAME, RTCFN, DCFN, TURBIN_GATE, F1
+      CHARACTER(100) :: DOWNSTREAM, NAME, RTCFN, DCFN, TURBIN_GATE, F1,ZOBS
       CHARACTER(3) :: ICH
       TYPE(RESERVOIR_TYPE), POINTER :: RES
       NAMELIST /RESNL/ NAME, DOWNSTREAM, ROUTE, Z0, ROUTING_CURVE, RTCFN,
      &                 DOORW, DC_COEFF, ZSW, DCFN, TB_TYPE,
-     &                 TB_CONST_DATA, TURBIN_GATE
+     &                 TB_CONST_DATA, TURBIN_GATE, ZOBS
 
 
       ALLOCATE(BS%RESERVOIR(1:BS%NRESERVOIR), STAT=IERR)
@@ -482,7 +482,7 @@ C=================================================================
         TB_TYPE = 0
         TB_CONST_DATA = 0.0D0
         TURBIN_GATE = ""
-
+        ZOBS = ""
 
         READ(FUNIT, RESNL,ERR=99)
 
@@ -569,6 +569,16 @@ C=================================================================
 
             ENDDO
 
+        ENDIF
+
+        ! If having observe data for elevation
+        RES%Z_OBS => NULL()
+        IF(TRIM(ZOBS).NE.'') THEN
+            DO J = 1, BS%NGATE
+
+                IF(TRIM(BS%GATE(J)%NAME).EQ.TRIM(ZOBS)) RES%Z_OBS => BS%GATE(J)
+
+            ENDDO
         ENDIF
 
 

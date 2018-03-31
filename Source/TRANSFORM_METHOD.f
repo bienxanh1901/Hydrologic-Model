@@ -50,7 +50,7 @@ C=================================================================
       SUMP = 0.0D0
       N1 = MAX(1,ITER - SBS%NUHG + 1)
       DO M = N1,ITER
-
+        IF(SBS%EXCESS(M).LT.0) CYCLE !HAIPT ADD TO IGNORE UNEXPECTED VALUE
         L = ITER - M + 1
         SUMP = SUMP + SBS%EXCESS(M)*SBS%U(L)/10.0D0
 

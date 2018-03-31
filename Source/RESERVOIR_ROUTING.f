@@ -54,7 +54,41 @@ C=================================================================
       REAL(8) :: QIT1, QIT2, DT1, QOT1, QOT2
       REAL(8) :: ZT, VT, DV
 
-      DT1 = 1.0D0
+      IF(RES%INFLOW(ITER).LT.0.0D0)THEN
+        RES%OUTFLOW(ITER) = -1.0D0
+        RES%ELEVATION(ITER) = -1.0D0
+        RES%STORAGE(ITER) = -1.0D0
+        RETURN
+
+      ELSEIF(RES%INFLOW(ITER - 1).LT.0.0D0) THEN
+        IF(.NOT.ASSOCIATED(RES%Z_OBS)) THEN
+            RES%ELEVATION(ITER) = RES%Z_OBS%GATE_DATA(ITER)
+            CALL SPILLWAY_DISCHARGE(RES, ZT, QOT2)
+        ELSE
+
+            RES%ELEVATION(ITER) = RES%Z0
+
+        ENDIF
+
+        IF(.NOT.ASSOCIATED(RES%TURBIN_GATE)) THEN
+
+            QOT2 = QOT2 + RES%TB_CONST_DATA
+
+        ELSE
+
+            QOT2 = QOT2 + RES%TURBIN_GATE%GATE_DATA(ITER)
+
+        ENDIF
+
+        RES%OUTFLOW(ITER) = QOT2
+
+        CALL INTERP(RES%SE_CURVE(1,1:RES%NSE),
+     &              RES%SE_CURVE(2,1:RES%NSE),
+     &              RES%ELEVATION(ITER), RES%STORAGE(ITER), RES%NSE)
+        RETURN
+      ENDIF
+
+      DT1 = 1.0D0/DT
 
       QIT1 = RES%INFLOW(ITER - 1)
       QIT2 = RES%INFLOW(ITER)
@@ -208,6 +242,11 @@ C=================================================================
 
         RCH => BS%REACH(I)
         IF(TRIM(RCH%DOWNSTREAM).EQ.TRIM(RES%NAME)) THEN
+
+            IF(RCH%OUTFLOW(ITER) < 0.0D0) THEN !!!HAIPT
+                RES%INFLOW(ITER) = -1.0D0
+                RETURN
+            ENDIF
 
             RES%INFLOW(ITER) = RES%INFLOW(ITER) + RCH%OUTFLOW(ITER)
 

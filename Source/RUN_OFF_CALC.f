@@ -47,6 +47,15 @@
 
             DO N = 1, NTIME - 1
 
+                !IGNORE IF don't have value at n-time
+                IF(SBS%PRECIP%GATE_DATA(N) < 0.0D0) THEN
+                    SBS%EXCESS(N) = -1.0D0
+                    SBS%LOSS(N) = -1.0D0
+                    SBS%DIRECT_FLOW(N) = -1.0D0
+                    SBS%TOTAL_FLOW(N) = -1.0D0
+                    CYCLE
+                ENDIF
+
                 IF(SBS%LOSSRATE.NE.0) THEN
 
                     CALL LOSS_CALC(SBS, N)

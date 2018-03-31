@@ -55,11 +55,21 @@
         DO N = 1, NTIME - 1
             DO K = BS%MAX_LEVEL, 0, -1
 
-                DO J = 1,BS%NREACH
+                RCHLOOP:DO J = 1,BS%NREACH
 
                     RCH => BS%REACH(J)
                     IF(RCH%LEVEL.NE.K) CYCLE
+
                     CALL GET_REACH_INFLOW(BS, RCH, N)
+
+                    IF(RCH%INFLOW(N).LT.0) THEN  !!!HAIPT
+                        RCH%OUTFLOW(N) = -1.0
+                        CYCLE RCHLOOP
+                    ELSEIF(RCH%INFLOW(N - 1).LT.0)THEN
+                        RCH%OUTFLOW(N) = RCH%INFLOW(N)
+                        CYCLE RCHLOOP
+                    ENDIF
+
                     IF(RCH%ROUTE.EQ.0) THEN
 
                         RCH%OUTFLOW(N) = RCH%INFLOW(N)
@@ -70,17 +80,26 @@
 
                     ENDIF
 
-                ENDDO
+                ENDDO RCHLOOP
 
-                DO J = 1,BS%NRESERVOIR
+                RESLOOP: DO J = 1,BS%NRESERVOIR
 
                     RES => BS%RESERVOIR(J)
                     IF(RES%LEVEL.NE.K) CYCLE
                     CALL GET_RESERVOIR_INFLOW(BS, RES, N)
+
+                    IF(RES%INFLOW(N).LT.0) THEN  !!!HAIPT
+                        RES%OUTFLOW(N) = -1.0
+                        CYCLE RESLOOP
+                    ELSEIF(RES%INFLOW(N - 1).LT.0) THEN
+                        RES%OUTFLOW(N) = -1.0
+                        CYCLE RESLOOP
+                    ENDIF
+
                     IF(RES%ROUTE.EQ.0) CYCLE
                     CALL RESERVOIR_ROUTING(RES, N)
 
-                ENDDO
+                ENDDO RESLOOP
 
             ENDDO
 

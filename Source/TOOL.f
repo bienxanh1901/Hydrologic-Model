@@ -11,6 +11,11 @@ C=================================================================
       REAL(8) :: DX, DY
 
       AY = 0.0D0
+      IF(AX.LT.X(1)) THEN
+        AY = Y(1)
+        RETURN
+      ENDIF
+
       IF(AX.EQ.X(N)) THEN
         AY = Y(N)
         RETURN
