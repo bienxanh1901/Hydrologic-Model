@@ -23,7 +23,14 @@ C=================================================================
       !definition for gate
       INTEGER, PARAMETER :: PRECIPITATION_GATE = 1
       INTEGER, PARAMETER :: DISCHARGE_GATE = 2
+      INTEGER, PARAMETER :: ELEVATION_OBS = 3
 
+      !definition of simulation type:
+      INTEGER, PARAMETER :: VALIDATION_MODE = 1
+      INTEGER, PARAMETER :: REAL_TIME_MODE = 2
+
+      !definition of max iteration in REAL_TIME_MODE
+      INTEGER, PARAMETER :: MAXITER = 100   ! FOR DT = 15MINUTE ==> OVER 1 DAYS
       !define log file
       INTEGER :: ULOG = 11
       CHARACTER(7) :: FLOG = "RUN.LOG"

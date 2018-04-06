@@ -55,12 +55,18 @@
 		<Unit filename="LOSS_METHOD.f">
 			<Option weight="5" />
 		</Unit>
+		<Unit filename="MOD_BASIN.f" />
 		<Unit filename="MOD_CONSTANTS.f">
 			<Option weight="0" />
 		</Unit>
+		<Unit filename="MOD_GATE.f" />
 		<Unit filename="MOD_PARAM.f">
 			<Option weight="4" />
 		</Unit>
+		<Unit filename="MOD_REACH.f" />
+		<Unit filename="MOD_RESERVOIR.f" />
+		<Unit filename="MOD_SOURCE.f" />
+		<Unit filename="MOD_SUBBASIN.f" />
 		<Unit filename="MOD_TIME.f">
 			<Option weight="4" />
 		</Unit>

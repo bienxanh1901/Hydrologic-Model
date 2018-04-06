@@ -13,14 +13,6 @@
         INTEGER, INTENT(IN) :: ITER
         END SUBROUTINE TRANSFORM_CALC
 
-        SUBROUTINE GET_BASE_FLOW(SBS, ITER)
-        USE PARAM
-        USE CONSTANTS
-        IMPLICIT NONE
-        TYPE(SUBBASIN_TYPE), POINTER :: SBS
-        INTEGER, INTENT(IN) :: ITER
-        END SUBROUTINE GET_BASE_FLOW
-
         SUBROUTINE LOSS_CALC(SBS, ITER)
         USE PARAM
         USE CONSTANTS
@@ -47,26 +39,21 @@
 
             DO N = 1, NTIME - 1
 
-                !IGNORE IF don't have value at n-time
-                IF(SBS%PRECIP%GATE_DATA(N) < 0.0D0) THEN
-                    SBS%EXCESS(N) = -1.0D0
-                    SBS%LOSS(N) = -1.0D0
-                    SBS%DIRECT_FLOW(N) = -1.0D0
-                    SBS%TOTAL_FLOW(N) = -1.0D0
-                    CYCLE
-                ENDIF
-
                 IF(SBS%LOSSRATE.NE.0) THEN
 
                     CALL LOSS_CALC(SBS, N)
 
                 ELSE
 
-                    IF(ASSOCIATED(SBS%PRECIP))SBS%EXCESS(N) = SBS%PRECIP%GATE_DATA(N)
+                    IF(SBS%NPRECIP_GATE.GT.0) THEN
+
+                        SBS%EXCESS(N) = SBS%AVERAGED_PRECIP(N)
+
+                    ENDIF
 
                 ENDIF
 
-                IF(SBS%BASE_FLOW_TYPE.NE.0)CALL GET_BASE_FLOW(SBS, N)
+                IF(SBS%BASE_FLOW_TYPE.NE.0) SBS%BASE_FLOW(N) = SBS%GET_BASE_FLOW(TIME_ARR(N))
 
                 IF(SBS%TRANSFORM.NE.0)CALL TRANSFORM_CALC(SBS, N)
 

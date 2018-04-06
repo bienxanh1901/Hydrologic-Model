@@ -4,19 +4,6 @@
       USE CONSTANTS
       IMPLICIT NONE
       INTERFACE
-        SUBROUTINE GET_BASE_FLOW(SBS, ITER)
-        USE PARAM
-        IMPLICIT NONE
-        TYPE(SUBBASIN_TYPE), POINTER :: SBS
-        INTEGER, INTENT(IN) :: ITER
-        END SUBROUTINE GET_BASE_FLOW
-
-        SUBROUTINE GET_UHG(SBS)
-        USE CONSTANTS
-        USE PARAM
-        IMPLICIT NONE
-        TYPE(SUBBASIN_TYPE), POINTER :: SBS
-        END SUBROUTINE GET_UHG
 
         SUBROUTINE GET_RESERVOIR_INFLOW(BS, RES, ITER)
         USE PARAM
@@ -55,27 +42,9 @@
         DO J = 1,BS%NSUBBASIN
 
             SBS => BS%SUBBASIN(J)
-            SBS%LOSS(0) = 0.0D0
-            SBS%EXCESS(0) = 0.0D0
-            SBS%DIRECT_FLOW(0) = 0.0D0
-            SBS%PRECIP%GATE_DATA(0) = 0.0D0
-            IF(SBS%TRANSFORM.EQ.SCS_UHG_TYPE) THEN
-
-                CALL GET_UHG(SBS)
-
-            ENDIF
-
-            IF(SBS%LOSSRATE.EQ.SCS_CURVE_LOSS) THEN
-
-                SBS%S =(25400.0D0 - 254.0D0*SBS%CN)/SBS%CN
-                SBS%P = 0.0D0
-                SBS%PE = 0.0D0
-
-            ENDIF
-
-            IF(SBS%BASE_FLOW_TYPE.NE.0)CALL GET_BASE_FLOW(SBS, 0)
-
-            SBS%TOTAL_FLOW(0) = SBS%DIRECT_FLOW(0) + SBS%BASE_FLOW(0)
+!            SBS%PRECIP(:)%GATE%GATE_DATA(0) = 0.0D0
+            SBS%BASE_FLOW(0) = SBS%GET_BASE_FLOW(TIME_ARR(0))
+            SBS%TOTAL_FLOW(0) = SBS%BASE_FLOW(0)
 
         ENDDO
 

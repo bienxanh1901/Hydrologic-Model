@@ -9,7 +9,7 @@ C=================================================================
       INTEGER :: FUNIT
       CHARACTER(5) :: F1
       CHARACTER(16) :: TSTART, TEND
-      NAMELIST /INP/ NBASIN, DT
+      NAMELIST /INP/ NBASIN, DT, SIMULATION_MODE, FORECASTING_DURATION
       NAMELIST /CTRL/ TSTART, TEND
       NAMELIST /IODIR/ INPUT_DIR, OUTPUT_DIR
 
@@ -30,6 +30,8 @@ C Read name list common
       TEND = ''
       INPUT_DIR = ''
       OUTPUT_DIR = 'OUTPUT'
+      SIMULATION_MODE = VALIDATION_MODE
+      FORECASTING_DURATION = 6 ! 6 HOURS
 
       READ(FUNIT,INP, ERR=99)
       READ(FUNIT,CTRL, ERR=99)
@@ -37,13 +39,32 @@ C Read name list common
       CLOSE(FUNIT)
 
 C Check parameter
+      IF(SIMULATION_MODE.NE.VALIDATION_MODE.OR.
+     &   SIMULATION_MODE.NE.REAL_TIME_MODE) THEN
+
+        CALL WRITE_LOG('    WARNING!!: SIMULATION MODE is automatically set by 1')
+        SIMULATION_MODE = VALIDATION_MODE
+
+      ENDIF
+
+      IF(SIMULATION_MODE.NE.REAL_TIME_MODE.AND.
+     &      FORECASTING_DURATION.LE.0) THEN
+
+         CALL WRITE_LOG('    WARNING!!: FORECASTING_DURATION MODE is automatically set by 6 (Hours)')
+         FORECASTING_DURATION = 6 ! 6 HOURS
+
+      ENDIF
+
+      FORECASTING_DURATION = FORECASTING_DURATION*3600
+
       IF(NBASIN.EQ.0) CALL WRITE_ERRORS('Number of BASIN(NBASIN) is zero or has not been set!')
 
       IF(DT.EQ.0.0D0) CALL WRITE_ERRORS('Time interval(DT) is zero or has not been set!')
 
       IF(TRIM(TSTART).EQ.'') CALL WRITE_ERRORS('Please set start time(TSTART) with format ''DD-MM-YYYY HH:MM'' and restart application')
 
-      IF(TRIM(TEND).EQ.'') CALL WRITE_ERRORS('Please set end time(TEND) with format ''DD-MM-YYYY HH:MM'' and restart the application')
+      IF(SIMULATION_MODE.EQ.VALIDATION_MODE.AND.TRIM(TEND).EQ.'')
+     & CALL WRITE_ERRORS('Please set end time(TEND) with format ''DD-MM-YYYY HH:MM'' and restart the application')
 
       IF(TRIM(INPUT_DIR).EQ.'') CALL WRITE_ERRORS('Please set input directory(INPUT_DIR) and restart the application')
 
@@ -70,6 +91,7 @@ C=================================================================
       INTEGER :: NSUBBASIN, NSOURCE, NREACH, NRESERVOIR, NGATE
       CHARACTER(2) :: ICH
       CHARACTER(100) :: F1, NAME
+      TYPE(BASIN_TYPE), POINTER :: BS
 
       NAMELIST /BSNL/ NSUBBASIN, NSOURCE, NREACH, NRESERVOIR, NGATE, NAME
 
@@ -79,7 +101,7 @@ C Allocate array
       CALL ChkMemErr('BASIN', IERR)
 
       DO I = 1, NBASIN
-
+        BS => BASIN(I)
 
 C Open input file
         WRITE(ICH,'(I2.2)') I
@@ -97,12 +119,7 @@ C Read name list BASIN
         NGATE = 0
         NAME='BASIN_'//ICH
         READ(FUNIT,BSNL,ERR=99)
-        BASIN(I)%NAME = TRIM(NAME)
-        BASIN(I)%NSUBBASIN = NSUBBASIN
-        BASIN(I)%NSOURCE = NSOURCE
-        BASIN(I)%NREACH = NREACH
-        BASIN(I)%NRESERVOIR = NRESERVOIR
-        BASIN(I)%NGATE = NGATE
+        BS = BASIN_TYPE_CONSTRUCTOR(TRIM(NAME), NSUBBASIN, NSOURCE, NGATE, NREACH, NRESERVOIR)
 
 C Read gate
         IF(NGATE.GT.0) CALL READ_GATE(FUNIT, BASIN(I))
@@ -138,19 +155,17 @@ C=================================================================
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: FUNIT
       TYPE(BASIN_TYPE) :: BS
-      INTEGER :: GATETYPE, I, J, FU, IERR
+      INTEGER :: GATETYPE, I, IERR
       INTEGER :: INTERVAL
       CHARACTER(100) :: NAME, DATAFILE
       CHARACTER(3) :: ICH
       CHARACTER(16) :: TSTART, TEND
       TYPE(GATE_TYPE), POINTER :: GT
-      TYPE(timedelta) :: DTIME
 
       NAMELIST /GTNL/ NAME, GATETYPE, TSTART, TEND, DATAFILE, INTERVAL
 
       ALLOCATE(BS%GATE(1:BS%NGATE), STAT=IERR)
       CALL ChkMemErr('GATE', IERR)
-      FU = 10
 
       DO I = 1, BS%NGATE
         GT => BS%GATE(I)
@@ -169,41 +184,29 @@ C=================================================================
         READ(FUNIT,GTNL, ERR=99)
 
 C Check parameter
-        IF(TRIM(TSTART).EQ.'') CALL WRITE_ERRORS('Please set start time(TSTART) with format ''DD-MM-YYYY HH:MM'' and restart application')
+        IF(TRIM(DATAFILE).EQ.'') CALL WRITE_ERRORS('Please set data DATAFILE and restart the application')
+        DATAFILE = TRIM(INPUT_DIR)//'/'//TRIM(DATAFILE)
+        CALL CHK_FILE(TRIM(DATAFILE))
 
-        IF(TRIM(TEND).EQ.'') CALL WRITE_ERRORS('Please set end time(TEND) with format ''DD-MM-YYYY HH:MM'' and restart the application')
+        IF(SIMULATION_MODE.EQ.VALIDATION_MODE) THEN
 
-        IF(TRIM(TEND).EQ.'') CALL WRITE_ERRORS('Please set data file name(DATAFILE) and restart the application')
+            IF(TRIM(TSTART).EQ.'') CALL WRITE_ERRORS('Please set TSTART with format ''DD-MM-YYYY HH:MM'' and restart application')
 
-        IF(INTERVAL.EQ.0) CALL WRITE_ERRORS('Time INTERVAL is zero or has not been set!')
+            IF(TRIM(TEND).EQ.'') CALL WRITE_ERRORS('Please set TEND with format ''DD-MM-YYYY HH:MM'' and restart the application')
 
-C
-        GT%NAME = TRIM(NAME)
-        GT%TS = strptime(TRIM(TSTART), '%d-%m-%Y %H:%M')
-        GT%TE = strptime(TRIM(TEND), '%d-%m-%Y %H:%M')
-        DTIME = GT%TE - GT%TS
+            IF(INTERVAL.EQ.0) CALL WRITE_ERRORS('Time INTERVAL is zero or has not been set!')
 
-        GT%NDATA = INT(DTIME%total_seconds()/INTERVAL) + 1
-        GT%GATETYPE = GATETYPE
-        GT%DT = INTERVAL
-        GT%DATAFILE = TRIM(INPUT_DIR)//'/'//TRIM(DATAFILE)
+        ENDIF
 
-        CALL CHK_FILE(TRIM(GT%DATAFILE))
-        OPEN(UNIT=FU, FILE=TRIM(GT%DATAFILE), STATUS='OLD')
+        GT = GATE_TYPE_CONSTRUCTOR(NAME, GATETYPE, TSTART, TEND, DATAFILE, INTERVAL, SIMULATION_MODE)
 
-        ALLOCATE(GT%GATE_DATA(0:GT%NDATA - 1), STAT=IERR)
-        CALL ChkMemErr('GATE_DATA', IERR)
+        IF(SIMULATION_MODE.EQ.VALIDATION_MODE) THEN
 
-        DO J = 0, GT%NDATA - 1
+            CALL GT%READ_ALL_DATA()
 
-            READ(FU,*) GT%GATE_DATA(J)
-
-        ENDDO
-
-        CLOSE(FU)
+        ENDIF
 
       ENDDO
-
 
       RETURN
 99    CALL WRITE_ERRORS('Problem occurred while reading GATE DATA: '//TRIM(ICH))
@@ -221,21 +224,21 @@ C=================================================================
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: FUNIT
       TYPE(BASIN_TYPE) :: BS
-      INTEGER :: LOSSRATE, BASE_FLOW_TYPE, TRANSFORM, I, J, FU, IERR
+      INTEGER :: LOSSRATE, BASE_FLOW_TYPE, TRANSFORM, I, IERR, NPRECIP_GATE
       REAL(8) :: AREA, CN, IMPERVIOUS, TLAG, LENGTH, SLOPE
       REAL(8) :: BF_CONST, BF_MONTHLY(1:12)
       CHARACTER(100) :: NAME, DOWNSTREAM, PRECIP_GATE
-      CHARACTER(3) :: ICH
+      CHARACTER(3)   :: ICH
       TYPE(SUBBASIN_TYPE), POINTER :: SBS
 
       NAMELIST /SBSNL/ NAME, DOWNSTREAM, PRECIP_GATE, LOSSRATE, TRANSFORM,
-     &                AREA, CN, IMPERVIOUS, TLAG, LENGTH, SLOPE, BASE_FLOW_TYPE, BF_CONST, BF_MONTHLY
+     &                 AREA, CN, IMPERVIOUS, TLAG, LENGTH, SLOPE,
+     &                 BASE_FLOW_TYPE, BF_CONST, BF_MONTHLY, NPRECIP_GATE
 
       ALLOCATE(BS%SUBBASIN(1:BS%NSUBBASIN), STAT=IERR)
       CALL ChkMemErr('SUB BASIN', IERR)
-      FU = 10
 
-      DO I = 1, BS%NSUBBASIN
+      BSLOOP: DO I = 1, BS%NSUBBASIN
         SBS => BS%SUBBASIN(I)
         !Initial values
         WRITE(ICH,'(I3.3)') I
@@ -254,56 +257,32 @@ C=================================================================
         TLAG = 0.0D0
         BF_CONST = 0.0D0
         BF_MONTHLY = 0.0D0
+        NPRECIP_GATE = 0
 
         READ(FUNIT,SBSNL,ERR=99)
 
 C Check parameter
         IF(TRIM(DOWNSTREAM).EQ.'') CALL WRITE_LOG('    WARNING!!: No DOWNSTREAM for sub basin '//TRIM(NAME))
 
+        SBS = SUBBASIN_TYPE_CONSTRUCTOR(NAME, DOWNSTREAM, BASE_FLOW_TYPE, AREA, BF_CONST, BF_MONTHLY(1:12))
+        CALL SBS%SET_TRANSFORM_PARAM(TRANSFORM, CN, TLAG, LENGTH, SLOPE)
+        CALL SBS%SET_LOSS_RATE_PARAM(LOSSRATE, IMPERVIOUS)
 
-C
-        SBS%NAME = TRIM(NAME)
-        SBS%DOWNSTREAM = TRIM(DOWNSTREAM)
-        SBS%BASE_FLOW_TYPE = BASE_FLOW_TYPE
-        SBS%AREA = AREA
-        IF(BASE_FLOW_TYPE.EQ.CONSTANT_DATA) THEN
 
-            SBS%BF_CONST = BF_CONST
-
-        ELSEIF(BASE_FLOW_TYPE.EQ.MONTHLY_DATA) THEN
-
-            SBS%BF_MONTHLY = BF_MONTHLY
-
-        ENDIF
-
-        !Loss method
-        SBS%LOSSRATE = LOSSRATE
-        IF(LOSSRATE.EQ.SCS_CURVE_LOSS) SBS%IMPERVIOUS = IMPERVIOUS/100.0D0
-
-        !Transform method
-        SBS%TRANSFORM = TRANSFORM
-        SBS%CN = CN
-        SBS%TLAG = TLAG
-        SBS%LENGTH = LENGTH
-        SBS%SLOPE = SLOPE
-
-        SBS%PRECIP => NULL()
-
-        IF(TRIM(PRECIP_GATE).EQ.'') THEN
+        IF(NPRECIP_GATE.LE.0) THEN
 
             CALL WRITE_LOG('    WARNING!!: No Precipitation gate is set for sub_basin '//TRIM(NAME))
-            CYCLE
+            CYCLE BSLOOP
+
+        ELSE IF(TRIM(PRECIP_GATE).EQ.'') THEN
+
+                CALL WRITE_ERRORS('Please set PRECIP_GATE for basin '//ICH)
 
         ENDIF
 
-        DO J = 1, BS%NGATE
+        CALL SBS%SET_PRECIPITATION_PARAM(NPRECIP_GATE, PRECIP_GATE, BS%GATE, BS%NGATE)
 
-            IF(TRIM(BS%GATE(I)%NAME).EQ.TRIM(PRECIP_GATE)) SBS%PRECIP => BS%GATE(I)
-
-        ENDDO
-
-      ENDDO
-
+      ENDDO BSLOOP
 
       RETURN
 99    CALL WRITE_ERRORS('Problem occurred while reading SUB-BASIN DATA: '//TRIM(ICH))
@@ -320,7 +299,7 @@ C=================================================================
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: FUNIT
       TYPE(BASIN_TYPE) :: BS
-      INTEGER :: SRC_TYPE, I, J, IERR
+      INTEGER :: SRC_TYPE, I, IERR
       REAL(8) :: CONST_DATA
       CHARACTER(100) :: DOWNSTREAM, NAME, SRC_GATE
       CHARACTER(3) :: ICH
@@ -353,24 +332,8 @@ C=================================================================
 
         IF(TRIM(DOWNSTREAM).EQ.'') CALL WRITE_LOG('    WARNING!!: No DOWNSTREAM for source '//TRIM(NAME))
 
-        SRC%NAME = TRIM(NAME)
-        SRC%DOWNSTREAM = TRIM(DOWNSTREAM)
-        SRC%SRC_TYPE = SRC_TYPE
-
-        !Source data
-        IF(SRC_TYPE.EQ.CONSTANT_DATA) THEN
-
-            SRC%CONST_DATA = CONST_DATA
-
-        ELSE
-
-            DO J = 1, BS%NGATE
-
-                IF(TRIM(BS%GATE(J)%NAME).EQ.TRIM(SRC_GATE)) SRC%SRC_DATA => BS%GATE(J)
-
-            ENDDO
-
-        ENDIF
+        SRC = SOURCE_TYPE_CONSTRUCTOR(NAME, DOWNSTREAM)
+        CALL SRC%SET_DATA_PARAM(SRC_TYPE,CONST_DATA, SRC_GATE, BS%GATE, BS%NGATE)
 
       ENDDO
 
@@ -413,23 +376,10 @@ C=================================================================
         X = 0.0D0
         LOSS_VALUE = 0.0D0
         LOSS_RATIO = 0.0D0
-
         READ(FUNIT, REACHNL, ERR=99)
-
         IF(TRIM(DOWNSTREAM).EQ.'') CALL WRITE_LOG('    WARNING!!: No DOWNSTREAM for reach '//TRIM(NAME))
-
-        RCH%NAME = TRIM(NAME)
-        RCH%DOWNSTREAM = TRIM(DOWNSTREAM)
-        RCH%ROUTE = ROUTE
-        RCH%LOSS_RATIO = LOSS_RATIO
-        RCH%LOSS_VALUE = LOSS_VALUE
-        IF(ROUTE.EQ.MUSKINGUM_METHOD) THEN
-
-            RCH%K = K*3600.0D0
-            RCH%X = X
-
-        ENDIF
-
+        RCH = REACH_TYPE_CONSTRUCTOR(NAME, DOWNSTREAM)
+        CALL RCH%SET_ROUTE_PARAM(ROUTE, LOSS_RATIO, LOSS_VALUE, K, X)
       ENDDO
 
       RETURN
@@ -448,19 +398,18 @@ C=================================================================
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: FUNIT
       TYPE(BASIN_TYPE) :: BS
-      INTEGER :: ROUTE, I, J, FU, IERR, ROUTING_CURVE, TB_TYPE
+      INTEGER :: ROUTE, I, IERR, ROUTING_CURVE, TB_TYPE
       REAL(8) :: Z0, DOORW, DC_COEFF, ZSW, TB_CONST_DATA
-      CHARACTER(100) :: DOWNSTREAM, NAME, RTCFN, DCFN, TURBIN_GATE, F1,ZOBS
+      CHARACTER(100) :: DOWNSTREAM, NAME, RTCFN, DCFN, TURBIN_GATE, F1
       CHARACTER(3) :: ICH
       TYPE(RESERVOIR_TYPE), POINTER :: RES
       NAMELIST /RESNL/ NAME, DOWNSTREAM, ROUTE, Z0, ROUTING_CURVE, RTCFN,
      &                 DOORW, DC_COEFF, ZSW, DCFN, TB_TYPE,
-     &                 TB_CONST_DATA, TURBIN_GATE, ZOBS
+     &                 TB_CONST_DATA, TURBIN_GATE
 
 
       ALLOCATE(BS%RESERVOIR(1:BS%NRESERVOIR), STAT=IERR)
       CALL ChkMemErr('RESERVOIR', IERR)
-      FU = 10
 
       DO I = 1, BS%NRESERVOIR
 
@@ -482,106 +431,32 @@ C=================================================================
         TB_TYPE = 0
         TB_CONST_DATA = 0.0D0
         TURBIN_GATE = ""
-        ZOBS = ""
+
 
         READ(FUNIT, RESNL,ERR=99)
 
         IF(TRIM(DOWNSTREAM).EQ.'') CALL WRITE_LOG('    WARNING!!: No DOWNSTREAM for reservoir '//TRIM(NAME))
 
-        RES%NAME = TRIM(NAME)
-        RES%DOWNSTREAM = TRIM(DOWNSTREAM)
-        RES%ROUTE = ROUTE
-        RES%Z0 = Z0
+        RES = RESERVOIR_TYPE_CONSTRUCTOR(NAME, DOWNSTREAM, Z0)
 
-        !Read storage - elevation curve
         F1 = TRIM(INPUT_DIR)//'/'//TRIM(RTCFN)
-        CALL CHK_FILE(TRIM(F1))
-        OPEN(UNIT=FU, FILE=TRIM(F1), STATUS='OLD')
-
-        READ(FU,*) RES%NSE
-        ALLOCATE(RES%SE_CURVE(1:2,1:RES%NSE), STAT=IERR)
-        CALL ChkMemErr('STORAGE-ELEVATION-CURVE', IERR)
-
-        DO J = 1, RES%NSE
-
-            READ(FU,*) RES%SE_CURVE(1:2,J)
-
-        ENDDO
-
-        RES%SE_CURVE(2,:) = RES%SE_CURVE(2,:)*1000.0D0
-
-        CLOSE(FU)
+        CALL RES%SET_ROUTING_CURVE(F1)
 
         !Read discharge - elevation curve
 
         F1 = TRIM(INPUT_DIR)//'/'//TRIM(DCFN)
-        CALL CHK_FILE(TRIM(F1))
-        OPEN(UNIT=FU, FILE=TRIM(F1), STATUS='OLD')
-
-        READ(FU,*) RES%NED
-
-        IF(ROUTE.EQ.OUTFLOW_STRUCTURE) THEN
-
-            RES%DOORW = DOORW
-            RES%DC_COEFF = DC_COEFF
-            RES%ZSW = ZSW
-
-            ALLOCATE(RES%NDOOR(1:RES%NED), STAT=IERR)
-            CALL ChkMemErr('NDOOR_OPEN', IERR)
-            ALLOCATE(RES%EH_CURVE(1:2,1:RES%NED), STAT=IERR)
-            CALL ChkMemErr('EH_CURVE', IERR)
+        CALL RES%SET_ROUTING_PARAM(ROUTE, F1, DOORW, DC_COEFF, ZSW)
 
 
-            DO J = 1, RES%NED
-
-                READ(FU,*) RES%EH_CURVE(1:2,J), RES%NDOOR(J)
-
-            ENDDO
-
-        ELSE IF(ROUTE.EQ.SPECIFIED_RELEASE) THEN
-
-            ALLOCATE(RES%ED_CURVE(1:2,1:RES%NED),STAT=IERR)
-            CALL ChkMemErr('ED_CURVE', IERR)
-
-            DO J = 1, RES%NED
-
-                READ(FU,*) RES%ED_CURVE(1:2,J)
-
-            ENDDO
-
-        ENDIF
-
-        CLOSE(FU)
-
-        !Turbin data
-        RES%TB_TYPE = TB_TYPE
         IF(TB_TYPE.EQ.CONSTANT_DATA) THEN
-
-            RES%TB_CONST_DATA = TB_CONST_DATA
 
         ELSE
 
-            RES%TURBIN_GATE => NULL()
             IF(TRIM(TURBIN_GATE).EQ.'') CALL WRITE_ERRORS('Please set the gate name turbin gate of reservoir '//TRIM(NAME))
-            DO J = 1, BS%NGATE
-
-                IF(TRIM(BS%GATE(J)%NAME).EQ.TRIM(TURBIN_GATE)) RES%TURBIN_GATE => BS%GATE(J)
-
-            ENDDO
 
         ENDIF
 
-        ! If having observe data for elevation
-        RES%Z_OBS => NULL()
-        IF(TRIM(ZOBS).NE.'') THEN
-            DO J = 1, BS%NGATE
-
-                IF(TRIM(BS%GATE(J)%NAME).EQ.TRIM(ZOBS)) RES%Z_OBS => BS%GATE(J)
-
-            ENDDO
-        ENDIF
-
-
+        CALL RES%SET_TURBIN_PARAM(TB_TYPE, TB_CONST_DATA, TURBIN_GATE, BS%GATE, BS%NGATE)
 
       ENDDO
 

@@ -135,7 +135,7 @@ C=================================================================
 
         DTWRT1 = TIME_ARR(N)%strftime('%m/%d/%y')
         DTWRT2 = TIME_ARR(N)%strftime('%H:%M')
-        WRITE(FUNIT,22) TRIM(DTWRT1),TRIM(DTWRT2),SBS%PRECIP%GATE_DATA(N), SBS%LOSS(N),
+        WRITE(FUNIT,22) TRIM(DTWRT1),TRIM(DTWRT2),SBS%AVERAGED_PRECIP(N), SBS%LOSS(N),
      &                  SBS%EXCESS(N), SBS%DIRECT_FLOW(N),
      &                  SBS%BASE_FLOW(N), SBS%TOTAL_FLOW(N)
 

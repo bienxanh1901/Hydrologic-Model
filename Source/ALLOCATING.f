@@ -2,11 +2,8 @@
       USE PARAM
       USE TIME
       IMPLICIT NONE
-      INTEGER :: I, J, IERR
+      INTEGER :: I
       TYPE(BASIN_TYPE), POINTER :: BS
-      TYPE(REACH_TYPE), POINTER :: RCH
-      TYPE(RESERVOIR_TYPE), POINTER :: RES
-      TYPE(SUBBASIN_TYPE), POINTER :: SBS
 
       CALL WRITE_LOG('ALLOCATING MEMMORY!!!')
 
@@ -14,61 +11,7 @@
       DO I = 1, NBASIN
 
         BS => BASIN(I)
-
-        DO J = 1,BS%NSUBBASIN
-
-            SBS => BS%SUBBASIN(J)
-            ALLOCATE(SBS%LOSS(0:NTIME - 1),STAT = IERR)
-            CALL ChkMemErr('SUB-BASIN LOSS', IERR)
-            ALLOCATE(SBS%EXCESS(0:NTIME - 1),STAT = IERR)
-            CALL ChkMemErr('SUB-BASIN EXCESS', IERR)
-            ALLOCATE(SBS%DIRECT_FLOW(0:NTIME - 1),STAT = IERR)
-            CALL ChkMemErr('SUB-BASIN DIRECT_FLOW', IERR)
-            ALLOCATE(SBS%TOTAL_FLOW(0:NTIME - 1),STAT = IERR)
-            CALL ChkMemErr('SUB-BASIN TOTAL_FLOW', IERR)
-            ALLOCATE(SBS%BASE_FLOW(0:NTIME - 1),STAT = IERR)
-            CALL ChkMemErr('SUB-BASIN BASE_FLOW', IERR)
-
-            SBS%LOSS = 0.0D0
-            SBS%EXCESS = 0.0D0
-            SBS%DIRECT_FLOW = 0.0D0
-            SBS%BASE_FLOW = 0.0D0
-            SBS%TOTAL_FLOW = 0.0D0
-
-
-        ENDDO
-
-
-
-        DO J = 1,BS%NREACH
-
-            RCH => BS%REACH(J)
-            ALLOCATE(RCH%INFLOW(0:NTIME - 1), STAT = IERR)
-            CALL ChkMemErr('REACH INFLOW', IERR)
-            ALLOCATE(RCH%OUTFLOW(0:NTIME - 1), STAT = IERR)
-            CALL ChkMemErr('REACH OUTFLOW', IERR)
-            RCH%INFLOW = 0.0D0
-            RCH%OUTFLOW = 0.0D0
-
-        ENDDO
-
-        DO J = 1,BS%NRESERVOIR
-
-            RES => BS%RESERVOIR(J)
-            ALLOCATE(RES%INFLOW(0:NTIME - 1),STAT = IERR)
-            CALL ChkMemErr('RESERVOIR INFLOW', IERR)
-            ALLOCATE(RES%OUTFLOW(0:NTIME - 1),STAT = IERR)
-            CALL ChkMemErr('RESERVOIR OUTFLOW', IERR)
-            ALLOCATE(RES%STORAGE(0:NTIME - 1),STAT = IERR)
-            CALL ChkMemErr('RESERVOIR STORAGE', IERR)
-            ALLOCATE(RES%ELEVATION(0:NTIME - 1),STAT = IERR)
-            CALL ChkMemErr('RESERVOIR ELEVATION', IERR)
-            RES%INFLOW = 0.0D0
-            RES%OUTFLOW = 0.0D0
-            RES%STORAGE = 0.0D0
-            RES%ELEVATION = 0.0D0
-
-        ENDDO
+        CALL BS%BSALLOCATING
 
       ENDDO
 

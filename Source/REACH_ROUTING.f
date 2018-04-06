@@ -106,11 +106,6 @@ C=================================================================
         SRC => BS%SOURCE(I)
         IF(TRIM(SRC%DOWNSTREAM).EQ.TRIM(RCH%NAME)) THEN
 
-            IF(SRC%SRC_DATA%GATE_DATA(ITER)<0.0D0) THEN !!!HAIPT
-                RCH%INFLOW(ITER) = -1.0D0
-                RETURN
-            ENDIF
-
             RCH%INFLOW(ITER) = RCH%INFLOW(ITER) + SRC%SRC_DATA%GATE_DATA(ITER)
 
         ENDIF
@@ -138,10 +133,6 @@ C=================================================================
         ENDIF
 
       ENDDO
-
-*C LOSS/GAIN
-*
-*      RCH%INFLOW(ITER) = (RCH%INFLOW(ITER) - RCH%LOSS_VALUE)*(1.0D0 - RCH%LOSS_RATIO)
 
       RETURN
       END SUBROUTINE GET_REACH_INFLOW

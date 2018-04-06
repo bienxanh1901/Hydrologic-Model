@@ -19,7 +19,7 @@ C=================================================================
       TYPE(SUBBASIN_TYPE), POINTER :: SBS
       INTEGER, INTENT(IN) :: ITER
 
-      IF(.NOT.ASSOCIATED(SBS%PRECIP)) RETURN
+      IF(SBS%NPRECIP_GATE.LE.0) RETURN
       SELECT CASE(SBS%LOSSRATE)
         CASE(SCS_CURVE_LOSS)
             CALL SCS_CURVE_NUMBER(SBS, ITER)
@@ -47,7 +47,7 @@ C=================================================================
 
       PE2 = 0.0D0
       IA = 0.2D0*SBS%S
-      PRECIP = SBS%PRECIP%GATE_DATA(ITER)
+      PRECIP = SBS%AVERAGED_PRECIP(ITER)
       IMP = PRECIP*SBS%IMPERVIOUS
       SBS%P = SBS%P + PRECIP - IMP
       IF(SBS%P.GT.IA) PE2 = (SBS%P - IA)*(SBS%P - IA)/(SBS%P + 0.8D0*SBS%S)

@@ -3,148 +3,71 @@ C MODULE CONTAINS VARIABLES OF BASIN
 C=================================================================
       MODULE PARAM
       USE datetime_module
+      USE GATE_MOD
+      USE SUBBASIN_MOD
+      USE REACH_MOD
+      USE RESERVOIR_MOD
+      USE SOURCE_MOD
+      USE BASIN_MOD
       IMPLICIT NONE
-
-C STRUCT FOR BASIN CHARACTERISTICS
-      TYPE SUBBASIN_TYPE
-
-        CHARACTER(100) :: NAME
-        !Characteristics
-        REAL(8) :: AREA, LENGTH, SLOPE
-        !Parameter for UHG - LOSS
-        REAL(8) :: CN, IMPERVIOUS, TLAG
-        !Parameter for NAM model
-        REAL(8) :: UMAX, SLMAX, CQOF, CKIF, CK1, TOF, TIF, TG, CKBF
-        REAL(8) :: U40, L20, OF0, FQ0, BF0, EP
-        !Precipitation gate
-        TYPE(GATE_TYPE), POINTER :: PRECIP
-        !Base flow
-        INTEGER :: BASE_FLOW_TYPE
-        REAL(8) :: BF_CONST, BF_MONTHLY(1:12)
-        REAL(8), ALLOCATABLE, DIMENSION(:) :: BASE_FLOW
-        !Transform method
-        INTEGER :: TRANSFORM
-        !Array for UHG
-        INTEGER :: NUHG
-        REAL(8), ALLOCATABLE, DIMENSION(:) :: U
-        !Loss method
-        INTEGER :: LOSSRATE
-        !Potential maximum retention (S)
-        !Accumulate precipitation excess (PE)
-        !Accumulate rainfall depth (P)
-        REAL(8) :: S, P, PE
-        !Output
-        REAL(8), ALLOCATABLE, DIMENSION(:) :: LOSS, EXCESS, DIRECT_FLOW, TOTAL_FLOW
-        !Downstream
-        CHARACTER(100) :: DOWNSTREAM
-
-      END TYPE SUBBASIN_TYPE
-
-C STRUCT FOR REACH
-      TYPE REACH_TYPE
-
-        CHARACTER(100) :: NAME
-        !Level
-        INTEGER :: LEVEL = 0
-        !Routing method
-        INTEGER :: ROUTE
-        !Parameter for Muskingum method
-        REAL(8) :: K, X
-        !Loss/gain
-        REAL(8) :: LOSS_VALUE, LOSS_RATIO
-        !Output
-        REAL(8), ALLOCATABLE, DIMENSION(:) :: INFLOW, OUTFLOW
-        !Downstream
-        CHARACTER(100) :: DOWNSTREAM
-
-      END TYPE REACH_TYPE
-
-C STRUCT FOR REACH
-      TYPE RESERVOIR_TYPE
-
-        CHARACTER(100) :: NAME
-        !Level
-        INTEGER :: LEVEL = 0
-        !Routing method
-        INTEGER :: ROUTE
-        !Parameter for reservoir structure method
-        REAL(8) :: Z0, DOORW, DC_COEFF, ZSW
-
-        !Storage method
-        INTEGER :: ROUTING_CURVE
-        !Storage-elevation relation
-        INTEGER :: NSE
-        REAL(8), ALLOCATABLE, DIMENSION(:,:) :: SE_CURVE
-        !Discharge control
-        INTEGER :: NED
-        REAL(8), ALLOCATABLE, DIMENSION(:,:) :: ED_CURVE
-        REAL(8), ALLOCATABLE, DIMENSION(:,:) :: EH_CURVE
-        INTEGER, ALLOCATABLE, DIMENSION(:) :: NDOOR
-        !Turbin discharge
-        INTEGER :: TB_TYPE
-        REAL(8) :: TB_CONST_DATA
-        TYPE(GATE_TYPE), POINTER :: TURBIN_GATE, Z_OBS
-        !Output
-        REAL(8), ALLOCATABLE, DIMENSION(:) :: INFLOW, OUTFLOW, STORAGE, ELEVATION
-        !Downstream
-        CHARACTER(100) :: DOWNSTREAM
-
-      END TYPE RESERVOIR_TYPE
-
-C STRUCT FOR SOURCE
-      TYPE SOURCE_TYPE
-
-        CHARACTER(100) :: NAME
-        !Source type
-        INTEGER :: SRC_TYPE
-        !Data
-        REAL(8) :: CONST_DATA
-        TYPE(GATE_TYPE), POINTER :: SRC_DATA
-        !Downstream
-        CHARACTER(100) :: DOWNSTREAM
-
-      END TYPE SOURCE_TYPE
-
-C STRUCT FOR  GATE
-      TYPE GATE_TYPE
-
-        !Gate name
-        CHARACTER(100) :: NAME, DATAFILE
-        !Type of gate
-        INTEGER :: GATETYPE
-        TYPE(DATETIME) :: TS, TE
-        INTEGER :: NDATA, DT
-        !Data
-        CHARACTER(100) :: GATE_FILE
-        REAL(8), ALLOCATABLE, DIMENSION(:) :: GATE_DATA
-
-      END TYPE GATE_TYPE
-
-C---------------------------------------------------------------------------------------------------------
-C---------------------------------------------------------------------------------------------------------
-      TYPE BASIN_TYPE
-
-        !basin name
-        CHARACTER(100) :: NAME
-        !max level of basin objects
-        INTEGER :: MAX_LEVEL = 0
-        !Number of objects
-        INTEGER :: NSUBBASIN, NREACH, NRESERVOIR, NSOURCE, NPRECIP, NGATE
-        !Object data
-        TYPE(SUBBASIN_TYPE), POINTER, DIMENSION(:) :: SUBBASIN
-        TYPE(REACH_TYPE), POINTER, DIMENSION(:) :: REACH
-        TYPE(RESERVOIR_TYPE), POINTER, DIMENSION(:) :: RESERVOIR
-        TYPE(SOURCE_TYPE), POINTER, DIMENSION(:) :: SOURCE
-        TYPE(GATE_TYPE), POINTER, DIMENSION(:) :: GATE
-
-      END TYPE BASIN_TYPE
 
       !Number of BASIN
       INTEGER :: NBASIN
+      INTEGER :: SIMULATION_MODE
+      INTEGER :: FORECASTING_DURATION
       TYPE(BASIN_TYPE), POINTER, DIMENSION(:) :: BASIN
       !Inout
       CHARACTER(100) :: INPUT_DIR, OUTPUT_DIR, ROOT_DIR
       END MODULE PARAM
+C=================================================================
+C
+C=================================================================
+
+C=================================================================
+C SUBROUTINE SET DATE AND TIME OF EACH TIME STEP
+C=================================================================
+      SUBROUTINE SET_DATE_TIME(TSTART, TEND)
+      USE PARAM
+      USE CONSTANTS
+      USE TIME
+      USE datetime_module
+      IMPLICIT NONE
+      CHARACTER(*), INTENT(IN) :: TSTART, TEND
+      INTEGER :: IERR, I
+
+      !Date time format:'dd-mm-yyyy hh:mm'
+
+      START_TIME = strptime(TSTART, '%d-%m-%Y %H:%M')
+      IF(SIMULATION_MODE.EQ.VALIDATION_MODE) THEN
+
+        END_TIME = strptime(TEND, '%d-%m-%Y %H:%M')
+        IF(START_TIME.GT.END_TIME) CALL WRITE_ERRORS('TSTART greater than TEND!')
+
+        DELTAT = END_TIME - START_TIME
+
+        NTIME = INT(DELTAT%total_seconds()/DT) + 1
+
+      ELSE
+
+        END_TIME = START_TIME
+        NTIME = FORECASTING_DURATION/INT(DT)*2
+
+      ENDIF
+
+      ALLOCATE(TIME_ARR(0:NTIME - 1), STAT=IERR)
+      CALL ChkMemErr('TIME_ARR', IERR)
+
+      TIME_ARR(0) = START_TIME
+      DELTAT = timedelta(0, 0, 0, INT(DT), 0)
+
+      DO I = 1, NTIME - 1
+
+        TIME_ARR(I) = TIME_ARR(I - 1) + DELTAT
+
+      ENDDO
+
+      RETURN
+      END SUBROUTINE SET_DATE_TIME
 C=================================================================
 C
 C=================================================================
