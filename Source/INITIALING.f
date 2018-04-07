@@ -3,46 +3,34 @@
       USE TIME
       USE CONSTANTS
       IMPLICIT NONE
-      INTERFACE
-
-        SUBROUTINE GET_RESERVOIR_INFLOW(BS, RES, ITER)
-        USE PARAM
-        USE CONSTANTS
-        USE TIME
-        IMPLICIT NONE
-        TYPE(BASIN_TYPE), POINTER :: BS
-        TYPE(RESERVOIR_TYPE), POINTER :: RES
-        INTEGER, INTENT(IN) :: ITER
-        END SUBROUTINE GET_RESERVOIR_INFLOW
-
-        SUBROUTINE GET_REACH_INFLOW(BS, RCH, ITER)
-        USE PARAM
-        USE CONSTANTS
-        USE TIME
-        IMPLICIT NONE
-        TYPE(BASIN_TYPE), POINTER :: BS
-        TYPE(REACH_TYPE), POINTER :: RCH
-        INTEGER, INTENT(IN) :: ITER
-        END SUBROUTINE GET_REACH_INFLOW
-
-      END INTERFACE
       TYPE(BASIN_TYPE), POINTER :: BS
       TYPE(REACH_TYPE), POINTER :: RCH
       TYPE(RESERVOIR_TYPE), POINTER :: RES
       TYPE(SUBBASIN_TYPE), POINTER :: SBS
-      INTEGER :: I, J, K
+      TYPE(GATE_TYPE), POINTER :: GT
+      INTEGER :: I, J, K, IERR
       REAL(8) :: QIN
 
       CALL WRITE_LOG('INITIALING VARIABLES!!!')
+
+      CURRENT_IDX = 0
 
       DO I = 1, NBASIN
 
         BS => BASIN(I)
 
+
+        DO J = 1, BS%NGATE
+
+            GT => BS%GATE(J)
+            IERR = GT%SET_CURRENT_DATA(SIMULATION_MODE)
+
+        ENDDO
+
+
         DO J = 1,BS%NSUBBASIN
 
             SBS => BS%SUBBASIN(J)
-!            SBS%PRECIP(:)%GATE%GATE_DATA(0) = 0.0D0
             SBS%BASE_FLOW(0) = SBS%GET_BASE_FLOW(TIME_ARR(0))
             SBS%TOTAL_FLOW(0) = SBS%BASE_FLOW(0)
 
@@ -55,7 +43,7 @@
 
                 RCH => BS%REACH(J)
                 IF(RCH%LEVEL.NE.K) CYCLE
-                CALL GET_REACH_INFLOW(BS, RCH, 0)
+                CALL BS%GET_REACH_INFLOW(RCH)
                 QIN = (RCH%INFLOW(0) - RCH%LOSS_VALUE)*(1.0D0 - RCH%LOSS_RATIO)
                 IF(QIN.LT.0D0) QIN = 0.0D0
                 RCH%OUTFLOW(0) = QIN
@@ -66,15 +54,15 @@
 
                 RES => BS%RESERVOIR(J)
                 IF(RES%LEVEL.NE.K) CYCLE
-                CALL GET_RESERVOIR_INFLOW(BS, RES, 0)
+                CALL BS%GET_RESERVOIR_INFLOW(RES)
 
-                IF(.NOT.ASSOCIATED(RES%TURBIN_GATE)) THEN
+                IF(RES%TB_TYPE.EQ.CONSTANT_DATA) THEN
 
                     RES%OUTFLOW = RES%TB_CONST_DATA
 
                 ELSE
 
-                    RES%OUTFLOW = RES%TURBIN_GATE%GATE_DATA(0)
+                    RES%OUTFLOW = RES%TURBIN_GATE%CURRENT_DATA
 
                 ENDIF
 

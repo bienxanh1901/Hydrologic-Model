@@ -1,28 +1,13 @@
 C=================================================================
 C SUBROUTINE UNIT_HYDROGRAPH_METHOD
 C=================================================================
-      SUBROUTINE LOSS_CALC(SBS, ITER)
-      USE PARAM
-      USE CONSTANTS
-      USE TIME
-      IMPLICIT NONE
-      INTERFACE
-        SUBROUTINE SCS_CURVE_NUMBER(SBS, ITER)
-        USE PARAM
-        USE CONSTANTS
-        USE TIME
-        IMPLICIT NONE
-        TYPE(SUBBASIN_TYPE), POINTER :: SBS
-        INTEGER, INTENT(IN) :: ITER
-        END SUBROUTINE SCS_CURVE_NUMBER
-      END INTERFACE
-      TYPE(SUBBASIN_TYPE), POINTER :: SBS
-      INTEGER, INTENT(IN) :: ITER
+      SUBROUTINE LOSS_CALC(SEFT)
 
-      IF(SBS%NPRECIP_GATE.LE.0) RETURN
-      SELECT CASE(SBS%LOSSRATE)
+      CLASS(SUBBASIN_TYPE), INTENT(INOUT) :: SEFT
+      IF(SEFT%NPRECIP_GATE.LE.0) RETURN
+      SELECT CASE(SEFT%LOSSRATE)
         CASE(SCS_CURVE_LOSS)
-            CALL SCS_CURVE_NUMBER(SBS, ITER)
+            CALL SEFT%SCS_CURVE_NUMBER
         CASE DEFAULT
             WRITE(*,*) 'Error: Invalid type of loss method!!!'
             STOP
@@ -36,24 +21,20 @@ C=================================================================
 C=================================================================
 C SUBROUTINE UNIT_HYDROGRAPH_METHOD
 C=================================================================
-      SUBROUTINE SCS_CURVE_NUMBER(SBS, ITER)
-      USE PARAM
-      USE CONSTANTS
-      USE TIME
+      SUBROUTINE SCS_CURVE_NUMBER(SEFT)
       IMPLICIT NONE
-      TYPE(SUBBASIN_TYPE), POINTER :: SBS
-      INTEGER, INTENT(IN) :: ITER
+      CLASS(SUBBASIN_TYPE), INTENT(INOUT) :: SEFT
       REAL(8) :: PE2, IMP, PRECIP, IA
 
       PE2 = 0.0D0
-      IA = 0.2D0*SBS%S
-      PRECIP = SBS%AVERAGED_PRECIP(ITER)
-      IMP = PRECIP*SBS%IMPERVIOUS
-      SBS%P = SBS%P + PRECIP - IMP
-      IF(SBS%P.GT.IA) PE2 = (SBS%P - IA)*(SBS%P - IA)/(SBS%P + 0.8D0*SBS%S)
-      SBS%EXCESS(ITER) = PE2 - SBS%PE + IMP
-      SBS%PE = PE2
-      SBS%LOSS(ITER) = PRECIP - SBS%EXCESS(ITER)
+      IA = 0.2D0*SEFT%S
+      PRECIP = SEFT%AVGPRECIP(CURRENT_IDX)
+      IMP = PRECIP*SEFT%IMPERVIOUS
+      SEFT%P = SEFT%P + PRECIP - IMP
+      IF(SEFT%P.GT.IA) PE2 = (SEFT%P - IA)*(SEFT%P - IA)/(SEFT%P + 0.8D0*SEFT%S)
+      SEFT%EXCESS(CURRENT_IDX) = PE2 - SEFT%PE + IMP
+      SEFT%PE = PE2
+      SEFT%LOSS(CURRENT_IDX) = PRECIP - SEFT%EXCESS(CURRENT_IDX)
 
 
       RETURN

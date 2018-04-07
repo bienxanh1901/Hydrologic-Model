@@ -1,27 +1,13 @@
 C=================================================================
 C TRANSFORM_CALC
 C=================================================================
-      SUBROUTINE TRANSFORM_CALC(SBS, ITER)
-      USE PARAM
-      USE CONSTANTS
-      USE TIME
+      SUBROUTINE TRANSFORM_CALC(SEFT)
       IMPLICIT NONE
-      INTERFACE
-        SUBROUTINE SCS_UHG(SBS, ITER)
-        USE PARAM
-        USE CONSTANTS
-        USE TIME
-        IMPLICIT NONE
-        TYPE(SUBBASIN_TYPE), POINTER :: SBS
-        INTEGER, INTENT(IN) :: ITER
-        END SUBROUTINE SCS_UHG
-      END INTERFACE
-      TYPE(SUBBASIN_TYPE), POINTER :: SBS
-      INTEGER, INTENT(IN) :: ITER
+      CLASS(SUBBASIN_TYPE), INTENT(INOUT) :: SEFT
 
-      SELECT CASE(SBS%TRANSFORM)
+      SELECT CASE(SEFT%TRANSFORM)
         CASE(SCS_UHG_TYPE)
-            CALL SCS_UHG(SBS, ITER)
+            CALL SEFT%SCS_UHG
         CASE DEFAULT
             WRITE(*,*) 'Error: Invalid type of transform method!!!'
             STOP
@@ -35,28 +21,21 @@ C=================================================================
 C=================================================================
 C SCS_UHG
 C=================================================================
-      SUBROUTINE SCS_UHG(SBS, ITER)
-      USE PARAM
-      USE CONSTANTS
-      USE TIME
+      SUBROUTINE SCS_UHG(SEFT)
       IMPLICIT NONE
-      INTERFACE
-      END INTERFACE
-      TYPE(SUBBASIN_TYPE), POINTER :: SBS
-      INTEGER, INTENT(IN) :: ITER
+      CLASS(SUBBASIN_TYPE), INTENT(INOUT) :: SEFT
       INTEGER :: M, L, N1
       REAL(8) :: SUMP
 
       SUMP = 0.0D0
-      N1 = MAX(1,ITER - SBS%NUHG + 1)
-      DO M = N1,ITER
-
-        L = ITER - M + 1
-        SUMP = SUMP + SBS%EXCESS(M)*SBS%U(L)/10.0D0
+      N1 = MAX(1,CURRENT_IDX - SEFT%NUHG + 1)
+      DO M = N1,CURRENT_IDX
+        L = CURRENT_IDX - M + 1
+        SUMP = SUMP + SEFT%EXCESS(M)*SEFT%U(L)/10.0D0
 
       ENDDO
 
-      SBS%DIRECT_FLOW(ITER) = SUMP
+      SEFT%DIRECT_FLOW(CURRENT_IDX) = SUMP
 
       RETURN
       END SUBROUTINE SCS_UHG

@@ -1,92 +1,41 @@
-      SUBROUTINE ROUTING_CALC
-      USE PARAM
-      USE CONSTANTS
-      USE TIME
+      SUBROUTINE ROUTING_CALC(SEFT)
       IMPLICIT NONE
-      INTERFACE
-        SUBROUTINE REACH_ROUTING(RCH, ITER)
-        USE PARAM
-        USE CONSTANTS
-        USE TIME
-        IMPLICIT NONE
-        TYPE(REACH_TYPE), POINTER :: RCH
-        INTEGER, INTENT(IN) :: ITER
-        END SUBROUTINE REACH_ROUTING
-
-        SUBROUTINE RESERVOIR_ROUTING(RES, ITER)
-        USE PARAM
-        USE CONSTANTS
-        USE TIME
-        IMPLICIT NONE
-        TYPE(RESERVOIR_TYPE), POINTER :: RES
-        INTEGER, INTENT(IN) :: ITER
-        END SUBROUTINE RESERVOIR_ROUTING
-
-        SUBROUTINE GET_REACH_INFLOW(BS, RCH, ITER)
-        USE PARAM
-        USE CONSTANTS
-        USE TIME
-        IMPLICIT NONE
-        TYPE(BASIN_TYPE), POINTER :: BS
-        TYPE(REACH_TYPE), POINTER :: RCH
-        INTEGER, INTENT(IN) :: ITER
-        END SUBROUTINE GET_REACH_INFLOW
-
-        SUBROUTINE GET_RESERVOIR_INFLOW(BS, RES, ITER)
-        USE PARAM
-        USE CONSTANTS
-        USE TIME
-        IMPLICIT NONE
-        TYPE(BASIN_TYPE), POINTER :: BS
-        TYPE(RESERVOIR_TYPE), POINTER :: RES
-        INTEGER, INTENT(IN) :: ITER
-        END SUBROUTINE GET_RESERVOIR_INFLOW
-      END INTERFACE
-      TYPE(BASIN_TYPE), POINTER :: BS
+      CLASS(BASIN_TYPE), INTENT(INOUT) :: SEFT
       TYPE(RESERVOIR_TYPE), POINTER :: RES
       TYPE(REACH_TYPE), POINTER :: RCH
-      INTEGER :: I, J, N, K
+      INTEGER :: J, K
 
-      CALL WRITE_LOG('STARTING ROUTING!!!')
+      DO K = SEFT%MAX_LEVEL, 0, -1
 
-      DO I = 1, NBASIN
+        DO J = 1,SEFT%NREACH
 
-        BS => BASIN(I)
-        DO N = 1, NTIME - 1
-            DO K = BS%MAX_LEVEL, 0, -1
+            RCH => SEFT%REACH(J)
+            IF(RCH%LEVEL.NE.K) CYCLE
+            CALL SEFT%GET_REACH_INFLOW(RCH)
+            IF(RCH%ROUTE.EQ.0) THEN
 
-                DO J = 1,BS%NREACH
+                RCH%OUTFLOW(CURRENT_IDX) = RCH%INFLOW(CURRENT_IDX)
 
-                    RCH => BS%REACH(J)
-                    IF(RCH%LEVEL.NE.K) CYCLE
-                    CALL GET_REACH_INFLOW(BS, RCH, N)
-                    IF(RCH%ROUTE.EQ.0) THEN
+            ELSE
 
-                        RCH%OUTFLOW(N) = RCH%INFLOW(N)
+                CALL RCH%REACH_ROUTING
 
-                    ELSE
+            ENDIF
 
-                        CALL REACH_ROUTING(RCH, N)
+        ENDDO
 
-                    ENDIF
+        DO J = 1,SEFT%NRESERVOIR
 
-                ENDDO
-
-                DO J = 1,BS%NRESERVOIR
-
-                    RES => BS%RESERVOIR(J)
-                    IF(RES%LEVEL.NE.K) CYCLE
-                    CALL GET_RESERVOIR_INFLOW(BS, RES, N)
-                    IF(RES%ROUTE.EQ.0) CYCLE
-                    CALL RESERVOIR_ROUTING(RES, N)
-
-                ENDDO
-
-            ENDDO
+            RES => SEFT%RESERVOIR(J)
+            IF(RES%LEVEL.NE.K) CYCLE
+            CALL SEFT%GET_RESERVOIR_INFLOW(RES)
+            IF(RES%ROUTE.EQ.0) CYCLE
+            CALL RES%RESERVOIR_ROUTING
 
         ENDDO
 
       ENDDO
+
 
 
       RETURN

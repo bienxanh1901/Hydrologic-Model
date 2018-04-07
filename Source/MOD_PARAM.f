@@ -38,6 +38,7 @@ C=================================================================
       !Date time format:'dd-mm-yyyy hh:mm'
 
       START_TIME = strptime(TSTART, '%d-%m-%Y %H:%M')
+      CURRENT_TIME = START_TIME
       IF(SIMULATION_MODE.EQ.VALIDATION_MODE) THEN
 
         END_TIME = strptime(TEND, '%d-%m-%Y %H:%M')
@@ -49,7 +50,7 @@ C=================================================================
 
       ELSE
 
-        END_TIME = START_TIME
+        END_TIME = START_TIME + timedelta(FORECASTING_DURATION, 0, 0, 0, 0)
         NTIME = FORECASTING_DURATION/INT(DT)*2
 
       ENDIF
