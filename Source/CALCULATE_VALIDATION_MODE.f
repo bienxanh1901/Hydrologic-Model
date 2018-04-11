@@ -1,6 +1,6 @@
       SUBROUTINE RUN_VALIDATION_MODE
       USE TIME
-      USE PARAM
+      USE CALC_PARAM
       IMPLICIT NONE
       INTEGER :: I
 
@@ -15,20 +15,19 @@
 
 
         DO I = 1,NBASIN
+          
             CALL BASIN(I)%CALCULATING_RUNOFF
-        ENDDO
 
-
-        DO I = 1,NBASIN
             CALL BASIN(I)%ROUTING_CALC
+
         ENDDO
 
         IF(CURRENT_TIME.EQ.END_TIME) EXIT
 
-
       ENDDO
 
+      CALL WRITE_OUTPUT 
 
 
 
-      END SUBROUTINE
+      END SUBROUTINE RUN_VALIDATION_MODE

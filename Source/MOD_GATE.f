@@ -1,5 +1,6 @@
       MODULE GATE_MOD
       USE datetime_module
+      USE COMMON_PARAM
       USE CONSTANTS
       USE TIME
       IMPLICIT NONE
@@ -40,10 +41,10 @@
       CONTAINS
 
         !Constructor
-        TYPE(GATE_TYPE) FUNCTION GATE_TYPE_CONSTRUCTOR(NAME, GTYPE, TSTART, TEND, FN, INTERVAL, MODE)
+        TYPE(GATE_TYPE) FUNCTION GATE_TYPE_CONSTRUCTOR(NAME, GTYPE, TSTART, TEND, FN, INTERVAL)
         IMPLICIT NONE
         CHARACTER(*), INTENT(IN) :: NAME, TSTART, TEND, FN
-        INTEGER, INTENT(IN) :: INTERVAL, MODE, GTYPE
+        INTEGER, INTENT(IN) :: INTERVAL, GTYPE
         TYPE(timedelta) :: DTIME
         INTEGER :: I
 
@@ -54,7 +55,7 @@
 
         GATE_TYPE_CONSTRUCTOR%DATAFILE = TRIM(FN)
 
-        IF(MODE.EQ.VALIDATION_MODE) THEN
+        IF(SIMULATION_MODE.EQ.VALIDATION_MODE) THEN
 
             GATE_TYPE_CONSTRUCTOR%TS = strptime(TRIM(TSTART), '%d-%m-%Y %H:%M')
             GATE_TYPE_CONSTRUCTOR%TE = strptime(TRIM(TEND), '%d-%m-%Y %H:%M')
@@ -94,8 +95,9 @@
         SUBROUTINE READ_ALL_DATA(SEFT)
 
             CLASS(GATE_TYPE), INTENT(INOUT) :: SEFT
-            INTEGER :: FU, J, IERR
-            CHARACTER(16) :: CTIME
+            INTEGER :: FU, J, IERR, IDX, CNT
+            CHARACTER(100) :: LINE
+
 
             FU = 10
 
@@ -104,29 +106,33 @@
             ALLOCATE(SEFT%GATE_DATA(0:SEFT%NDATA - 1), STAT=IERR)
             CALL ChkMemErr('GATE_DATA', IERR)
 
+            CNT = 0
             DO J = 0, SEFT%NDATA - 1
-
-                !READ(FU,'(A16,F)') CTIME !, SEFT%GATE_DATA(J)
-                READ(FU,*) SEFT%GATE_DATA(J)
-
+                LINE = ""
+                READ(FU,'(A)', END = 99) LINE
+                !IDX = INDEX(LINE,',') + 1
+                IDX = INDEX(LINE,TAB) + 1
+                READ(LINE(IDX:),*) SEFT%GATE_DATA(J)
+                CNT = CNT + 1
             ENDDO
-
+99          CONTINUE
+            IF(CNT.NE.SEFT%NDATA) CALL WRITE_ERRORS("NOT ENOUGH DATA IN GATE "//TRIM(SEFT%NAME))
             CLOSE(FU)
 
         END SUBROUTINE READ_ALL_DATA
 
 
         !READ DATA AT CURRENT TIME
-        INTEGER FUNCTION SET_CURRENT_DATA(SEFT,MODE)
+        INTEGER FUNCTION SET_CURRENT_DATA(SEFT)
 
             CLASS(GATE_TYPE), INTENT(INOUT) :: SEFT
-            INTEGER, INTENT(IN) :: MODE
-            CHARACTER(16) :: CTIME
+            CHARACTER(17) :: CTIME
+            CHARACTER(100) :: LINE
             TYPE(datetime) :: CRRTIME
             REAL(8) :: CRRVAL
-            INTEGER :: FU
+            INTEGER :: FU, IDX
 
-            IF(MODE.EQ.VALIDATION_MODE) THEN
+            IF(SIMULATION_MODE.EQ.VALIDATION_MODE) THEN
 
                 DO WHILE(.TRUE.)
                     IF(CURRENT_TIME .EQ.SEFT%TIME_ARR(SEFT%CURRENT_INDEX)) THEN
@@ -152,8 +158,13 @@
 
                 DO WHILE(.TRUE.)
 
-                    READ(FU,END=104) CTIME,CRRVAL
-                    CRRTIME = strptime(TRIM(CTIME), '%d-%m-%Y %H:%M')
+                    LINE = ""
+                    READ(FU,'(A)', END = 99) LINE
+                    !IDX = INDEX(LINE,',')
+                    IDX = INDEX(LINE,TAB)
+                    READ(LINE(1:IDX - 1), '(A17)') CTIME
+                    READ(LINE(IDX+1:),*) CRRVAL
+                    CRRTIME = strptime(ADJUSTL(TRIM(CTIME)), '%d-%m-%Y %H:%M')
 
                     IF(CRRTIME.EQ.CURRENT_TIME) THEN
                         SEFT%CURRENT_DATA = CRRVAL
@@ -163,13 +174,7 @@
 
                 ENDDO
 
-104             CRRTIME = strptime(TRIM(CTIME), '%d-%m-%Y %H:%M')
-                IF(CRRTIME.EQ.CURRENT_TIME) THEN
-                    SEFT%CURRENT_DATA = CRRVAL
-                    SET_CURRENT_DATA = 0
-                ELSE
-                    SET_CURRENT_DATA = 1
-                ENDIF
+99              SET_CURRENT_DATA = 1
 105             CLOSE(FU)
             ENDIF
 

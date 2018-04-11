@@ -2,7 +2,7 @@ C=================================================================
 C CHECK THE LEVEL OF OBJECTS TO FIND THE CONNECTION OF BASIN
 C=================================================================
       SUBROUTINE BASIN_CONNECTION
-      USE PARAM
+      USE CALC_PARAM
       IMPLICIT NONE
       INTEGER :: I
       TYPE(BASIN_TYPE), POINTER :: BS

@@ -4,6 +4,8 @@ C=================================================================
       MODULE CONSTANTS
       IMPLICIT NONE
 
+      !definition of tab
+      CHARACTER(1), PARAMETER :: TAB = CHAR(9)
       !definition for data type
       INTEGER, PARAMETER :: CONSTANT_DATA = 1
       INTEGER, PARAMETER :: MONTHLY_DATA = 2
@@ -23,16 +25,20 @@ C=================================================================
       !definition for gate
       INTEGER, PARAMETER :: PRECIPITATION_GATE = 1
       INTEGER, PARAMETER :: DISCHARGE_GATE = 2
-      INTEGER, PARAMETER :: ELEVATION_OBS = 3
+      INTEGER, PARAMETER :: TURBIN__DISCHARGE_GATE = 3
+      INTEGER, PARAMETER :: ELEVATION_OBS = 4
 
       !definition of simulation type:
       INTEGER, PARAMETER :: VALIDATION_MODE = 1
       INTEGER, PARAMETER :: REAL_TIME_MODE = 2
 
+      !definition current mode
+      INTEGER, PARAMETER :: PREDICT_CALC_MODE = 1
+      INTEGER, PARAMETER :: EXACTLY_CALC_MODE = 2
       !definition of max iteration in REAL_TIME_MODE
       INTEGER, PARAMETER :: MAXITER = 100   ! FOR DT = 15MINUTE ==> OVER 1 DAYS
       !define log file
-      INTEGER :: ULOG = 11
+      INTEGER, PARAMETER :: ULOG = 11, FUOUT1 = 20, FUOUT2 = 21
       CHARACTER(7) :: FLOG = "RUN.LOG"
       CHARACTER(1):: FILE_PATH
       END MODULE CONSTANTS

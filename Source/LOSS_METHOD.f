@@ -1,5 +1,5 @@
 C=================================================================
-C SUBROUTINE UNIT_HYDROGRAPH_METHOD
+C SUBROUTINE LOSS METHOD
 C=================================================================
       SUBROUTINE LOSS_CALC(SEFT)
 
@@ -19,26 +19,41 @@ C=================================================================
 C
 C=================================================================
 C=================================================================
-C SUBROUTINE UNIT_HYDROGRAPH_METHOD
+C SUBROUTINE SCS LOSS METHOD
 C=================================================================
       SUBROUTINE SCS_CURVE_NUMBER(SEFT)
       IMPLICIT NONE
       CLASS(SUBBASIN_TYPE), INTENT(INOUT) :: SEFT
-      REAL(8) :: PE2, IMP, PRECIP, IA
+      REAL(8) :: PE2, IMP, PRECIP, IA, PT, PET
 
+      PT = SEFT%P
+      PET = SEFT%PE
       PE2 = 0.0D0
       IA = 0.2D0*SEFT%S
+
+      IF(SIMULATION_MODE.EQ.REAL_TIME_MODE.AND. ACTIVE_MODE.EQ.PREDICT_CALC_MODE) THEN
+
+        PT = SEFT%PFC
+        PET = SEFT%PEFC
+
+      ENDIF
+
       PRECIP = SEFT%AVGPRECIP(CURRENT_IDX)
       IMP = PRECIP*SEFT%IMPERVIOUS
-      SEFT%P = SEFT%P + PRECIP - IMP
-      IF(SEFT%P.GT.IA) PE2 = (SEFT%P - IA)*(SEFT%P - IA)/(SEFT%P + 0.8D0*SEFT%S)
-      SEFT%EXCESS(CURRENT_IDX) = PE2 - SEFT%PE + IMP
-      SEFT%PE = PE2
+      PT = PT + PRECIP - IMP
+      IF(PT.GT.IA) PE2 = (PT - IA)*(PT - IA)/(PT + 0.8D0*SEFT%S)
+      SEFT%EXCESS(CURRENT_IDX) = PE2 - PET + IMP
       SEFT%LOSS(CURRENT_IDX) = PRECIP - SEFT%EXCESS(CURRENT_IDX)
 
+      SEFT%PFC = PT
+      SEFT%PEFC = PE2
+
+      IF(SIMULATION_MODE.EQ.VALIDATION_MODE.OR.(SIMULATION_MODE.EQ.REAL_TIME_MODE.AND.ACTIVE_MODE.EQ.EXACTLY_CALC_MODE)) THEN
+
+        SEFT%P = PT
+        SEFT%PE = PE2
+
+      ENDIF
 
       RETURN
       END SUBROUTINE SCS_CURVE_NUMBER
-C=================================================================
-C
-C=================================================================

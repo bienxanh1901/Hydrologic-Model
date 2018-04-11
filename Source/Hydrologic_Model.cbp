@@ -46,7 +46,7 @@
 			<Option weight="9" />
 		</Unit>
 		<Unit filename="CALCULATE_REALTIME_MODE.f">
-			<Option weight="0" />
+			<Option weight="9" />
 		</Unit>
 		<Unit filename="CALCULATE_VALIDATION_MODE.f">
 			<Option weight="9" />
@@ -54,11 +54,17 @@
 		<Unit filename="CHECK.f">
 			<Option weight="1" />
 		</Unit>
+		<Unit filename="FORECASTING.f">
+			<Option weight="9" />
+		</Unit>
 		<Unit filename="INITIALING.f">
 			<Option weight="9" />
 		</Unit>
 		<Unit filename="MOD_BASIN.f">
 			<Option weight="7" />
+		</Unit>
+		<Unit filename="MOD_COMMON_PARAM.f">
+			<Option weight="0" />
 		</Unit>
 		<Unit filename="MOD_CONSTANTS.f">
 			<Option weight="0" />

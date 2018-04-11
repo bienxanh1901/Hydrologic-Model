@@ -2,7 +2,8 @@ C=================================================================
 C SUBROUTINE READ INPUT
 C=================================================================
       SUBROUTINE READING_INPUT
-      USE PARAM
+      USE COMMON_PARAM
+      USE CALC_PARAM
       USE CONSTANTS
       USE TIME
       IMPLICIT NONE
@@ -39,7 +40,7 @@ C Read name list common
       CLOSE(FUNIT)
 
 C Check parameter
-      IF(SIMULATION_MODE.NE.VALIDATION_MODE.OR.
+      IF(SIMULATION_MODE.NE.VALIDATION_MODE.AND.
      &   SIMULATION_MODE.NE.REAL_TIME_MODE) THEN
 
         CALL WRITE_LOG('    WARNING!!: SIMULATION MODE is automatically set by 1')
@@ -84,7 +85,8 @@ C=================================================================
 C
 C=================================================================
       SUBROUTINE READ_BASIN
-      USE PARAM
+      USE COMMON_PARAM
+      USE CALC_PARAM
       USE CONSTANTS
       IMPLICIT NONE
       INTEGER :: FUNIT, IERR, I
@@ -148,7 +150,8 @@ C=================================================================
 C
 C=================================================================
       SUBROUTINE READ_GATE(FUNIT, BS)
-      USE PARAM
+      USE COMMON_PARAM
+      USE CALC_PARAM
       USE CONSTANTS
       USE TIME
       USE datetime_module
@@ -198,7 +201,7 @@ C Check parameter
 
         ENDIF
 
-        GT = GATE_TYPE_CONSTRUCTOR(NAME, GATETYPE, TSTART, TEND, DATAFILE, INTERVAL, SIMULATION_MODE)
+        GT = GATE_TYPE_CONSTRUCTOR(NAME, GATETYPE, TSTART, TEND, DATAFILE, INTERVAL)
 
         IF(SIMULATION_MODE.EQ.VALIDATION_MODE) THEN
 
@@ -219,7 +222,8 @@ C=================================================================
 C READ SUB BASIN INPUT
 C=================================================================
       SUBROUTINE READ_SUB_BASIN(FUNIT, BS)
-      USE PARAM
+      USE COMMON_PARAM
+      USE CALC_PARAM
       USE CONSTANTS
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: FUNIT
@@ -294,7 +298,8 @@ C=================================================================
 C READ SOURCE INPUT
 C=================================================================
       SUBROUTINE READ_SOURCE(FUNIT, BS)
-      USE PARAM
+      USE COMMON_PARAM
+      USE CALC_PARAM
       USE CONSTANTS
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: FUNIT
@@ -347,7 +352,8 @@ C=================================================================
 C READ REACH INPUT
 C=================================================================
       SUBROUTINE READ_REACH(FUNIT, BS)
-      USE PARAM
+      USE COMMON_PARAM
+      USE CALC_PARAM
       USE CONSTANTS
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: FUNIT
@@ -392,7 +398,8 @@ C=================================================================
 C READ RESERVOIR INPUT
 C=================================================================
       SUBROUTINE READ_RESERVOIR(FUNIT, BS)
-      USE PARAM
+      USE COMMON_PARAM
+      USE CALC_PARAM
       USE CONSTANTS
       USE TIME
       IMPLICIT NONE

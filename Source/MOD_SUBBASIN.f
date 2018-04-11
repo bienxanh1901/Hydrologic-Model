@@ -1,8 +1,10 @@
       MODULE SUBBASIN_MOD
       USE datetime_module
+      USE COMMON_PARAM
       USE GATE_MOD
       USE CONSTANTS
       USE UHG_MOD
+      USE TIME
 
       IMPLICIT NONE
 
@@ -38,7 +40,7 @@
         !Potential maximum retention (S)
         !Accumulate precipitation excess (PE)
         !Accumulate rainfall depth (P)
-        REAL(8) :: S, P, PE
+        REAL(8) :: S, P, PE, PFC, PEFC
         !Output
         REAL(8), ALLOCATABLE, DIMENSION(:) :: LOSS, EXCESS, DIRECT_FLOW, TOTAL_FLOW, AVGPRECIP
         !Downstream
@@ -58,6 +60,7 @@
         PROCEDURE,PASS(SEFT), PRIVATE :: SCS_CURVE_NUMBER
         PROCEDURE,PASS(SEFT), PRIVATE :: SET_SCS_UHG
         PROCEDURE,PASS(SEFT), PRIVATE :: SCS_UHG
+
 
 
       END TYPE SUBBASIN_TYPE
