@@ -13,7 +13,7 @@
 	  INTERVAL = 3600               /
 
 &GTNL NAME     = "ZOBS"             , 
-	  GATETYPE = 1                  , 
+	  GATETYPE = 4                  , 
 	  TSTART = "10-01-2018 11:00"   , 
 	  TEND   = "31-01-2018 00:00"   , 
 	  DATAFILE = "Z_SS4.DAT"        , 
@@ -27,7 +27,7 @@
 	  INTERVAL = 3600               /
 
 &GTNL NAME     = "TURBIN4"          , 
-	  GATETYPE = 2                  , 
+	  GATETYPE = 3                  , 
 	  TSTART = "10-01-2018 11:00"   , 
 	  TEND   = "31-01-2018 11:00"   , 
 	  DATAFILE = "QTURBIN.DAT"        , 
@@ -61,7 +61,7 @@
 		 
 &RESNL NAME = "SESAN4" ,
 	   ROUTE = 1 ,
-	   Z0 = 213.706 ,
+	   Z0 = 213.801 ,
 	   ROUTING_CURVE = 1 ,
 	   RTCFN = "ES_SESAN4.DAT" ,
 	   DCFN = "ED_SESAN4A.DAT" ,

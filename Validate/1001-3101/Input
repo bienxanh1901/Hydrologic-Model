@@ -1,8 +1,10 @@
 &INP NBASIN = 1, 
-	 DT     = 3600.0/
+	 DT     = 3600.0,
+	 SIMULATION_MODE = 2,
+	 FORECASTING_DURATION = 48/
 	 
-&CTRL TSTART = "15-01-2018 13:00", 
-	  TEND   = "27-01-2018 00:00"/
+&CTRL TSTART = "10-01-2018 11:00", 
+	  TEND   = "15-01-2018 00:00"/
 	  
 &IODIR INPUT_DIR  = "Input_file",
-	   OUTPUT_DIR = "Output"/
+	   OUTPUT_DIR = "Output2"/
