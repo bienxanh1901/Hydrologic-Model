@@ -12,7 +12,12 @@
       INTEGER :: I, J, K, IERR
       REAL(8) :: QIN
 
-      CALL WRITE_LOG('INITIALING VARIABLES!!!')
+      CALL WRITE_LOG('===================================')
+      CALL WRITE_LOG('=                                 =')
+      CALL WRITE_LOG('=      INITIALING VARIABLES       =')
+      CALL WRITE_LOG('=                                 =')
+      CALL WRITE_LOG('===================================')
+      CALL WRITE_LOG('')
 
       CURRENT_IDX = 0
 
@@ -80,6 +85,6 @@
 
       CALL CREATE_OUTPUT_DIR
       IF(SIMULATION_MODE.EQ.REAL_TIME_MODE)CALL WRITE_OUTPUT
-
+      CALL SLEEP(1)
       RETURN
       END SUBROUTINE INITIALING_VARIABLES

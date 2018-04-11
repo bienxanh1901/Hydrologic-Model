@@ -51,9 +51,6 @@ C=================================================================
       TYPE(BASIN_TYPE), POINTER :: BS
       INTEGER :: I
 
-      CALL WRITE_LOG('WRITING OUTPUT!!!')
-
-
       DO I = 1,NBASIN
 
         BS => BASIN(I)

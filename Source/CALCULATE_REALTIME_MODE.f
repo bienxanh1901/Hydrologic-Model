@@ -7,15 +7,17 @@
       INTEGER,DIMENSION(8) :: TVAL
       TYPE(datetime) :: CRRTIME
       TYPE(timedelta):: DES
+      CHARACTER(100) :: LOGCMD
 
-      CALL WRITE_LOG('STARTING CALCULATION!!!')
 
       DO
 
         ACTIVE_MODE = EXACTLY_CALC_MODE
         CURRENT_IDX = CURRENT_IDX + 1
         CURRENT_TIME = CURRENT_TIME + DELTAT
-        print*, CURRENT_IDX
+        WRITE(LOGCMD,'(A8,A)')"TIME: ", TRIM(CURRENT_TIME%strftime('%d-%m-%Y %H:%M'))
+        CALL WRITE_LOG(TRIM(LOGCMD))
+        CALL WRITE_LOG("---===")
 
         !Sleep for waiting data
         SLEEPLOOP: DO

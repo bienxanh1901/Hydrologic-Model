@@ -14,8 +14,12 @@ C=================================================================
       NAMELIST /CTRL/ TSTART, TEND
       NAMELIST /IODIR/ INPUT_DIR, OUTPUT_DIR
 
-
-      CALL WRITE_LOG('READING INPUT DATA!!!')
+      CALL WRITE_LOG('===================================')
+      CALL WRITE_LOG('=                                 =')
+      CALL WRITE_LOG('=       READING INPUT DATA        =')
+      CALL WRITE_LOG('=                                 =')
+      CALL WRITE_LOG('===================================')
+      CALL WRITE_LOG('')
 C Open input file
 
       FUNIT = 30
@@ -43,7 +47,8 @@ C Check parameter
       IF(SIMULATION_MODE.NE.VALIDATION_MODE.AND.
      &   SIMULATION_MODE.NE.REAL_TIME_MODE) THEN
 
-        CALL WRITE_LOG('    WARNING!!: SIMULATION MODE is automatically set by 1')
+        CALL WRITE_LOG(TAB//'WARNING!!: SIMULATION MODE is automatically set by 1')
+        CALL WRITE_LOG('')
         SIMULATION_MODE = VALIDATION_MODE
 
       ENDIF
@@ -51,7 +56,8 @@ C Check parameter
       IF(SIMULATION_MODE.NE.REAL_TIME_MODE.AND.
      &      FORECASTING_DURATION.LE.0) THEN
 
-         CALL WRITE_LOG('    WARNING!!: FORECASTING_DURATION MODE is automatically set by 6 (Hours)')
+         CALL WRITE_LOG(TAB//'WARNING!!: FORECASTING_DURATION MODE is automatically set by 6 (Hours)')
+         CALL WRITE_LOG('')
          FORECASTING_DURATION = 6 ! 6 HOURS
 
       ENDIF
@@ -69,9 +75,19 @@ C Check parameter
 
       IF(TRIM(INPUT_DIR).EQ.'') CALL WRITE_ERRORS('Please set input directory(INPUT_DIR) and restart the application')
 
+      IF(SIMULATION_MODE.EQ.REAL_TIME_MODE)CALL WRITE_LOG(TAB//'REAL TIME SIMULATION MODE')
+      IF(SIMULATION_MODE.EQ.VALIDATION_MODE)CALL WRITE_LOG(TAB//'VALIDATION MODE')
+      CALL WRITE_LOG('')
+      CALL WRITE_LOG(TAB//'START TIME: '//TRIM(TSTART))
+      CALL WRITE_LOG('')
+      IF(SIMULATION_MODE.EQ.VALIDATION_MODE) CALL WRITE_LOG(TAB//'END TIME: '//TRIM(TEND))
+      CALL WRITE_LOG(TAB//'INPUT DIRECTORY: '//TRIM(INPUT_DIR))
+      CALL WRITE_LOG(TAB//'OUTPUT DIRECTORY: '//TRIM(OUTPUT_DIR))
+      CALL WRITE_LOG('')
 C Set date and time
       CALL SET_DATE_TIME(TSTART, TEND)
 
+      CALL SLEEP(1)
 C Read BASIN
       CALL READ_BASIN
 
@@ -107,7 +123,7 @@ C Allocate array
 
 C Open input file
         WRITE(ICH,'(I2.2)') I
-        CALL WRITE_LOG('  READING BASIN '//TRIM(ICH))
+        CALL WRITE_LOG(TAB//'READING BASIN '//TRIM(ICH))
         FUNIT = 30
         F1 = TRIM(INPUT_DIR)//'/Basin_'//ICH
         CALL CHK_FILE(TRIM(F1))
@@ -122,9 +138,10 @@ C Read name list BASIN
         NAME='BASIN_'//ICH
         READ(FUNIT,BSNL,ERR=99)
         BS = BASIN_TYPE_CONSTRUCTOR(TRIM(NAME), NSUBBASIN, NSOURCE, NGATE, NREACH, NRESERVOIR)
-
+        CALL WRITE_LOG('')
 C Read gate
         IF(NGATE.GT.0) CALL READ_GATE(FUNIT, BASIN(I))
+
 
 C Read sub basin
         IF(NSUBBASIN.GT.0) CALL READ_SUB_BASIN(FUNIT, BASIN(I))
@@ -137,6 +154,7 @@ C Read reach
 
 C Read reservoir
         IF(NRESERVOIR.GT.0) CALL READ_RESERVOIR(FUNIT, BASIN(I))
+        CALL WRITE_LOG('')
 
       ENDDO
       CLOSE(FUNIT)
@@ -175,7 +193,7 @@ C=================================================================
 
         !Initial values
         WRITE(ICH,'(I3.3)') I
-        CALL WRITE_LOG('    READING GATE '//TRIM(ICH))
+        CALL WRITE_LOG(TAB//TAB//'READING GATE '//TRIM(ICH))
         NAME = "GATE_"//ICH
         TSTART = ""
         TEND = ""
@@ -208,7 +226,7 @@ C Check parameter
             CALL GT%READ_ALL_DATA()
 
         ENDIF
-
+        CALL WRITE_LOG('')
       ENDDO
 
       RETURN
@@ -246,7 +264,7 @@ C=================================================================
         SBS => BS%SUBBASIN(I)
         !Initial values
         WRITE(ICH,'(I3.3)') I
-        CALL WRITE_LOG('    READING SUB_BASIN '//TRIM(ICH))
+        CALL WRITE_LOG(TAB//TAB//'READING SUB_BASIN '//TRIM(ICH))
         NAME = "SUB_BASIN_"//ICH
         DOWNSTREAM = ""
         PRECIP_GATE = ""
@@ -266,7 +284,7 @@ C=================================================================
         READ(FUNIT,SBSNL,ERR=99)
 
 C Check parameter
-        IF(TRIM(DOWNSTREAM).EQ.'') CALL WRITE_LOG('    WARNING!!: No DOWNSTREAM for sub basin '//TRIM(NAME))
+        IF(TRIM(DOWNSTREAM).EQ.'') CALL WRITE_LOG(TAB//TAB//'WARNING!!: No DOWNSTREAM for sub basin '//TRIM(NAME))
 
         SBS = SUBBASIN_TYPE_CONSTRUCTOR(NAME, DOWNSTREAM, BASE_FLOW_TYPE, AREA, BF_CONST, BF_MONTHLY(1:12))
         CALL SBS%SET_TRANSFORM_PARAM(TRANSFORM, CN, TLAG, LENGTH, SLOPE)
@@ -275,7 +293,7 @@ C Check parameter
 
         IF(NPRECIP_GATE.LE.0) THEN
 
-            CALL WRITE_LOG('    WARNING!!: No Precipitation gate is set for sub_basin '//TRIM(NAME))
+            CALL WRITE_LOG(TAB//TAB//'WARNING!!: No Precipitation gate is set for sub_basin '//TRIM(NAME))
             CYCLE BSLOOP
 
         ELSE IF(TRIM(PRECIP_GATE).EQ.'') THEN
@@ -285,7 +303,7 @@ C Check parameter
         ENDIF
 
         CALL SBS%SET_PRECIPITATION_PARAM(NPRECIP_GATE, PRECIP_GATE, BS%GATE, BS%NGATE)
-
+        CALL WRITE_LOG('')
       ENDDO BSLOOP
 
       RETURN
@@ -319,7 +337,7 @@ C=================================================================
         SRC => BS%SOURCE(I)
         !Initial values
         WRITE(ICH,'(I3.3)') I
-        CALL WRITE_LOG('    READING SOURCE '//TRIM(ICH))
+        CALL WRITE_LOG(TAB//TAB//'READING SOURCE '//TRIM(ICH))
         NAME = "SOURCE_"//ICH
         DOWNSTREAM = ""
         SRC_GATE = ""
@@ -339,7 +357,7 @@ C=================================================================
 
         SRC = SOURCE_TYPE_CONSTRUCTOR(NAME, DOWNSTREAM)
         CALL SRC%SET_DATA_PARAM(SRC_TYPE,CONST_DATA, SRC_GATE, BS%GATE, BS%NGATE)
-
+        CALL WRITE_LOG('')
       ENDDO
 
       RETURN
@@ -374,7 +392,7 @@ C=================================================================
         RCH => BS%REACH(I)
         !Initial values
         WRITE(ICH,'(I3.3)') I
-        CALL WRITE_LOG('    READING REACH '//TRIM(ICH))
+        CALL WRITE_LOG(TAB//TAB//'READING REACH '//TRIM(ICH))
         NAME = "REACH_"//ICH
         DOWNSTREAM = ""
         ROUTE = 0
@@ -383,9 +401,11 @@ C=================================================================
         LOSS_VALUE = 0.0D0
         LOSS_RATIO = 0.0D0
         READ(FUNIT, REACHNL, ERR=99)
-        IF(TRIM(DOWNSTREAM).EQ.'') CALL WRITE_LOG('    WARNING!!: No DOWNSTREAM for reach '//TRIM(NAME))
+        IF(TRIM(DOWNSTREAM).EQ.'') CALL WRITE_LOG(TAB//TAB//'WARNING!!: No DOWNSTREAM for reach '//TRIM(NAME))
         RCH = REACH_TYPE_CONSTRUCTOR(NAME, DOWNSTREAM)
         CALL RCH%SET_ROUTE_PARAM(ROUTE, LOSS_RATIO, LOSS_VALUE, K, X)
+
+        CALL WRITE_LOG('')
       ENDDO
 
       RETURN
@@ -424,7 +444,7 @@ C=================================================================
 
         !Initial values
         WRITE(ICH,'(I3.3)') I
-        CALL WRITE_LOG('    READING RESERVOIR '//TRIM(ICH))
+        CALL WRITE_LOG(TAB//TAB//'READING RESERVOIR '//TRIM(ICH))
         NAME = "RESERVOIR_"//ICH
         DOWNSTREAM = ""
         ROUTE = 0
@@ -442,7 +462,7 @@ C=================================================================
 
         READ(FUNIT, RESNL,ERR=99)
 
-        IF(TRIM(DOWNSTREAM).EQ.'') CALL WRITE_LOG('    WARNING!!: No DOWNSTREAM for reservoir '//TRIM(NAME))
+        IF(TRIM(DOWNSTREAM).EQ.'') CALL WRITE_LOG(TAB//TAB//'WARNING!!: No DOWNSTREAM for reservoir '//TRIM(NAME))
 
         RES = RESERVOIR_TYPE_CONSTRUCTOR(NAME, DOWNSTREAM, Z0)
 
@@ -464,6 +484,8 @@ C=================================================================
         ENDIF
 
         CALL RES%SET_TURBIN_PARAM(TB_TYPE, TB_CONST_DATA, TURBIN_GATE, BS%GATE, BS%NGATE)
+
+        CALL WRITE_LOG('')
 
       ENDDO
 

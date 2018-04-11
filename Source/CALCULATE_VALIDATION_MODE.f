@@ -3,19 +3,21 @@
       USE CALC_PARAM
       IMPLICIT NONE
       INTEGER :: I
+      CHARACTER(100) :: LOGCMD
 
-      CALL WRITE_LOG('STARTING CALCULATION!!!')
 
       DO
         CURRENT_IDX = CURRENT_IDX + 1
         CURRENT_TIME = CURRENT_TIME + DELTAT
-        PRINT*, CURRENT_IDX
+        WRITE(LOGCMD,'(A8,A)')"TIME: ", TRIM(CURRENT_TIME%strftime('%d-%m-%Y %H:%M'))
+        CALL WRITE_LOG(TRIM(LOGCMD))
+        CALL WRITE_LOG("---===")
 
         CALL UPDATE_GATE_DATA
 
 
         DO I = 1,NBASIN
-          
+
             CALL BASIN(I)%CALCULATING_RUNOFF
 
             CALL BASIN(I)%ROUTING_CALC
@@ -26,7 +28,8 @@
 
       ENDDO
 
-      CALL WRITE_OUTPUT 
+      CALL WRITE_LOG('WRITING OUTPUT!!!')
+      CALL WRITE_OUTPUT
 
 
 

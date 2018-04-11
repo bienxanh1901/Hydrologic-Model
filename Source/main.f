@@ -10,8 +10,13 @@ C Open log file
 
 C Introduction
       CALL GETCWD(ROOT_DIR)
-      CALL WRITE_LOG('WORKING DIRECTORY: ')
-      CALL WRITE_LOG('  '//TRIM(ROOT_DIR))
+      CALL WRITE_LOG('===================================')
+      CALL WRITE_LOG('=                                 =')
+      CALL WRITE_LOG('=   WELCOME TO HYDROLOGIC MODEL   =')
+      CALL WRITE_LOG('=                                 =')
+      CALL WRITE_LOG('===================================')
+      CALL WRITE_LOG('')
+      CALL WRITE_LOG('WORKING DIRECTORY: '//TRIM(ROOT_DIR))
 
 C Read input parameters
       CALL READING_INPUT
@@ -26,13 +31,24 @@ C Initial variables
       CALL INITIALING_VARIABLES
 
 C Starting calculate
+      CALL WRITE_LOG('===================================')
+      CALL WRITE_LOG('=      STARTING CALCULATION       =')
+      IF(SIMULATION_MODE.EQ.REAL_TIME_MODE)CALL WRITE_LOG('=      REAL TIME SIMULATION       =')
+      IF(SIMULATION_MODE.EQ.VALIDATION_MODE)CALL WRITE_LOG('=         VALIDATION MODE         =')
+      CALL WRITE_LOG('===================================')
+
 
       IF(SIMULATION_MODE.EQ.REAL_TIME_MODE) CALL RUN_REAL_TIME_MODE
       IF(SIMULATION_MODE.EQ.VALIDATION_MODE) CALL RUN_VALIDATION_MODE
 
 
 
-      CALL WRITE_LOG('END OF CALCULATION!!!')
+      CALL WRITE_LOG('===================================')
+      CALL WRITE_LOG('=                                 =')
+      CALL WRITE_LOG('=        END OF CALCULATION       =')
+      CALL WRITE_LOG('=                                 =')
+      CALL WRITE_LOG('===================================')
+      CALL WRITE_LOG('')
       CLOSE(ULOG)
 
       WRITE(*,*) 'PRESS ANY KEY TO STOP!!!'

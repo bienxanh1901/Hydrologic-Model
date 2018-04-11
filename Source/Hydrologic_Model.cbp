@@ -8,7 +8,7 @@
 		<Build>
 			<Target title="Debug">
 				<Option output="bin/Debug/Hydrologic_Model" prefix_auto="1" extension_auto="1" />
-				<Option working_dir="E:/project/HuynhCongHoai/validation/comua_12" />
+				<Option working_dir="../Validate/1001-3101" />
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gfortran" />
@@ -17,6 +17,7 @@
 					<Add option="-ffixed-line-length-none" />
 					<Add option="-fcheck=bounds" />
 					<Add option="-g" />
+					<Add option="-fbackslash" />
 				</Compiler>
 			</Target>
 			<Target title="Release">
