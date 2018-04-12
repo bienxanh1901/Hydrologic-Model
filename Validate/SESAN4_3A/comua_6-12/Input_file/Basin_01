@@ -20,14 +20,15 @@
 	  INTERVAL = 3600               /
 
 &GTNL NAME     = "TURBIN4"          , 
-	  GATETYPE = 2                  , 
+	  GATETYPE = 3                  , 
 	  TSTART   = "01-06-2016 00:00" , 
 	  TEND     = "31-12-2016 23:00" , 
 	  DATAFILE = "QTURBIN.DAT"        , 
 	  INTERVAL = 3600               /	  
 	  
 &SBSNL NAME           = "SUB-BASIN-4A" , 
-	   DOWNSTREAM     = "SESAN4" , 
+	   DOWNSTREAM     = "SESAN4" ,
+	   NPRECIP_GATE   = 1, 
 	   PRECIP_GATE    = "PRECIP" , 
 	   LOSSRATE       = 1        , 
 	   TRANSFORM      = 1        , 
@@ -53,7 +54,7 @@
 		 
 &RESNL NAME = "SESAN4" ,
 	   ROUTE = 1 ,
-	   Z0 = 210.19 ,
+	   Z0 = 210.21 ,
 	   ROUTING_CURVE = 1 ,
 	   RTCFN = "ES_SESAN4.DAT" ,
 	   DCFN = "ED_SESAN4A.DAT" ,
