@@ -78,11 +78,11 @@
 
       END MODULE SOURCE_MOD
 
-      MODULE SOURCE_PTR_LIST_MOD
-      USE SOURCE_MOD
-
-#define LIST_DATA SOURCE_PTR
-#include "linkedlist.f90"
-#undef LIST_DATA
-
-      END MODULE SOURCE_PTR_LIST_MOD
+*      MODULE SOURCE_PTR_LIST_MOD
+*      USE SOURCE_MOD
+*
+*#define LIST_DATA SOURCE_PTR
+*#include "linkedlist.f90"
+*#undef LIST_DATA
+*
+*      END MODULE SOURCE_PTR_LIST_MOD

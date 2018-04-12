@@ -34,6 +34,7 @@
         PROCEDURE,PASS(SEFT), PUBLIC :: GET_REACH_INFLOW
         PROCEDURE,PASS(SEFT), PUBLIC :: GET_RESERVOIR_INFLOW
         PROCEDURE,PASS(SEFT), PUBLIC :: SHOW_INFORMATION
+        PROCEDURE,PASS(SEFT), PUBLIC :: BSRESET_MEMORIES
 
 
       END TYPE BASIN_TYPE
@@ -59,113 +60,27 @@
 
         END FUNCTION BASIN_TYPE_CONSTRUCTOR
 
-        ! set level for all basin objects to obtain basin connectivity
-        SUBROUTINE SET_OBJECTS_LEVEL(SEFT)
-
-        CLASS(BASIN_TYPE), INTENT(INOUT) :: SEFT
-        INTEGER :: J
-        TYPE(REACH_TYPE), POINTER :: RCH
-        TYPE(RESERVOIR_TYPE), POINTER :: RES
-
-        SEFT%MAX_LEVEL = 0
-
-        DO J = 1, SEFT%NREACH
-
-            RCH => SEFT%REACH(J)
-
-            RCH%LEVEL = RCH%LEVEL + SEFT%FIND_LEVEL(RCH%DOWNSTREAM)
-            SEFT%MAX_LEVEL = MAX(SEFT%MAX_LEVEL, RCH%LEVEL)
-
-        ENDDO
-
-        DO J = 1, SEFT%NRESERVOIR
-
-            RES => SEFT%RESERVOIR(J)
-
-            RES%LEVEL = RES%LEVEL + SEFT%FIND_LEVEL(RES%DOWNSTREAM)
-            SEFT%MAX_LEVEL = MAX(SEFT%MAX_LEVEL, RES%LEVEL)
-
-        ENDDO
-
-        RETURN
-        END SUBROUTINE SET_OBJECTS_LEVEL
-
-
-        !find level of an object
-        RECURSIVE FUNCTION FIND_LEVEL(SEFT,DOWNSTREAM) RESULT(LEVEL)
-
-        CLASS(BASIN_TYPE), INTENT(INOUT) :: SEFT
-        CHARACTER(*), INTENT(IN) :: DOWNSTREAM
-        INTEGER :: LEVEL, J
-        TYPE(REACH_TYPE), POINTER :: RCH
-        TYPE(RESERVOIR_TYPE), POINTER :: RES
-
-
-        IF(TRIM(DOWNSTREAM).EQ."") THEN
-
-            LEVEL = 0
-            RETURN
-
-        ELSE
-
-            LEVEL = 1
-
-            DO J = 1, SEFT%NREACH
-
-                RCH => SEFT%REACH(J)
-                IF(TRIM(DOWNSTREAM).EQ.TRIM(RCH%NAME)) THEN
-
-                    LEVEL = LEVEL + SEFT%FIND_LEVEL(RCH%DOWNSTREAM)
-                    RETURN
-
-                ENDIF
-
-            ENDDO
-
-            DO J = 1, SEFT%NRESERVOIR
-
-                RES => SEFT%RESERVOIR(J)
-                IF(TRIM(DOWNSTREAM).EQ.TRIM(RES%NAME)) THEN
-
-                    LEVEL = LEVEL + SEFT%FIND_LEVEL(RES%DOWNSTREAM)
-                    RETURN
-
-                ENDIF
-
-            ENDDO
-
-        ENDIF
-
-        RETURN
-        END FUNCTION FIND_LEVEL
-
 
         SUBROUTINE BSALLOCATING(SEFT)
 
         CLASS(BASIN_TYPE), INTENT(INOUT) :: SEFT
-        TYPE(REACH_TYPE), POINTER :: RCH
-        TYPE(RESERVOIR_TYPE), POINTER :: RES
-        TYPE(SUBBASIN_TYPE), POINTER :: SBS
         INTEGER :: J
 
         DO J = 1, SEFT%NSUBBASIN
 
-            SBS => SEFT%SUBBASIN(J)
-            CALL SBS%SBSALLOCATING
+            CALL SEFT%SUBBASIN(J)%SBSALLOCATING
 
         ENDDO
 
         DO J = 1, SEFT%NREACH
 
-            RCH => SEFT%REACH(J)
-            CALL RCH%RCHALLOCATING
+            CALL SEFT%REACH(J)%RCHALLOCATING
 
         ENDDO
 
         DO J = 1, SEFT%NRESERVOIR
 
-            RES => SEFT%RESERVOIR(J)
-            CALL RES%RESALLOCATING
+            CALL SEFT%RESERVOIR(J)%RESALLOCATING
 
         ENDDO
 
@@ -180,8 +95,34 @@
         END SUBROUTINE SHOW_INFORMATION
 
 
+        SUBROUTINE BSRESET_MEMORIES(SEFT)
+        CLASS(BASIN_TYPE), INTENT(INOUT) :: SEFT
+        INTEGER :: J
+
+        DO J = 1, SEFT%NSUBBASIN
+
+            CALL SEFT%SUBBASIN(J)%SBSRESET_MEMORIES
+
+        ENDDO
+
+        DO J = 1, SEFT%NREACH
+
+            CALL SEFT%REACH(J)%RCHRESET_MEMORIES
+
+        ENDDO
+
+        DO J = 1, SEFT%NRESERVOIR
+
+            CALL SEFT%RESERVOIR(J)%RESRESET_MEMORIES
+
+        ENDDO
+
+        END SUBROUTINE BSRESET_MEMORIES
+
+
         INCLUDE "RUN_OFF_CALC.f"
         INCLUDE "BASIN_GET_INFLOW.f"
         INCLUDE "ROUTING.f"
+        INCLUDE "SET_BASIN_LEVEL.f"
 
       END MODULE BASIN_MOD

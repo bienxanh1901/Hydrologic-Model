@@ -49,8 +49,10 @@
         CALL WRITE_OUTPUT
 
 
+        !Reset all array
+        IF(CURRENT_IDX.EQ.NTIME - 2*NFCT) CALL RESET_MEMORIES
         !TEST
-        IF(CURRENT_IDX.EQ.24) STOP
+        IF(CURRENT_IDX.EQ.48) STOP
 
       ENDDO
 

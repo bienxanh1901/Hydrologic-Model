@@ -183,12 +183,12 @@
       END MODULE GATE_MOD
 
 
-      MODULE GATE_PTR_LIST_MOD
-      USE GATE_MOD
-
-#define LIST_DATA GATE_PTR
-#include "linkedlist.f90"
-#undef LIST_DATA
-
-      END MODULE GATE_PTR_LIST_MOD
+*      MODULE GATE_PTR_LIST_MOD
+*      USE GATE_MOD
+*
+*#define LIST_DATA GATE_PTR
+*#include "linkedlist.f90"
+*#undef LIST_DATA
+*
+*      END MODULE GATE_PTR_LIST_MOD
 
