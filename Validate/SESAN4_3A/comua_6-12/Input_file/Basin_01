@@ -46,7 +46,7 @@
 	   
 &REACHNL NAME       = "SESAN3A" , 
 		 DOWNSTREAM = "SESAN4"  , 
-		 K          = 2.0D0     , 
+		 K          = 1.5D0     , 
 		 X          = 0.25D0    , 
 		 LOSS_VALUE = 6.0D0     , 
 		 LOSS_RATIO = 0.015D0     , 

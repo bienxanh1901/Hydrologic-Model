@@ -10,7 +10,7 @@
 
  
 
- WORKING DIRECTORY: D:\haipt\project\hydrology_model_2018\Hydrologic-Model\Validate\1001-3101
+ WORKING DIRECTORY: D:\haipt\project\hydrology_model_2018\Hydrologic-Model\Validate\SESAN4_3A\khongmua_6-12
 
  ===================================
 
@@ -24,17 +24,19 @@
 
  
 
- 	REAL TIME SIMULATION MODE
+ 	VALIDATION MODE
 
  
 
- 	START TIME: 10-01-2018 11:00
+ 	START TIME: 01-06-2016 00:00
 
  
+
+ 	END TIME: 31-12-2016 23:00
 
  	INPUT DIRECTORY: Input_file
 
- 	OUTPUT DIRECTORY: Output_corect
+ 	OUTPUT DIRECTORY: Output
 
  
 
@@ -54,15 +56,11 @@
 
  
 
- 		READING GATE 004
-
- 
-
  		READING SUB_BASIN 001
 
  		WARNING!!: No DOWNSTREAM for sub basin SUB-BASIN-4A
 
- 
+ 		WARNING!!: No Precipitation gate is set for sub_basin SUB-BASIN-4A
 
  		READING SOURCE 001
 
@@ -122,103 +120,11 @@
 
  =      STARTING CALCULATION       =
 
- =      REAL TIME SIMULATION       =
+ =         VALIDATION MODE         =
 
  ===================================
 
-   TIME: 10-01-2018 12:00
-
- ---===
-
-   TIME: 10-01-2018 13:00
-
- ---===
-
-   TIME: 10-01-2018 14:00
-
- ---===
-
-   TIME: 10-01-2018 15:00
-
- ---===
-
-   TIME: 10-01-2018 16:00
-
- ---===
-
-   TIME: 10-01-2018 17:00
-
- ---===
-
-   TIME: 10-01-2018 18:00
-
- ---===
-
-   TIME: 10-01-2018 19:00
-
- ---===
-
-   TIME: 10-01-2018 20:00
-
- ---===
-
-   TIME: 10-01-2018 21:00
-
- ---===
-
-   TIME: 10-01-2018 22:00
-
- ---===
-
-   TIME: 10-01-2018 23:00
-
- ---===
-
-   TIME: 11-01-2018 00:00
-
- ---===
-
-   TIME: 11-01-2018 01:00
-
- ---===
-
-   TIME: 11-01-2018 02:00
-
- ---===
-
-   TIME: 11-01-2018 03:00
-
- ---===
-
-   TIME: 11-01-2018 04:00
-
- ---===
-
-   TIME: 11-01-2018 05:00
-
- ---===
-
-   TIME: 11-01-2018 06:00
-
- ---===
-
-   TIME: 11-01-2018 07:00
-
- ---===
-
-   TIME: 11-01-2018 08:00
-
- ---===
-
-   TIME: 11-01-2018 09:00
-
- ---===
-
-   TIME: 11-01-2018 10:00
-
- ---===
-
-   TIME: 11-01-2018 11:00
+   TIME: 01-06-2016 01:00
 
  ---===
 

@@ -7,4 +7,4 @@
 	  TEND   = "15-01-2018 00:00"/
 	  
 &IODIR INPUT_DIR  = "Input_file",
-	   OUTPUT_DIR = "Output2"/
+	   OUTPUT_DIR = "Output_corect"/
