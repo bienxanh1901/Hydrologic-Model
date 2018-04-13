@@ -167,3 +167,47 @@ C=================================================================
 C=================================================================
 C
 C=================================================================
+C=================================================================
+C SPECIFIED_RELEASE
+C=================================================================
+      SUBROUTINE CORRECT_DATA_CURRENT_TIME(SEFT)
+      IMPLICIT NONE
+      CLASS(RESERVOIR_TYPE), INTENT(INOUT) :: SEFT
+      REAL(8) :: QIT1, QIT2, DT1, QOT1, QOT2
+      REAL(8) :: ZT1, ZT2, VT1, VT2, DV
+
+      DT1 = DT
+
+      QIT1 = SEFT%INFLOW(CURRENT_IDX - 1)
+      QOT1 = SEFT%OUTFLOW(CURRENT_IDX - 1)
+      ZT1 = SEFT%ELEVATION(CURRENT_IDX - 1)
+      ZT2 = SEFT%ZOBS%CURRENT_DATA
+      VT1 = SEFT%STORAGE(CURRENT_IDX - 1)
+
+      CALL INTERP(SEFT%SE_CURVE(1,1:SEFT%NSE),
+     &            SEFT%SE_CURVE(2,1:SEFT%NSE),
+     &            ZT2, VT2, SEFT%NSE)
+
+      DV = VT2 - VT1
+      QOT2 = 0.0D0
+
+      CALL SEFT%SPILLWAY_DISCHARGE(ZT2, QOT2)
+      IF(SEFT%TB_TYPE.EQ.CONSTANT_DATA) THEN
+
+        QOT2 = QOT2 + SEFT%TB_CONST_DATA
+
+      ELSE
+
+        QOT2 = QOT2 + SEFT%TURBIN_GATE%CURRENT_DATA
+
+      ENDIF
+
+      QIT2 = 2.0D0*DV/DT1 + (QOT2 + QOT1) - QIT1
+
+      SEFT%OUTFLOW(CURRENT_IDX) = QOT2
+      SEFT%ELEVATION(CURRENT_IDX) = ZT2
+      SEFT%STORAGE(CURRENT_IDX) = VT2
+      SEFT%INFLOW(CURRENT_IDX) = QIT2
+
+      RETURN
+      END SUBROUTINE CORRECT_DATA_CURRENT_TIME

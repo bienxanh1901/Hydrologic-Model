@@ -427,12 +427,12 @@ C=================================================================
       TYPE(BASIN_TYPE) :: BS
       INTEGER :: ROUTE, I, IERR, ROUTING_CURVE, TB_TYPE
       REAL(8) :: Z0, DOORW, DC_COEFF, ZSW, TB_CONST_DATA
-      CHARACTER(100) :: DOWNSTREAM, NAME, RTCFN, DCFN, TURBIN_GATE, F1
+      CHARACTER(100) :: DOWNSTREAM, NAME, RTCFN, DCFN, TURBIN_GATE, F1, ZOBS_GATE
       CHARACTER(3) :: ICH
       TYPE(RESERVOIR_TYPE), POINTER :: RES
       NAMELIST /RESNL/ NAME, DOWNSTREAM, ROUTE, Z0, ROUTING_CURVE, RTCFN,
      &                 DOORW, DC_COEFF, ZSW, DCFN, TB_TYPE,
-     &                 TB_CONST_DATA, TURBIN_GATE
+     &                 TB_CONST_DATA, TURBIN_GATE, ZOBS_GATE
 
 
       ALLOCATE(BS%RESERVOIR(1:BS%NRESERVOIR), STAT=IERR)
@@ -458,6 +458,7 @@ C=================================================================
         TB_TYPE = 0
         TB_CONST_DATA = 0.0D0
         TURBIN_GATE = ""
+        ZOBS_GATE = ""
 
 
         READ(FUNIT, RESNL,ERR=99)
@@ -477,6 +478,8 @@ C=================================================================
 
         IF(TB_TYPE.EQ.CONSTANT_DATA) THEN
 
+            RES%TURBIN_GATE => NULL()
+
         ELSE
 
             IF(TRIM(TURBIN_GATE).EQ.'') CALL WRITE_ERRORS('Please set the gate name turbin gate of reservoir '//TRIM(NAME))
@@ -484,6 +487,16 @@ C=================================================================
         ENDIF
 
         CALL RES%SET_TURBIN_PARAM(TB_TYPE, TB_CONST_DATA, TURBIN_GATE, BS%GATE, BS%NGATE)
+
+        IF(ZOBS_GATE.NE."") THEN
+
+            CALL RES%SET_OBS_GATE(ZOBS_GATE, BS%GATE, BS%NGATE)
+
+        ELSE
+
+            RES%ZOBS => NULL()
+
+        ENDIF
 
         CALL WRITE_LOG('')
 

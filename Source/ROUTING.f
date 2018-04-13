@@ -28,9 +28,16 @@
 
             RES => SEFT%RESERVOIR(J)
             IF(RES%LEVEL.NE.K) CYCLE
-            CALL SEFT%GET_RESERVOIR_INFLOW(RES)
-            IF(RES%ROUTE.EQ.0) CYCLE
-            CALL RES%RESERVOIR_ROUTING
+
+            IF(SIMULATION_MODE.EQ.REAL_TIME_MODE.AND.
+     &         ACTIVE_MODE.EQ.EXACTLY_CALC_MODE.AND.
+     &         ASSOCIATED(RES%ZOBS)) THEN
+               CALL RES%CORRECT_DATA_CURRENT_TIME
+            ELSE
+                CALL SEFT%GET_RESERVOIR_INFLOW(RES)
+                IF(RES%ROUTE.EQ.0) CYCLE
+                CALL RES%RESERVOIR_ROUTING
+            ENDIF
 
         ENDDO
 

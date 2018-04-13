@@ -22,15 +22,13 @@
 			</Target>
 			<Target title="Release">
 				<Option output="bin/Release/Hydrologic_Model" prefix_auto="1" extension_auto="1" />
-				<Option working_dir="../Validate/SESAN4_3A/khongmua_6-12" />
+				<Option working_dir="../Validate/1001-3101" />
 				<Option object_output="obj/Release/" />
 				<Option type="1" />
 				<Option compiler="gfortran" />
 				<Compiler>
 					<Add option="-O2" />
-					<Add option="-cpp" />
 					<Add option="-ffixed-line-length-none" />
-					<Add option="-fcheck=bounds" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
@@ -96,6 +94,13 @@
 		</Unit>
 		<Unit filename="READ.f">
 			<Option weight="9" />
+		</Unit>
+		<Unit filename="RESET_MEMORIES.f">
+			<Option weight="9" />
+		</Unit>
+		<Unit filename="SET_BASIN_LEVEL.f">
+			<Option weight="0" />
+			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
 		<Unit filename="TOOL.f">
 			<Option weight="0" />
